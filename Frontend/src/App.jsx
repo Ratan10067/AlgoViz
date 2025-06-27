@@ -2,13 +2,23 @@ import { useState } from "react";
 import reactLogo from "./assets/react.svg";
 import viteLogo from "/vite.svg";
 import "./App.css";
+import { BrowserRouter, Route, Routes } from "react-router-dom";
+
+import AlgorithmHomePage from "./components/AlgorithmHomePage";
+import AuthPages from "./components/AuthPages";
+import AlgorithmVisualizerPage from "./components/AlgorithmVisualizerPage";
 
 function App() {
-  const [count, setCount] = useState(0);
-
   return (
     <>
-      <div className="bg-red-500">Wlecome to visualizer</div>
+      <BrowserRouter>
+        <Routes>
+          <Route path="/" element={<AlgorithmHomePage />} />
+          <Route path="/auth" element={<AuthPages />} />
+          <Route path="/visualizer" element={<AlgorithmVisualizerPage />} />
+          {/* Add more routes here as needed */}
+        </Routes>
+      </BrowserRouter>
     </>
   );
 }
