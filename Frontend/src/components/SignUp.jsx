@@ -129,7 +129,7 @@ const SignUp = () => {
       <div className="relative w-full max-w-md">
         {/* Back Button */}
         <button
-          onClick={() => window.history.back()}
+          onClick={() => navigate("/")}
           className="mb-8 flex items-center space-x-2 text-gray-400 hover:text-white transition-colors duration-300 group"
         >
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-300" />
@@ -367,7 +367,7 @@ const SignUp = () => {
             <div className="mt-6 text-center text-sm text-gray-400">
               Already have an account?{" "}
               <button
-                onClick={navigate("/signin")}
+                onClick={() => navigate("/signin")}
                 className="text-purple-400 hover:underline cursor-pointer"
               >
                 Sign in

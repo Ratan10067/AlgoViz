@@ -11,6 +11,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [formData, setFormData] = useState({
@@ -19,6 +20,7 @@ const SignIn = () => {
     rememberMe: false,
   });
   const navigate = useNavigate();
+
   const handleInputChange = (field, value) => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
@@ -27,11 +29,17 @@ const SignIn = () => {
     e.preventDefault();
     // Handle sign in logic here
     console.log("Sign in data:", formData);
+    // After successful login, you might want to navigate:
+    // navigate("/dashboard");
   };
 
   const handleSocialLogin = (provider) => {
     // Handle social login
     console.log(`${provider} login clicked`);
+  };
+
+  const handleSignUp = () => {
+    navigate("/register");
   };
 
   return (
@@ -46,7 +54,7 @@ const SignIn = () => {
       <div className="relative w-full max-w-md">
         {/* Back Button */}
         <button
-          onClick={() => window.history.back()}
+          onClick={() => navigate("/")}
           className="mb-8 flex items-center space-x-2 text-gray-400 hover:text-white transition-colors duration-300 group"
         >
           <ArrowLeft className="w-5 h-5 group-hover:-translate-x-1 transition-transform duration-300" />
@@ -112,7 +120,7 @@ const SignIn = () => {
             </div>
 
             {/* Sign In Fields */}
-            <div className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label className="block text-sm font-medium text-gray-300 mb-2">
                   Email Address
@@ -125,6 +133,7 @@ const SignIn = () => {
                     placeholder="Enter your email"
                     value={formData.email}
                     onChange={(e) => handleInputChange("email", e.target.value)}
+                    required
                   />
                 </div>
               </div>
@@ -143,6 +152,7 @@ const SignIn = () => {
                     onChange={(e) =>
                       handleInputChange("password", e.target.value)
                     }
+                    required
                   />
                   <button
                     type="button"
@@ -181,20 +191,20 @@ const SignIn = () => {
               </div>
 
               <button
-                onClick={handleSubmit}
+                type="submit"
                 className="w-full py-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 shadow-lg hover:shadow-cyan-500/25 flex items-center justify-center space-x-2 group font-medium"
               >
                 <span>Sign In</span>
                 <Zap className="w-4 h-4 group-hover:scale-110 transition-transform duration-300" />
               </button>
-            </div>
+            </form>
 
             {/* Footer */}
             <div className="text-center mt-6 pt-6 border-t border-gray-700/50">
               <p className="text-gray-400">
                 Don't have an account?{" "}
                 <button
-                  onClick={navigate("/register")}
+                  onClick={handleSignUp}
                   type="button"
                   className="text-cyan-400 hover:text-cyan-300 transition-colors duration-300 font-medium hover:underline cursor-pointer"
                 >
@@ -203,13 +213,6 @@ const SignIn = () => {
               </p>
             </div>
           </div>
-        </div>
-
-        {/* Additional Info */}
-        <div className="text-center mt-6">
-          <p className="text-gray-500 text-sm">
-            Secure login with industry-standard encryption
-          </p>
         </div>
       </div>
     </div>

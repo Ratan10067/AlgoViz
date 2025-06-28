@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from "react";
+import React, { useState, useRef } from "react";
 import {
   Play,
   Code,
@@ -16,12 +16,10 @@ import {
   X,
   Clock,
   Zap,
-  User,
-  LogIn,
-  UserPlus,
-  LogOut,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import Navbar from "./Navbar"; // Import the new Navbar component
+
 const AlgorithmHomePage = () => {
   const [selectedTopic, setSelectedTopic] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -30,9 +28,7 @@ const AlgorithmHomePage = () => {
   const [isStartLearningActive, setIsStartLearningActive] = useState(false);
   const topicsRef = useRef(null);
   const navigate = useNavigate();
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false); // For demo purposes
-  const dropdownRef = useRef(null);
+
   const topics = [
     {
       id: "arrays",
@@ -306,49 +302,13 @@ const AlgorithmHomePage = () => {
       color: "from-indigo-500 to-blue-500",
     },
   ];
-  useEffect(() => {
-    const handleClickOutside = (event) => {
-      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
-        setIsDropdownOpen(false);
-      }
-    };
 
-    document.addEventListener("mousedown", handleClickOutside);
-    return () => document.removeEventListener("mousedown", handleClickOutside);
-  }, []);
   const scrollToTopics = () => {
     if (topicsRef.current) {
       topicsRef.current.scrollIntoView({ behavior: "smooth" });
     }
   };
-  const handleLogin = () => {
-    try {
-      console.log("Login button clicked");
-      setIsDropdownOpen(false);
-      navigate("/signin");
-      console.log("Navigation attempted to /signin");
-    } catch (error) {
-      console.error("Navigation error:", error);
-    }
-  };
 
-  const handleRegister = () => {
-    // Implement register logic
-    setIsDropdownOpen(false);
-    navigate("/register");
-  };
-
-  const handleLogout = () => {
-    // Implement logout logic
-    setIsLoggedIn(false);
-    setIsDropdownOpen(false);
-  };
-
-  const handleProfile = () => {
-    // Implement profile navigation
-    setIsDropdownOpen(false);
-    navigate("/profile");
-  };
   const openModal = (topic) => {
     setModalTopic(topic);
     setIsModalOpen(true);
@@ -390,86 +350,10 @@ const AlgorithmHomePage = () => {
       {/* Header */}
       <header className="relative overflow-hidden bg-gradient-to-br from-gray-900 via-slate-900 to-black">
         <div className="absolute inset-0 bg-gradient-to-r from-blue-600/10 to-purple-600/10"></div>
-        <nav className="relative z-10 container mx-auto px-6 py-4 flex justify-between items-center">
-          <div className="flex items-center space-x-2">
-            <Code className="w-8 h-8 text-cyan-400" />
-            <span className="text-2xl font-bold text-white">AlgoViz</span>
-          </div>
-          <div className="relative" ref={dropdownRef}>
-            <button
-              onClick={(e) => {
-                e.stopPropagation();
-                setIsDropdownOpen(!isDropdownOpen);
-              }}
-              className="p-2 rounded-lg hover:bg-gray-800 transition-colors duration-300"
-            >
-              <User className="w-6 h-6 text-gray-300" />
-            </button>
 
-            {isDropdownOpen && (
-              <div
-                className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-xl border border-gray-700 py-1 z-50"
-                onClick={(e) => e.stopPropagation()}
-              >
-                {!isLoggedIn ? (
-                  <>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        console.log("Sign In clicked");
-                        handleLogin();
-                      }}
-                      className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 w-full text-left"
-                    >
-                      <LogIn className="w-4 h-4" />
-                      <span>Sign In</span>
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        console.log("Register clicked");
-                        handleRegister();
-                      }}
-                      className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 w-full text-left"
-                    >
-                      <UserPlus className="w-4 h-4" />
-                      <span>Register</span>
-                    </button>
-                  </>
-                ) : (
-                  <>
-                    <div className="px-4 py-2 border-b border-gray-700">
-                      <p className="text-sm text-gray-400">Signed in as</p>
-                      <p className="text-sm font-medium text-white">
-                        user@example.com
-                      </p>
-                    </div>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleProfile();
-                      }}
-                      className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 w-full text-left"
-                    >
-                      <User className="w-4 h-4" />
-                      <span>Profile</span>
-                    </button>
-                    <button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleLogout();
-                      }}
-                      className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 w-full text-left"
-                    >
-                      <LogOut className="w-4 h-4" />
-                      <span>Sign Out</span>
-                    </button>
-                  </>
-                )}
-              </div>
-            )}
-          </div>
-        </nav>
+        {/* Use the imported Navbar component */}
+        <Navbar />
+
         {/* Hero Section */}
         <div className="relative z-10 container mx-auto px-6 py-20 text-center">
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">
@@ -760,15 +644,23 @@ const AlgorithmHomePage = () => {
                 <li>
                   <a
                     href="#"
-                    className="text-gray-400 hover:text-white transition-colors duration-300"
+                    className="text-gray-400 hover:text-cyan-400 transition-colors duration-300"
                   >
-                    About Us
+                    Home
                   </a>
                 </li>
                 <li>
                   <a
                     href="#"
-                    className="text-gray-400 hover:text-white transition-colors duration-300"
+                    className="text-gray-400 hover:text-cyan-400 transition-colors duration-300"
+                  >
+                    Algorithms
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="text-gray-400 hover:text-cyan-400 transition-colors duration-300"
                   >
                     Documentation
                   </a>
@@ -776,7 +668,31 @@ const AlgorithmHomePage = () => {
                 <li>
                   <a
                     href="#"
-                    className="text-gray-400 hover:text-white transition-colors duration-300"
+                    className="text-gray-400 hover:text-cyan-400 transition-colors duration-300"
+                  >
+                    About
+                  </a>
+                </li>
+              </ul>
+            </div>
+
+            <div>
+              <h4 className="text-lg font-semibold text-white mb-4">
+                Resources
+              </h4>
+              <ul className="space-y-3">
+                <li>
+                  <a
+                    href="#"
+                    className="text-gray-400 hover:text-cyan-400 transition-colors duration-300"
+                  >
+                    Blog
+                  </a>
+                </li>
+                <li>
+                  <a
+                    href="#"
+                    className="text-gray-400 hover:text-cyan-400 transition-colors duration-300"
                   >
                     Tutorials
                   </a>
@@ -784,47 +700,17 @@ const AlgorithmHomePage = () => {
                 <li>
                   <a
                     href="#"
-                    className="text-gray-400 hover:text-white transition-colors duration-300"
+                    className="text-gray-400 hover:text-cyan-400 transition-colors duration-300"
                   >
-                    Blog
-                  </a>
-                </li>
-              </ul>
-            </div>
-
-            <div>
-              <h4 className="text-lg font-semibold text-white mb-4">Support</h4>
-              <ul className="space-y-3">
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-400 hover:text-white transition-colors duration-300"
-                  >
-                    Help Center
+                    GitHub
                   </a>
                 </li>
                 <li>
                   <a
                     href="#"
-                    className="text-gray-400 hover:text-white transition-colors duration-300"
+                    className="text-gray-400 hover:text-cyan-400 transition-colors duration-300"
                   >
-                    Community
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-400 hover:text-white transition-colors duration-300"
-                  >
-                    Contact Us
-                  </a>
-                </li>
-                <li>
-                  <a
-                    href="#"
-                    className="text-gray-400 hover:text-white transition-colors duration-300"
-                  >
-                    Report Bug
+                    Support
                   </a>
                 </li>
               </ul>
@@ -832,13 +718,15 @@ const AlgorithmHomePage = () => {
           </div>
 
           <div className="border-t border-gray-700 mt-12 pt-8 flex flex-col md:flex-row justify-between items-center">
-            <p className="text-gray-400 text-sm">
-              © 2025 AlgoViz. All rights reserved.
+            <p className="text-gray-400 text-sm mb-4 md:mb-0">
+              © 2023 AlgoViz. All rights reserved.
             </p>
-            <p className="text-gray-400 text-sm flex items-center mt-4 md:mt-0">
-              Made with <Heart className="w-4 h-4 text-red-500 mx-1" /> for
-              algorithm enthusiasts
-            </p>
+            <div className="flex items-center space-x-2">
+              <Heart className="w-4 h-4 text-rose-500" />
+              <span className="text-gray-400 text-sm">
+                Made with love for computer science
+              </span>
+            </div>
           </div>
         </div>
       </footer>
