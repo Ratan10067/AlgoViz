@@ -326,7 +326,7 @@ const AlgorithmHomePage = () => {
   };
 
   const startLearning = () => {
-    navigate("/visualizer");
+    navigate("/bfs-visualizer");
   };
 
   const getDifficultyColor = (difficulty) => {

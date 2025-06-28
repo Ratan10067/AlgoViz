@@ -7,6 +7,7 @@ import { BrowserRouter, Route, Routes } from "react-router-dom";
 import AlgorithmHomePage from "./components/AlgorithmHomePage";
 import AuthPages from "./components/AuthPages";
 import AlgorithmVisualizerPage from "./components/AlgorithmVisualizerPage";
+import BFSVisualizer from "./components/BFSVisualizer";
 
 function App() {
   return (
@@ -16,6 +17,7 @@ function App() {
           <Route path="/" element={<AlgorithmHomePage />} />
           <Route path="/auth" element={<AuthPages />} />
           <Route path="/visualizer" element={<AlgorithmVisualizerPage />} />
+          <Route path="/bfs-visualizer" element={<BFSVisualizer />} />
           {/* Add more routes here as needed */}
         </Routes>
       </BrowserRouter>
