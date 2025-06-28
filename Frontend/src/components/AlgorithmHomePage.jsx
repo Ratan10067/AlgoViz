@@ -18,7 +18,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import Navbar from "./Navbar"; // Import the new Navbar component
+import Navbar from "./Navbar";
 
 const AlgorithmHomePage = () => {
   const [selectedTopic, setSelectedTopic] = useState(null);
@@ -376,7 +376,10 @@ const AlgorithmHomePage = () => {
               <Play className="w-5 h-5" />
               <span>Start Learning</span>
             </button>
-            <button className="px-8 py-4 border border-gray-600 text-white rounded-lg hover:bg-gray-800 transition-all duration-300">
+            <button
+              onClick={(e) => navigate("/view-documentation")}
+              className="px-8 py-4 border border-gray-600 text-white rounded-lg hover:bg-gray-800 transition-all duration-300"
+            >
               View Documentation
             </button>
           </div>
@@ -724,7 +727,7 @@ const AlgorithmHomePage = () => {
             <div className="flex items-center space-x-2">
               <Heart className="w-4 h-4 text-rose-500" />
               <span className="text-gray-400 text-sm">
-                Made with love for computer science
+                Made with love for Algorithmic Mind People
               </span>
             </div>
           </div>

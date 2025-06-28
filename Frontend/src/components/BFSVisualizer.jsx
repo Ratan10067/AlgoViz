@@ -17,8 +17,10 @@ import {
   Upload,
   Download,
   Maximize2,
+  ArrowLeft,
 } from "lucide-react";
-
+import { useNavigate } from "react-router-dom";
+import Alert from "./Alert";
 // Register Cytoscape extensions
 cytoscape.use(coseBilkent);
 cytoscape.use(edgehandles);
@@ -26,32 +28,114 @@ cytoscape.use(edgehandles);
 export default function EnhancedBFSVisualizer() {
   const cyRef = useRef(null);
   const cyInstance = useRef(null);
-
+  const navigate = useNavigate();
   const [numNodes, setNumNodes] = useState(8);
   const [edgeList, setEdgeList] = useState(
     "0-1,0-2,1-3,1-4,2-4,2-5,3-6,4-6,4-7,5-7"
   );
   const [graphType, setGraphType] = useState("undirected");
   const [startNode, setStartNode] = useState("0");
-
   const [steps, setSteps] = useState([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [speed, setSpeed] = useState(500);
   const [activeTab, setActiveTab] = useState("settings");
+  const [alertConfig, setAlertConfig] = useState({
+    isOpen: false,
+    message: "",
+    type: "error",
+  });
+  const handleBack = () => {
+    setAlertConfig({
+      isOpen: true,
+      message: "Are you sure you want to leave? Your progress will be lost.",
+      type: "warning",
+      // Add custom buttons for confirmation
+      customButtons: (
+        <div className="flex space-x-4 justify-center ">
+          <button
+            onClick={() => navigate("/")}
+            className="px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl transition-all duration-300 hover:scale-105 shadow-lg"
+          >
+            Leave
+          </button>
+          <button
+            onClick={closeAlert}
+            className="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl transition-all duration-300 hover:scale-105 shadow-lg"
+          >
+            Stay
+          </button>
+        </div>
+      ),
+    });
+  };
+  // Add this helper function to show alerts
+  const showAlert = (message, type = "error") => {
+    setAlertConfig({
+      isOpen: true,
+      message,
+      type,
+    });
+  };
 
+  // Add this function to close the alert
+  const closeAlert = () => {
+    setAlertConfig({
+      ...alertConfig,
+      isOpen: false,
+    });
+  };
   // Parse edges into from/to
-  const parseEdges = () =>
-    edgeList
-      .split(",")
-      .map((s) => s.trim())
-      .filter((s) => s.includes("-"))
-      .flatMap((pair) => {
-        const [u, v] = pair.split("-").map((x) => x.trim());
-        const arr = [{ from: u, to: v }];
-        if (graphType === "undirected") arr.push({ from: v, to: u });
-        return arr;
+  const parseEdges = () => {
+    try {
+      // Handle empty edge list
+      if (!edgeList.trim()) {
+        return [];
+      }
+
+      const edges = edgeList
+        .split(",")
+        .map((s) => s.trim())
+        .filter((s) => s.length > 0) // Remove empty entries
+        .map((pair) => {
+          const [from, to] = pair.split("-").map((x) => {
+            const num = parseInt(x.trim());
+            if (isNaN(num)) {
+              throw new Error(`Invalid number format in edge: ${pair}`);
+            }
+            return num;
+          });
+
+          if (from === undefined || to === undefined) {
+            throw new Error(`Invalid edge format: ${pair}`);
+          }
+
+          // Validate node indices
+          if (from >= numNodes || to >= numNodes || from < 0 || to < 0) {
+            throw new Error(
+              `Edge ${from}-${to} contains invalid node indices. Must be between 0 and ${
+                numNodes - 1
+              }`
+            );
+          }
+
+          return { from, to };
+        });
+
+      // Create undirected edges if needed
+      const finalEdges = edges.flatMap((edge) => {
+        if (graphType === "undirected") {
+          return [edge, { from: edge.to, to: edge.from }];
+        }
+        return [edge];
       });
+
+      return finalEdges;
+    } catch (error) {
+      showAlert(error.message);
+      return [];
+    }
+  };
 
   // Compute BFS steps
   const computeBFSSteps = (nodesCount, edgesArr, start) => {
@@ -106,14 +190,27 @@ export default function EnhancedBFSVisualizer() {
   useEffect(() => {
     if (!cyRef.current) return;
     cyInstance.current?.destroy();
+    const validEdges = parseEdges();
+    if (validEdges.length === 0) {
+      showAlert("Please add valid edges in the format: 0-1,1-2,2-3");
+      return;
+    }
     const cy = cytoscape({
       container: cyRef.current,
       elements: {
         nodes: Array.from({ length: numNodes }, (_, i) => ({
-          data: { id: `${i}`, label: `${i}`, distance: "∞" },
+          data: {
+            id: i.toString(),
+            label: i.toString(),
+            distance: "∞",
+          },
         })),
-        edges: parseEdges().map((e, idx) => ({
-          data: { id: `e${idx}`, source: e.from, target: e.to },
+        edges: validEdges.map((e, idx) => ({
+          data: {
+            id: `e${idx}`,
+            source: e.from.toString(),
+            target: e.to.toString(),
+          },
         })),
       },
       style: [
@@ -277,7 +374,16 @@ export default function EnhancedBFSVisualizer() {
     <div className="flex h-screen bg-gradient-to-br from-gray-900 via-gray-900 to-blue-900/20 text-white">
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 h-16 bg-gray-800/80 backdrop-blur-lg border-b border-gray-700/50 flex items-center justify-between px-6 z-10">
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-2">
+          {/* Add this button */}
+          <button
+            onClick={handleBack}
+            className="p-2 hover:bg-gray-700 rounded-lg transition-colors duration-200"
+            title="Go back"
+          >
+            <ArrowLeft className="w-5 h-5 text-gray-400 hover:text-white" />
+          </button>
+
           <div className="flex items-center gap-3">
             <div className="w-8 h-8 bg-gradient-to-r from-blue-500 to-purple-600 rounded-lg flex items-center justify-center">
               <Activity size={18} className="text-white" />
@@ -286,6 +392,7 @@ export default function EnhancedBFSVisualizer() {
               BFS Algorithm Visualizer
             </h1>
           </div>
+
           <div className="flex items-center gap-3 px-4 py-2 bg-gray-700/50 rounded-lg backdrop-blur-sm">
             <span className="text-sm text-gray-400">Graph Type:</span>
             <span className="text-sm font-semibold text-blue-400 capitalize">
@@ -294,7 +401,6 @@ export default function EnhancedBFSVisualizer() {
           </div>
         </div>
       </div>
-
       {/* Left Sidebar */}
       <div className="w-96 bg-gray-800/50 backdrop-blur-xl border-r border-gray-700/50 flex flex-col mt-16">
         {/* Tab Navigation */}
@@ -363,11 +469,9 @@ export default function EnhancedBFSVisualizer() {
                   Number of Nodes
                 </label>
                 <input
-                  type="number"
-                  min={1}
-                  max={50}
+                  type="text"
                   value={numNodes}
-                  onChange={(e) => setNumNodes(Number(e.target.value))}
+                  onChange={(e) => setNumNodes(e.target.value)}
                   className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
                 />
               </div>
@@ -380,9 +484,17 @@ export default function EnhancedBFSVisualizer() {
                 <textarea
                   rows={4}
                   value={edgeList}
-                  onChange={(e) => setEdgeList(e.target.value)}
+                  onChange={(e) => {
+                    const value = e.target.value;
+                    // Allow more flexible input including spaces
+                    if (/^[\d\s\-,]*$/.test(value)) {
+                      setEdgeList(value);
+                    } else {
+                      showAlert("Please use only numbers, hyphens, and commas");
+                    }
+                  }}
                   className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
-                  placeholder="0-1,0-2,1-3..."
+                  placeholder="0-1,1-2,2-3..."
                 />
               </div>
 
@@ -558,7 +670,6 @@ export default function EnhancedBFSVisualizer() {
                   })}
                 </div>
               </div>
-
               {/* Current State */}
               {steps[currentStep] && (
                 <div className="space-y-4">
@@ -699,7 +810,6 @@ export default function EnhancedBFSVisualizer() {
           )}
         </div>
       </div>
-
       {/* Main Canvas */}
       <div className="flex-1 mt-16 p-6">
         <div
@@ -707,6 +817,13 @@ export default function EnhancedBFSVisualizer() {
           className="w-full h-full bg-gray-800/30 backdrop-blur-sm rounded-xl border border-gray-700/50 shadow-2xl"
         />
       </div>
+      <Alert
+        isOpen={alertConfig.isOpen}
+        message={alertConfig.message}
+        type={alertConfig.type}
+        onClose={closeAlert}
+        customButtons={alertConfig.customButtons} // Add this prop
+      />
     </div>
   );
 }

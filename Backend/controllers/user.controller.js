@@ -31,9 +31,9 @@ module.exports.register = async (req, res, next) => {
 
 module.exports.login = async (req, res, next) => {
   try {
-    console.log("yaha pr aye hai");
-    const { email, password } = req.body;
-    if (!email || !password) {
+    console.log("yaha pr aye hai", req.body);
+    const { email, password, rememberMe } = req.body;
+    if (!email || !password || !rememberMe) {
       return res
         .send(400)
         .json({ message: "Please enter your email or password" });
@@ -50,6 +50,9 @@ module.exports.login = async (req, res, next) => {
     }
     const token = await user.generateAuthToken();
     console.log(token);
+    if (!rememberMe) {
+      return res.status(200).json({ user });
+    }
     res.cookie("token", token);
     return res.status(200).json({ user, token });
   } catch (error) {

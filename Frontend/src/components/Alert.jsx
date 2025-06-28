@@ -1,7 +1,13 @@
 import React from "react";
 import { AlertTriangle, X, Check } from "lucide-react";
 
-export default function Alert({ message, type = "error", isOpen, onClose }) {
+export default function Alert({
+  message,
+  type = "error",
+  isOpen,
+  onClose,
+  customButtons,
+}) {
   const getAlertIcon = () => {
     switch (type) {
       case "success":
@@ -54,12 +60,14 @@ export default function Alert({ message, type = "error", isOpen, onClose }) {
             {message}
           </p>
 
-          <button
-            onClick={onClose}
-            className={`px-6 py-3 bg-gradient-to-r ${getAlertColors()} text-white rounded-xl transition-all duration-300 hover:scale-105 shadow-lg`}
-          >
-            Close
-          </button>
+          {customButtons || (
+            <button
+              onClick={onClose}
+              className={`px-6 py-3 bg-gradient-to-r ${getAlertColors()} text-white rounded-xl transition-all duration-300 hover:scale-105 shadow-lg`}
+            >
+              Close
+            </button>
+          )}
         </div>
       </div>
     </div>
