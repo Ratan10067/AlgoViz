@@ -322,15 +322,20 @@ const AlgorithmHomePage = () => {
     }
   };
   const handleLogin = () => {
-    // Implement login logic
-    setIsDropdownOpen(false);
-    navigate("/auth");
+    try {
+      console.log("Login button clicked");
+      setIsDropdownOpen(false);
+      navigate("/signin");
+      console.log("Navigation attempted to /signin");
+    } catch (error) {
+      console.error("Navigation error:", error);
+    }
   };
 
   const handleRegister = () => {
     // Implement register logic
     setIsDropdownOpen(false);
-    navigate("/auth");
+    navigate("/register");
   };
 
   const handleLogout = () => {
@@ -392,27 +397,39 @@ const AlgorithmHomePage = () => {
           </div>
           <div className="relative" ref={dropdownRef}>
             <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              onClick={(e) => {
+                e.stopPropagation();
+                setIsDropdownOpen(!isDropdownOpen);
+              }}
               className="p-2 rounded-lg hover:bg-gray-800 transition-colors duration-300"
             >
               <User className="w-6 h-6 text-gray-300" />
             </button>
 
-            {/* Dropdown Menu */}
             {isDropdownOpen && (
-              <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-xl border border-gray-700 py-1 z-50">
+              <div
+                className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-xl border border-gray-700 py-1 z-50"
+                onClick={(e) => e.stopPropagation()}
+              >
                 {!isLoggedIn ? (
                   <>
                     <button
-                      onClick={handleLogin}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log("Sign In clicked");
+                        handleLogin();
+                      }}
                       className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 w-full text-left"
                     >
                       <LogIn className="w-4 h-4" />
                       <span>Sign In</span>
                     </button>
-
                     <button
-                      onClick={handleRegister}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        console.log("Register clicked");
+                        handleRegister();
+                      }}
                       className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 w-full text-left"
                     >
                       <UserPlus className="w-4 h-4" />
@@ -428,15 +445,20 @@ const AlgorithmHomePage = () => {
                       </p>
                     </div>
                     <button
-                      onClick={handleProfile}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleProfile();
+                      }}
                       className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 w-full text-left"
                     >
                       <User className="w-4 h-4" />
                       <span>Profile</span>
                     </button>
-
                     <button
-                      onClick={handleLogout}
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        handleLogout();
+                      }}
                       className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 w-full text-left"
                     >
                       <LogOut className="w-4 h-4" />
