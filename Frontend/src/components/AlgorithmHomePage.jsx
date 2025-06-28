@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState, useRef, useEffect } from "react";
 import {
   Play,
   Code,
@@ -16,6 +16,10 @@ import {
   X,
   Clock,
   Zap,
+  User,
+  LogIn,
+  UserPlus,
+  LogOut,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 const AlgorithmHomePage = () => {
@@ -26,6 +30,9 @@ const AlgorithmHomePage = () => {
   const [isStartLearningActive, setIsStartLearningActive] = useState(false);
   const topicsRef = useRef(null);
   const navigate = useNavigate();
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  const [isLoggedIn, setIsLoggedIn] = useState(false); // For demo purposes
+  const dropdownRef = useRef(null);
   const topics = [
     {
       id: "arrays",
@@ -299,13 +306,44 @@ const AlgorithmHomePage = () => {
       color: "from-indigo-500 to-blue-500",
     },
   ];
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setIsDropdownOpen(false);
+      }
+    };
 
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
   const scrollToTopics = () => {
     if (topicsRef.current) {
       topicsRef.current.scrollIntoView({ behavior: "smooth" });
     }
   };
+  const handleLogin = () => {
+    // Implement login logic
+    setIsDropdownOpen(false);
+    navigate("/auth");
+  };
 
+  const handleRegister = () => {
+    // Implement register logic
+    setIsDropdownOpen(false);
+    navigate("/auth");
+  };
+
+  const handleLogout = () => {
+    // Implement logout logic
+    setIsLoggedIn(false);
+    setIsDropdownOpen(false);
+  };
+
+  const handleProfile = () => {
+    // Implement profile navigation
+    setIsDropdownOpen(false);
+    navigate("/profile");
+  };
   const openModal = (topic) => {
     setModalTopic(topic);
     setIsModalOpen(true);
@@ -352,16 +390,64 @@ const AlgorithmHomePage = () => {
             <Code className="w-8 h-8 text-cyan-400" />
             <span className="text-2xl font-bold text-white">AlgoViz</span>
           </div>
-          <div className="flex space-x-4">
-            <button className="px-6 py-2 text-white border border-gray-600 rounded-lg hover:bg-gray-800 transition-all duration-300">
-              Sign In
+          <div className="relative" ref={dropdownRef}>
+            <button
+              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+              className="p-2 rounded-lg hover:bg-gray-800 transition-colors duration-300"
+            >
+              <User className="w-6 h-6 text-gray-300" />
             </button>
-            <button className="px-6 py-2 bg-gradient-to-r from-cyan-500 to-blue-500 text-white rounded-lg hover:from-cyan-600 hover:to-blue-600 transition-all duration-300 shadow-lg">
-              Register
-            </button>
+
+            {/* Dropdown Menu */}
+            {isDropdownOpen && (
+              <div className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-xl border border-gray-700 py-1 z-50">
+                {!isLoggedIn ? (
+                  <>
+                    <button
+                      onClick={handleLogin}
+                      className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 w-full text-left"
+                    >
+                      <LogIn className="w-4 h-4" />
+                      <span>Sign In</span>
+                    </button>
+
+                    <button
+                      onClick={handleRegister}
+                      className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 w-full text-left"
+                    >
+                      <UserPlus className="w-4 h-4" />
+                      <span>Register</span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="px-4 py-2 border-b border-gray-700">
+                      <p className="text-sm text-gray-400">Signed in as</p>
+                      <p className="text-sm font-medium text-white">
+                        user@example.com
+                      </p>
+                    </div>
+                    <button
+                      onClick={handleProfile}
+                      className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 w-full text-left"
+                    >
+                      <User className="w-4 h-4" />
+                      <span>Profile</span>
+                    </button>
+
+                    <button
+                      onClick={handleLogout}
+                      className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 w-full text-left"
+                    >
+                      <LogOut className="w-4 h-4" />
+                      <span>Sign Out</span>
+                    </button>
+                  </>
+                )}
+              </div>
+            )}
           </div>
         </nav>
-
         {/* Hero Section */}
         <div className="relative z-10 container mx-auto px-6 py-20 text-center">
           <h1 className="text-5xl md:text-7xl font-bold text-white mb-6 leading-tight">

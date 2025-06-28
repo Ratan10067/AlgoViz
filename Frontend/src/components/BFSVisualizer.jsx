@@ -16,7 +16,8 @@ import {
   X,
 } from "lucide-react";
 import Alert from "./Alert";
-
+import ConfirmDialog from "./ConfirmDialog";
+import { useNavigate } from "react-router-dom";
 const BFSVisualizer = () => {
   const canvasRef = useRef(null);
   const animationRef = useRef(null);
@@ -24,7 +25,7 @@ const BFSVisualizer = () => {
   const rightPanelRef = useRef(null);
   const resizeLeftRef = useRef(null);
   const resizeRightRef = useRef(null);
-
+  const navigate = useNavigate();
   // Panel sizing
   const [leftPanelWidth, setLeftPanelWidth] = useState(320);
   const [rightPanelWidth, setRightPanelWidth] = useState(384);
@@ -35,6 +36,7 @@ const BFSVisualizer = () => {
     message: "",
     type: "error",
   });
+  const [showConfirmDialog, setShowConfirmDialog] = useState(false);
 
   // Graph state
   const [nodes, setNodes] = useState([]);
@@ -140,7 +142,17 @@ const BFSVisualizer = () => {
       isOpen: false,
     });
   };
+  const handleBackClick = () => {
+    setShowConfirmDialog(true);
+  };
 
+  const handleConfirmNavigation = () => {
+    navigate("/"); // Navigate to home page
+  };
+
+  const handleCancelNavigation = () => {
+    setShowConfirmDialog(false);
+  };
   const generateNodePositions = (numNodes) => {
     const positions = [];
     const centerX = 400;
@@ -772,7 +784,10 @@ const BFSVisualizer = () => {
       <header className="bg-gray-800 border-b border-gray-700 px-6 py-4">
         <div className="flex items-center justify-between">
           <div className="flex items-center space-x-4">
-            <button className="p-2 hover:bg-gray-700 rounded-lg transition-colors">
+            <button
+              onClick={handleBackClick}
+              className="p-2 hover:bg-gray-700 rounded-lg transition-colors"
+            >
               <ArrowLeft className="w-5 h-5" />
             </button>
             <h1 className="text-2xl font-bold">Enhanced BFS Visualizer</h1>
@@ -1151,6 +1166,13 @@ const BFSVisualizer = () => {
         message={alertConfig.message}
         type={alertConfig.type}
         onClose={closeAlert}
+      />
+      <ConfirmDialog
+        isOpen={showConfirmDialog}
+        title="Leave Page?"
+        message="Are you sure you want to leave? Any unsaved changes will be lost."
+        onConfirm={handleConfirmNavigation}
+        onCancel={handleCancelNavigation}
       />
     </div>
   );

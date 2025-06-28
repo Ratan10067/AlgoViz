@@ -8,6 +8,7 @@ import AlgorithmHomePage from "./components/AlgorithmHomePage";
 import AuthPages from "./components/AuthPages";
 import AlgorithmVisualizerPage from "./components/AlgorithmVisualizerPage";
 import BFSVisualizer from "./components/BFSVisualizer";
+import DocumentationModal from "./components/DocumentationModal";
 
 function App() {
   return (
@@ -18,6 +19,7 @@ function App() {
           <Route path="/auth" element={<AuthPages />} />
           <Route path="/visualizer" element={<AlgorithmVisualizerPage />} />
           <Route path="/bfs-visualizer" element={<BFSVisualizer />} />
+          <Route path="/view-documentation" element={<DocumentationModal />} />
           {/* Add more routes here as needed */}
         </Routes>
       </BrowserRouter>
