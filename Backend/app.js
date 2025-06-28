@@ -1,10 +1,12 @@
 const express = require("express");
 const cookieParser = require("cookie-parser"); // Add this import
 const dotenv = require("dotenv");
+const cors = require("cors");
 dotenv.config();
 const app = express();
 app.use(express.json());
 app.use(cookieParser());
+app.use(cors());
 const userRoutes = require("./routes/user.route");
 const dbConnect = require("./db/db");
 app.get("/", (req, res) => {

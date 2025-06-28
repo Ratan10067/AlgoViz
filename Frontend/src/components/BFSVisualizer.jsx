@@ -18,14 +18,23 @@ import {
 import Alert from "./Alert";
 import ConfirmDialog from "./ConfirmDialog";
 import { useNavigate } from "react-router-dom";
+import cytoscape from "cytoscape";
+import coseBilkent from "cytoscape-cose-bilkent";
+import edgehandles from "cytoscape-edgehandles";
+
+// Register Cytoscape extensions
+cytoscape.use(coseBilkent);
+cytoscape.use(edgehandles);
+
 const BFSVisualizer = () => {
-  const canvasRef = useRef(null);
+  const cyRef = useRef(null);
   const animationRef = useRef(null);
   const leftPanelRef = useRef(null);
   const rightPanelRef = useRef(null);
   const resizeLeftRef = useRef(null);
   const resizeRightRef = useRef(null);
   const navigate = useNavigate();
+
   // Panel sizing
   const [leftPanelWidth, setLeftPanelWidth] = useState(320);
   const [rightPanelWidth, setRightPanelWidth] = useState(384);
@@ -64,12 +73,202 @@ const BFSVisualizer = () => {
   const [numNodes, setNumNodes] = useState(8);
   const [edgeList, setEdgeList] = useState(
     "0-1, 0-2, 1-3, 1-4, 2-4, 2-5, 3-6, 4-6, 4-7, 5-7"
-  );
-
-  // Initialize graph
+  );  
+  // Initialize Cytoscape graph
   useEffect(() => {
-    initializeGraph();
-  }, []);
+    if (!cyRef.current) return;
+
+    const cy = cytoscape({
+      container: cyRef.current,
+      elements: {
+        nodes: nodes.map((node) => ({
+          data: {
+            id: node.id.toString(),
+            label: node.label,
+            distance:
+              distances[node.id] !== undefined ? distances[node.id] : "∞",
+          },
+          classes: getNodeClasses(node.id),
+        })),
+        edges: edges.map((edge) => ({
+          data: {
+            id: `${edge.from}-${edge.to}`,
+            source: edge.from.toString(),
+            target: edge.to.toString(),
+            directed: graphType === "directed",
+          },
+          classes: graphType === "directed" ? "directed" : "",
+        })),
+      },
+      style: [
+        // Node styles
+        {
+          selector: "node",
+          style: {
+            label: "data(label)",
+            "text-valign": "center",
+            "text-halign": "center",
+            width: 40,
+            height: 40,
+            "font-size": 14,
+            "font-weight": "bold",
+            "background-color": "#4b5563", // Default gray
+            "border-width": 2,
+            "border-color": "#9ca3af",
+            color: "#ffffff",
+            "text-outline-color": "#1f2937",
+            "text-outline-width": 2,
+          },
+        },
+        {
+          selector: "node.visited",
+          style: {
+            "background-color": "#10b981", // Green
+            "border-color": "#6ee7b7",
+          },
+        },
+        {
+          selector: "node.current",
+          style: {
+            "background-color": "#ef4444", // Red
+            "border-color": "#fca5a5",
+            width: 50,
+            height: 50,
+            "font-size": 16,
+          },
+        },
+        {
+          selector: "node.queued",
+          style: {
+            "background-color": "#3b82f6", // Blue
+            "border-color": "#93c5fd",
+          },
+        },
+        // Edge styles
+        {
+          selector: "edge",
+          style: {
+            width: 2,
+            "line-color": "#374151",
+            "curve-style": "bezier",
+            "target-arrow-shape": "none",
+          },
+        },
+        {
+          selector: "edge.directed",
+          style: {
+            "target-arrow-shape": "triangle",
+            "target-arrow-color": "#374151",
+            "arrow-scale": 1.2,
+          },
+        },
+        {
+          selector: "edge.highlighted",
+          style: {
+            "line-color": "#f59e0b",
+            width: 3,
+            "target-arrow-color": "#f59e0b",
+          },
+        },
+        // Distance label
+        {
+          selector: "node::label.distance",
+          style: {
+            content: "data(distance)",
+            "font-size": 12,
+            color: "#fbbf24",
+            "text-valign": "bottom",
+            "text-margin-y": 10,
+            "text-outline-width": 0,
+          },
+        },
+      ],
+      layout: {
+        name: "cose-bilkent",
+        animate: true,
+        animationDuration: 500,
+        randomize: false,
+        idealEdgeLength: 100,
+        nodeRepulsion: 420000,
+        edgeElasticity: 100,
+        nestingFactor: 5,
+      },
+      minZoom: 0.5,
+      maxZoom: 2,
+      wheelSensitivity: 0.2,
+    });
+
+    // Apply initial BFS step
+    updateGraphVisualization();
+
+    return () => {
+      cy.destroy();
+    };
+  }, [nodes, edges, graphType]);
+
+  // Update graph visualization based on current BFS step
+  const updateGraphVisualization = () => {
+    if (!cyRef.current) return;
+
+    const cy = cyRef.current._cy;
+    if (!cy) return;
+
+    const currentStepData = bfsSteps[currentStep] || {
+      visited: new Set(),
+      current: null,
+      queue: [],
+      distances: {},
+    };
+
+    // Reset all nodes to default state first
+    cy.nodes().removeClass("visited current queued");
+
+    // Apply current step visualization
+    cy.nodes().forEach((node) => {
+      const nodeId = parseInt(node.id());
+
+      // Add classes based on current state
+      if (currentStepData.visited.has(nodeId)) {
+        node.addClass("visited");
+      }
+      if (currentStepData.current === nodeId) {
+        node.addClass("current");
+      }
+      if (currentStepData.queue.includes(nodeId)) {
+        node.addClass("queued");
+      }
+
+      // Update distance label
+      const distance = currentStepData.distances[nodeId];
+      node.data("distance", distance !== undefined ? distance : "∞");
+    });
+
+    // Highlight edges from current node to neighbors
+    if (currentStepData.current !== null) {
+      cy.edges().removeClass("highlighted");
+      const currentEdges = cy.edges(
+        `[source = "${currentStepData.current}"], [target = "${currentStepData.current}"]`
+      );
+      currentEdges.addClass("highlighted");
+    }
+  };
+
+  // Get node classes based on current BFS step
+  const getNodeClasses = (nodeId) => {
+    const currentStepData = bfsSteps[currentStep] || {
+      visited: new Set(),
+      current: null,
+      queue: [],
+      distances: {},
+    };
+
+    let classes = [];
+    if (currentStepData.visited.has(nodeId)) classes.push("visited");
+    if (currentStepData.current === nodeId) classes.push("current");
+    if (currentStepData.queue.includes(nodeId)) classes.push("queued");
+
+    return classes.join(" ");
+  };
 
   // Smooth resize handlers with requestAnimationFrame
   useEffect(() => {
@@ -153,28 +352,15 @@ const BFSVisualizer = () => {
   const handleCancelNavigation = () => {
     setShowConfirmDialog(false);
   };
+
   const generateNodePositions = (numNodes) => {
     const positions = [];
-    const centerX = 400;
-    const centerY = 300;
-    const radius = Math.min(200, 50 + numNodes * 15);
-
-    if (numNodes === 1) {
-      positions.push({ id: 0, x: centerX, y: centerY, label: "0" });
-    } else {
-      for (let i = 0; i < numNodes; i++) {
-        const angle = (2 * Math.PI * i) / numNodes - Math.PI / 2; // Start from top
-        const x = centerX + radius * Math.cos(angle);
-        const y = centerY + radius * Math.sin(angle);
-        positions.push({
-          id: i,
-          x: Math.round(x),
-          y: Math.round(y),
-          label: i.toString(),
-        });
-      }
+    for (let i = 0; i < numNodes; i++) {
+      positions.push({
+        id: i,
+        label: i.toString(),
+      });
     }
-
     return positions;
   };
 
@@ -353,129 +539,6 @@ const BFSVisualizer = () => {
     setDistances(distances);
   };
 
-  const drawGraph = useCallback(() => {
-    const canvas = canvasRef.current;
-    if (!canvas) return;
-
-    const ctx = canvas.getContext("2d");
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-    const currentStepData = bfsSteps[currentStep] || {
-      visited: new Set(),
-      current: null,
-      queue: [],
-      distances: {},
-    };
-
-    // Draw edges first
-    ctx.strokeStyle = "#374151";
-    ctx.lineWidth = 2;
-
-    // Filter edges to only show one direction for undirected graphs
-    const uniqueEdges =
-      graphType === "undirected"
-        ? edges.filter(
-            (edge, index, self) =>
-              index ===
-              self.findIndex(
-                (e) =>
-                  (e.from === edge.from && e.to === edge.to) ||
-                  (e.from === edge.to && e.to === edge.from)
-              )
-          )
-        : edges;
-
-    uniqueEdges.forEach((edge) => {
-      const fromNode = nodes.find((n) => n.id === edge.from);
-      const toNode = nodes.find((n) => n.id === edge.to);
-      if (fromNode && toNode) {
-        // Draw the line
-        ctx.beginPath();
-        ctx.moveTo(fromNode.x, fromNode.y);
-        ctx.lineTo(toNode.x, toNode.y);
-        ctx.stroke();
-
-        // For directed graphs, draw an arrowhead
-        if (graphType === "directed") {
-          const headLength = 15;
-          const angle = Math.atan2(
-            toNode.y - fromNode.y,
-            toNode.x - fromNode.x
-          );
-
-          // Arrowhead lines
-          ctx.beginPath();
-          ctx.moveTo(toNode.x, toNode.y);
-          ctx.lineTo(
-            toNode.x - headLength * Math.cos(angle - Math.PI / 6),
-            toNode.y - headLength * Math.sin(angle - Math.PI / 6)
-          );
-          ctx.moveTo(toNode.x, toNode.y);
-          ctx.lineTo(
-            toNode.x - headLength * Math.cos(angle + Math.PI / 6),
-            toNode.y - headLength * Math.sin(angle + Math.PI / 6)
-          );
-          ctx.stroke();
-        }
-      }
-    });
-
-    // Draw nodes
-    nodes.forEach((node) => {
-      const isVisited = currentStepData.visited.has(node.id);
-      const isCurrent = currentStepData.current === node.id;
-      const isInQueue = currentStepData.queue.includes(node.id);
-      const distance = currentStepData.distances[node.id] || 0;
-
-      // Node circle with enhanced styling
-      ctx.beginPath();
-      ctx.arc(node.x, node.y, 28, 0, 2 * Math.PI);
-
-      if (isCurrent) {
-        ctx.fillStyle = "#ef4444"; // Red for current node
-        ctx.strokeStyle = "#fca5a5";
-        ctx.lineWidth = 4;
-        // Add pulsing effect for current node
-        const pulseRadius = 28 + Math.sin(Date.now() / 200) * 3;
-        ctx.beginPath();
-        ctx.arc(node.x, node.y, pulseRadius, 0, 2 * Math.PI);
-      } else if (isVisited) {
-        ctx.fillStyle = "#10b981"; // Green for visited
-        ctx.strokeStyle = "#6ee7b7";
-        ctx.lineWidth = 3;
-      } else if (isInQueue) {
-        ctx.fillStyle = "#3b82f6"; // Blue for queued
-        ctx.strokeStyle = "#93c5fd";
-        ctx.lineWidth = 3;
-      } else {
-        ctx.fillStyle = "#4b5563"; // Gray for unvisited
-        ctx.strokeStyle = "#9ca3af";
-        ctx.lineWidth = 2;
-      }
-
-      ctx.fill();
-      ctx.stroke();
-
-      // Node label
-      ctx.fillStyle = "#ffffff";
-      ctx.font = "bold 16px Arial";
-      ctx.textAlign = "center";
-      ctx.textBaseline = "middle";
-      ctx.fillText(node.label, node.x, node.y);
-
-      // Distance label
-      if (distance !== Infinity && distance !== undefined) {
-        ctx.fillStyle = "#fbbf24";
-        ctx.font = "bold 12px Arial";
-        ctx.fillText(`d:${distance}`, node.x, node.y + 45);
-      }
-    });
-  }, [nodes, edges, currentStep, bfsSteps, graphType]);
-
-  useEffect(() => {
-    drawGraph();
-  }, [drawGraph]);
-
   const play = () => {
     if (currentStep >= bfsSteps.length - 1) {
       reset();
@@ -518,7 +581,7 @@ const BFSVisualizer = () => {
     }
   }, [isPlaying, currentStep, animationSpeed, bfsSteps.length]);
 
-  // Update statistics
+  // Update statistics and visualization when currentStep changes
   useEffect(() => {
     if (bfsSteps[currentStep]) {
       const step = bfsSteps[currentStep];
@@ -528,6 +591,9 @@ const BFSVisualizer = () => {
         queueOperations: currentStep,
         progress: Math.round((currentStep / (bfsSteps.length - 1)) * 100),
       }));
+
+      // Update Cytoscape visualization
+      updateGraphVisualization();
     }
   }, [currentStep, bfsSteps]);
 
@@ -1010,58 +1076,21 @@ const BFSVisualizer = () => {
               </div>
             </div>
           </div>
-
-          {/* Legend */}
-          <div>
-            <h3 className="text-lg font-semibold mb-4">Legend</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-center space-x-3">
-                <div className="w-4 h-4 bg-gray-600 rounded-full border border-gray-400"></div>
-                <span>Unvisited</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-4 h-4 bg-blue-600 rounded-full border border-blue-400"></div>
-                <span>In Queue</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-4 h-4 bg-red-600 rounded-full border border-red-400"></div>
-                <span>Current</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-4 h-4 bg-green-600 rounded-full border border-green-400"></div>
-                <span>Visited</span>
-              </div>
-              <div className="flex items-center space-x-3">
-                <div className="w-3 h-3 bg-yellow-400 rounded"></div>
-                <span>Distance Label</span>
-              </div>
-            </div>
-          </div>
         </div>
 
-        {/* Center Panel - Visualization */}
-        <div className="flex-1 flex flex-col">
-          <div className="flex-1 bg-gray-900 flex items-center justify-center p-8">
-            <div className="relative">
-              <canvas
-                ref={canvasRef}
-                width={800}
-                height={600}
-                className="border border-gray-700 rounded-lg bg-gray-800 shadow-xl"
-              />
-              <div className="absolute bottom-4 left-4 bg-gray-800 bg-opacity-90 rounded-lg px-3 py-2">
-                <span className="text-sm text-gray-300">
-                  Step {currentStep + 1} of {bfsSteps.length}
-                </span>
-              </div>
-            </div>
-          </div>
+        {/* Main Graph Area */}
+        <div className="flex-1 relative overflow-hidden bg-gray-900">
+          <div
+            ref={cyRef}
+            className="absolute inset-0 w-full h-full"
+            style={{ backgroundColor: "#1a202c" }}
+          />
         </div>
 
         {/* Right Panel - Code */}
         <div
           ref={rightPanelRef}
-          className="bg-gray-800 border-l border-gray-700 flex flex-col relative transition-all duration-75"
+          className="bg-gray-800 border-l border-gray-700 p-6 overflow-y-auto relative transition-all duration-75"
           style={{ width: `${rightPanelWidth}px` }}
         >
           {/* Resize Handle */}
@@ -1076,101 +1105,98 @@ const BFSVisualizer = () => {
             <div className="w-1 h-8 bg-gray-500 rounded-full opacity-50 hover:opacity-100 transition-opacity"></div>
           </div>
 
-          <div className="p-4 border-b border-gray-700">
-            <h3 className="text-lg font-semibold flex items-center">
-              <Code className="w-5 h-5 mr-2" />
-              Source Code
-            </h3>
-          </div>
+          <h3 className="text-lg font-semibold mb-4 flex items-center">
+            <Code className="w-5 h-5 mr-2" />
+            BFS Algorithm
+          </h3>
 
-          <div className="flex-1 p-4 overflow-y-auto">
-            <pre className="text-sm font-mono bg-gray-900 rounded-lg p-4">
-              <code className="text-gray-300">
-                {bfsCode.split("\n").map((line, index) => (
-                  <div
-                    key={index}
-                    className={`leading-6 ${
-                      getCurrentCodeLine() === index + 1
-                        ? "bg-cyan-500 bg-opacity-20 text-cyan-300 border-l-2 border-cyan-400 pl-2 -ml-2"
-                        : ""
-                    }`}
-                  >
-                    {line}
-                  </div>
-                ))}
-              </code>
+          <div className="bg-gray-900 rounded-lg p-4 font-mono text-sm overflow-x-auto">
+            <pre className="text-gray-300">
+              {bfsCode.split("\n").map((line, index) => (
+                <div
+                  key={index}
+                  className={`py-1 px-2 ${
+                    getCurrentCodeLine() === index + 1
+                      ? "bg-blue-900 text-white"
+                      : ""
+                  }`}
+                >
+                  {line}
+                </div>
+              ))}
             </pre>
           </div>
 
-          <div className="p-4 border-t border-gray-700">
-            <h3 className="text-lg font-semibold mb-3">Algorithm Steps</h3>
-            <div className="space-y-2 text-sm">
-              <div className="flex items-start">
-                <div
-                  className={`w-2 h-2 rounded-full mt-1.5 mr-2 flex-shrink-0 ${
-                    getCurrentCodeLine() === 1 ? "bg-cyan-400" : "bg-gray-600"
-                  }`}
-                ></div>
-                <span>
-                  Initialize queue with start node and set its distance to 0
-                </span>
+          <div className="mt-6">
+            <h4 className="text-md font-semibold mb-3">Legend</h4>
+            <div className="space-y-3">
+              <div className="flex items-center">
+                <div className="w-4 h-4 rounded-full bg-gray-500 mr-2"></div>
+                <span className="text-sm text-gray-300">Unvisited Node</span>
               </div>
-              <div className="flex items-start">
-                <div
-                  className={`w-2 h-2 rounded-full mt-1.5 mr-2 flex-shrink-0 ${
-                    getCurrentCodeLine() === 2 ? "bg-cyan-400" : "bg-gray-600"
-                  }`}
-                ></div>
-                <span>Check if queue is not empty</span>
+              <div className="flex items-center">
+                <div className="w-4 h-4 rounded-full bg-blue-500 mr-2"></div>
+                <span className="text-sm text-gray-300">Queued Node</span>
               </div>
-              <div className="flex items-start">
-                <div
-                  className={`w-2 h-2 rounded-full mt-1.5 mr-2 flex-shrink-0 ${
-                    getCurrentCodeLine() === 3 ? "bg-cyan-400" : "bg-gray-600"
-                  }`}
-                ></div>
-                <span>Dequeue the front node from the queue</span>
+              <div className="flex items-center">
+                <div className="w-4 h-4 rounded-full bg-green-500 mr-2"></div>
+                <span className="text-sm text-gray-300">Visited Node</span>
               </div>
-              <div className="flex items-start">
-                <div
-                  className={`w-2 h-2 rounded-full mt-1.5 mr-2 flex-shrink-0 ${
-                    getCurrentCodeLine() === 4 ? "bg-cyan-400" : "bg-gray-600"
-                  }`}
-                ></div>
-                <span>Mark node as visited and process its neighbors</span>
+              <div className="flex items-center">
+                <div className="w-5 h-5 rounded-full bg-red-500 mr-2"></div>
+                <span className="text-sm text-gray-300">Current Node</span>
               </div>
-              <div className="flex items-start">
-                <div
-                  className={`w-2 h-2 rounded-full mt-1.5 mr-2 flex-shrink-0 ${
-                    getCurrentCodeLine() === 5 ? "bg-cyan-400" : "bg-gray-600"
-                  }`}
-                ></div>
-                <span>
-                  Enqueue unvisited neighbors and update their distances
-                </span>
+              <div className="flex items-center">
+                <div className="w-3 h-0.5 bg-gray-500 mr-2"></div>
+                <span className="text-sm text-gray-300">Regular Edge</span>
               </div>
-              <div className="flex items-start">
-                <div
-                  className={`w-2 h-2 rounded-full mt-1.5 mr-2 flex-shrink-0 ${
-                    getCurrentCodeLine() === 6 ? "bg-cyan-400" : "bg-gray-600"
-                  }`}
-                ></div>
-                <span>Complete when queue is empty</span>
+              <div className="flex items-center">
+                <div className="w-3 h-0.5 bg-yellow-500 mr-2"></div>
+                <span className="text-sm text-gray-300">Highlighted Edge</span>
               </div>
+            </div>
+          </div>
+
+          <div className="mt-6">
+            <h4 className="text-md font-semibold mb-3">BFS Explanation</h4>
+            <div className="text-sm text-gray-300 space-y-3">
+              <p>
+                Breadth-First Search (BFS) is an algorithm for traversing or
+                searching tree or graph data structures.
+              </p>
+              <p>
+                It starts at the selected node (start node) and explores all of
+                the neighbor nodes at the present depth prior to moving on to
+                nodes at the next depth level.
+              </p>
+              <p>
+                <strong>Key characteristics:</strong>
+              </p>
+              <ul className="list-disc pl-5 space-y-1">
+                <li>Uses a queue to keep track of nodes to visit</li>
+                <li>Visits nodes level by level</li>
+                <li>Finds the shortest path in unweighted graphs</li>
+                <li>Time complexity: O(V + E)</li>
+                <li>Space complexity: O(V)</li>
+              </ul>
             </div>
           </div>
         </div>
       </div>
+
+      {/* Alert */}
       <Alert
         isOpen={alertConfig.isOpen}
         message={alertConfig.message}
         type={alertConfig.type}
         onClose={closeAlert}
       />
+
+      {/* Confirm Navigation Dialog */}
       <ConfirmDialog
         isOpen={showConfirmDialog}
-        title="Leave Page?"
-        message="Are you sure you want to leave? Any unsaved changes will be lost."
+        title="Confirm Navigation"
+        message="Are you sure you want to leave? Your current progress will be lost."
         onConfirm={handleConfirmNavigation}
         onCancel={handleCancelNavigation}
       />

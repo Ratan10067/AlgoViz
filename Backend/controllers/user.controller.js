@@ -39,6 +39,10 @@ module.exports.login = async (req, res, next) => {
         .json({ message: "Please enter your email or password" });
     }
     const user = await User.findOne({ email });
+    console.log("password", password);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
     const comparePassword = await user.comparePassword(password);
     console.log(comparePassword);
     if (!comparePassword) {

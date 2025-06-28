@@ -11,6 +11,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 
 const SignIn = () => {
   const [showPassword, setShowPassword] = useState(false);
@@ -25,12 +26,19 @@ const SignIn = () => {
     setFormData((prev) => ({ ...prev, [field]: value }));
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Handle sign in logic here
-    console.log("Sign in data:", formData);
-    // After successful login, you might want to navigate:
-    // navigate("/dashboard");
+    try {
+      const response = await axios.post(
+        "http://localhost:3000/users/login",
+        formData
+      );
+      if (response.status === 200) {
+        navigate("/");
+      }
+    } catch (error) {
+      console.log("error aaya hai", error);
+    }
   };
 
   const handleSocialLogin = (provider) => {

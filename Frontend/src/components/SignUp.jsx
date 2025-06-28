@@ -14,6 +14,7 @@ import {
   Zap,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import axios from "axios";
 const SignUp = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
@@ -73,14 +74,19 @@ const SignUp = () => {
     );
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (isFormValid()) {
-      console.log("Registration data:", formData);
-      // Here you would typically send the data to your backend
-      alert("Account created successfully!");
-    } else {
-      alert("Please fill out all fields correctly and agree to the terms.");
+    try {
+      const response = await axios.post(
+        "http://localhost:3000/users/register",
+        formData
+      );
+      console.log("response : ", response);
+      if (response.status === 201) {
+        navigate("/");
+      }
+    } catch (error) {
+      console.log("error aaya hai", error);
     }
   };
 
