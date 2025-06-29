@@ -7,6 +7,8 @@ import DocumentationModal from "./components/DocumentationModal";
 import SignIn from "./components/SignIn";
 import SignUp from "./components/SignUp";
 import DijkstraVisualizer from "./components/DijkstraVisualizer";
+import BlogPage from "./components/BlogPage";
+import CheatSheet from "./components/CheatSheet";
 function App() {
   return (
     <>
@@ -19,6 +21,8 @@ function App() {
           <Route path="/bfs-visualizer" element={<BFSVisualizer />} />
           <Route path="/dijkstra-visualizer" element={<DijkstraVisualizer />} />
           <Route path="/view-documentation" element={<DocumentationModal />} />
+          <Route path="/blogs" element={<BlogPage />} />
+          <Route path="/cheatsheet" element={<CheatSheet />} />
         </Routes>
       </BrowserRouter>
     </>
