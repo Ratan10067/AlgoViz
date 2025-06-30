@@ -9,6 +9,8 @@ import SignUp from "./components/SignUp";
 import DijkstraVisualizer from "./components/DijkstraVisualizer";
 import BlogPage from "./components/BlogPage";
 import CheatSheet from "./components/CheatSheet";
+import ComingSoonPage from "./components/ComingSoon";
+import NotFoundPage from "./components/PageNotFound";
 function App() {
   return (
     <>
@@ -23,6 +25,8 @@ function App() {
           <Route path="/view-documentation" element={<DocumentationModal />} />
           <Route path="/blogs" element={<BlogPage />} />
           <Route path="/cheatsheet" element={<CheatSheet />} />
+          <Route path="/coming-soon" element={<ComingSoonPage />} />
+          <Route path="/page-not-found" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
     </>

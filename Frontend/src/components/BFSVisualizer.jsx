@@ -21,6 +21,7 @@ import {
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Alert from "./Alert";
+
 // Register Cytoscape extensions
 cytoscape.use(coseBilkent);
 cytoscape.use(edgehandles);
@@ -45,12 +46,12 @@ export default function EnhancedBFSVisualizer() {
     message: "",
     type: "error",
   });
+
   const handleBack = () => {
     setAlertConfig({
       isOpen: true,
       message: "Are you sure you want to leave? Your progress will be lost.",
       type: "warning",
-      // Add custom buttons for confirmation
       customButtons: (
         <div className="flex space-x-4 justify-center ">
           <button
@@ -69,7 +70,7 @@ export default function EnhancedBFSVisualizer() {
       ),
     });
   };
-  // Add this helper function to show alerts
+
   const showAlert = (message, type = "error") => {
     setAlertConfig({
       isOpen: true,
@@ -78,17 +79,16 @@ export default function EnhancedBFSVisualizer() {
     });
   };
 
-  // Add this function to close the alert
   const closeAlert = () => {
     setAlertConfig({
       ...alertConfig,
       isOpen: false,
     });
   };
+
   // Parse edges into from/to
   const parseEdges = () => {
     try {
-      // Handle empty edge list
       if (!edgeList.trim()) {
         return [];
       }
@@ -96,7 +96,7 @@ export default function EnhancedBFSVisualizer() {
       const edges = edgeList
         .split(",")
         .map((s) => s.trim())
-        .filter((s) => s.length > 0) // Remove empty entries
+        .filter((s) => s.length > 0)
         .map((pair) => {
           const [from, to] = pair.split("-").map((x) => {
             const num = parseInt(x.trim());
@@ -110,7 +110,6 @@ export default function EnhancedBFSVisualizer() {
             throw new Error(`Invalid edge format: ${pair}`);
           }
 
-          // Validate node indices
           if (from >= numNodes || to >= numNodes || from < 0 || to < 0) {
             throw new Error(
               `Edge ${from}-${to} contains invalid node indices. Must be between 0 and ${
@@ -122,10 +121,9 @@ export default function EnhancedBFSVisualizer() {
           return { from, to };
         });
 
-      // Create undirected edges if needed
       const finalEdges = edges.flatMap((edge) => {
         if (graphType === "undirected") {
-          return [edge, { from: edge.to, to: edge.from }];
+          return [edge];
         }
         return [edge];
       });
@@ -133,7 +131,7 @@ export default function EnhancedBFSVisualizer() {
       return finalEdges;
     } catch (error) {
       showAlert(error.message);
-      return [];
+      return null; // Return null to indicate error
     }
   };
 
@@ -186,15 +184,20 @@ export default function EnhancedBFSVisualizer() {
     setCurrentStep(0);
   };
 
-  // Initialize Cytoscape
-  useEffect(() => {
+  // Initialize Cytoscape graph
+  const initializeGraph = () => {
     if (!cyRef.current) return;
-    cyInstance.current?.destroy();
+
     const validEdges = parseEdges();
+    if (validEdges === null) return; // Validation failed
+
     if (validEdges.length === 0) {
       showAlert("Please add valid edges in the format: 0-1,1-2,2-3");
       return;
     }
+
+    cyInstance.current?.destroy();
+
     const cy = cytoscape({
       container: cyRef.current,
       elements: {
@@ -202,6 +205,7 @@ export default function EnhancedBFSVisualizer() {
           data: {
             id: i.toString(),
             label: i.toString(),
+            number: i.toString(),
             distance: "∞",
           },
         })),
@@ -217,16 +221,20 @@ export default function EnhancedBFSVisualizer() {
         {
           selector: "node",
           style: {
-            label: "data(label)",
+            label: "data(number)", // ← show the index
+            "text-valign": "center", // ← center vertically
+            "text-halign": "center", // ← center horizontally
+            "text-margin-y": 0,
             "background-color": "#475569",
             "border-width": 3,
             "border-color": "#94a3b8",
             "text-valign": "center",
+            "text-halign": "center",
             color: "#ffffff",
             "font-size": "16px",
             "font-weight": "bold",
-            width: 45,
-            height: 45,
+            width: 25,
+            height: 25,
           },
         },
         {
@@ -258,7 +266,6 @@ export default function EnhancedBFSVisualizer() {
         {
           selector: "node::after",
           style: {
-            content: "data(distance)",
             color: "#fbbf24",
             "text-valign": "bottom",
             "text-margin-y": 15,
@@ -298,9 +305,10 @@ export default function EnhancedBFSVisualizer() {
       minZoom: 0.3,
       maxZoom: 3,
     });
+
     cyInstance.current = cy;
-    computeBFSSteps(numNodes, parseEdges(), startNode);
-  }, [numNodes, edgeList, graphType, startNode]);
+    computeBFSSteps(numNodes, validEdges, parseInt(startNode));
+  };
 
   // Update viz per step
   useEffect(() => {
@@ -330,6 +338,10 @@ export default function EnhancedBFSVisualizer() {
     }, speed);
     return () => clearTimeout(t);
   }, [playing, currentStep, steps, speed]);
+
+  const handleGenerateGraph = () => {
+    initializeGraph();
+  };
 
   const TabButton = ({ id, icon: Icon, label, isActive, onClick }) => (
     <button
@@ -375,7 +387,6 @@ export default function EnhancedBFSVisualizer() {
       {/* Header */}
       <div className="absolute top-0 left-0 right-0 h-16 bg-gray-800/80 backdrop-blur-lg border-b border-gray-700/50 flex items-center justify-between px-6 z-10">
         <div className="flex items-center gap-2">
-          {/* Add this button */}
           <button
             onClick={handleBack}
             className="p-2 hover:bg-gray-700 rounded-lg transition-colors duration-200"
@@ -401,7 +412,8 @@ export default function EnhancedBFSVisualizer() {
           </div>
         </div>
       </div>
-      {/* Left Sidebar */}
+
+      {/* Left Sidebar - Settings and Algorithm */}
       <div className="w-96 bg-gray-800/50 backdrop-blur-xl border-r border-gray-700/50 flex flex-col mt-16">
         {/* Tab Navigation */}
         <div className="p-6 border-b border-gray-700/50">
@@ -412,13 +424,6 @@ export default function EnhancedBFSVisualizer() {
               label="Graph Settings"
               isActive={activeTab === "settings"}
               onClick={() => setActiveTab("settings")}
-            />
-            <TabButton
-              id="stats"
-              icon={BarChart3}
-              label="Statistics & Info"
-              isActive={activeTab === "stats"}
-              onClick={() => setActiveTab("stats")}
             />
             <TabButton
               id="algorithm"
@@ -484,15 +489,7 @@ export default function EnhancedBFSVisualizer() {
                 <textarea
                   rows={4}
                   value={edgeList}
-                  onChange={(e) => {
-                    const value = e.target.value;
-                    // Allow more flexible input including spaces
-                    if (/^[\d\s\-,]*$/.test(value)) {
-                      setEdgeList(value);
-                    } else {
-                      showAlert("Please use only numbers, hyphens, and commas");
-                    }
-                  }}
+                  onChange={(e) => setEdgeList(e.target.value)}
                   className="w-full px-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white placeholder-gray-400 font-mono text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 resize-none"
                   placeholder="0-1,1-2,2-3..."
                 />
@@ -518,9 +515,7 @@ export default function EnhancedBFSVisualizer() {
 
               {/* Generate Button */}
               <button
-                onClick={() =>
-                  computeBFSSteps(numNodes, parseEdges(), startNode)
-                }
+                onClick={handleGenerateGraph}
                 className="w-full py-3 bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 rounded-xl font-semibold transition-all duration-200 shadow-lg transform hover:scale-105"
               >
                 Generate Graph
@@ -584,132 +579,6 @@ export default function EnhancedBFSVisualizer() {
                   </div>
                 </div>
               </div>
-            </div>
-          )}
-
-          {activeTab === "stats" && (
-            <div className="space-y-6">
-              {/* Stats Grid */}
-              <div className="grid grid-cols-2 gap-4">
-                <StatCard
-                  icon={Target}
-                  value={
-                    steps[currentStep]
-                      ? [...steps[currentStep].visited].length
-                      : 0
-                  }
-                  label="Visited"
-                  color="green"
-                />
-                <StatCard
-                  icon={Activity}
-                  value={
-                    steps[currentStep] ? steps[currentStep].queue.length : 0
-                  }
-                  label="In Queue"
-                  color="blue"
-                />
-                <StatCard
-                  icon={Maximize2}
-                  value={numNodes}
-                  label="Total Nodes"
-                  color="yellow"
-                />
-                <StatCard
-                  icon={Clock}
-                  value={`${
-                    Math.round(((currentStep + 1) / steps.length) * 100) || 0
-                  }%`}
-                  label="Progress"
-                  color="red"
-                />
-              </div>
-
-              {/* Step Info */}
-              <div className="bg-gray-700/30 backdrop-blur-sm rounded-xl p-5 border border-gray-600/30">
-                <h3 className="text-lg font-semibold text-gray-200 mb-4">
-                  Current Step
-                </h3>
-                <div className="space-y-3">
-                  <div className="flex justify-between">
-                    <span className="text-gray-300">Step:</span>
-                    <span className="font-mono text-blue-400">
-                      {currentStep + 1} / {steps.length}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-600 rounded-full h-2">
-                    <div
-                      className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
-                      style={{
-                        width: `${((currentStep + 1) / steps.length) * 100}%`,
-                      }}
-                    />
-                  </div>
-                </div>
-              </div>
-
-              {/* Distance Array */}
-              <div className="bg-gray-700/30 backdrop-blur-sm rounded-xl p-5 border border-gray-600/30">
-                <h3 className="text-lg font-semibold text-gray-200 mb-4">
-                  Distance Array
-                </h3>
-                <div className="grid grid-cols-4 gap-2">
-                  {Array.from({ length: numNodes }, (_, i) => {
-                    const distance = steps[currentStep]?.distances[i] ?? "∞";
-                    return (
-                      <div
-                        key={i}
-                        className="flex justify-between bg-gray-600/50 rounded-lg px-3 py-2"
-                      >
-                        <span className="text-gray-300 font-mono">{i}:</span>
-                        <span className="text-yellow-400 font-mono font-bold">
-                          {distance}
-                        </span>
-                      </div>
-                    );
-                  })}
-                </div>
-              </div>
-              {/* Current State */}
-              {steps[currentStep] && (
-                <div className="space-y-4">
-                  <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                      <span className="text-sm font-semibold text-green-400">
-                        Visited Nodes
-                      </span>
-                    </div>
-                    <span className="font-mono text-green-300">
-                      {[...steps[currentStep].visited].join(", ") || "None"}
-                    </span>
-                  </div>
-
-                  <div className="bg-blue-500/20 border border-blue-500/30 rounded-xl p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                      <span className="text-sm font-semibold text-blue-400">
-                        Queue
-                      </span>
-                    </div>
-                    <span className="font-mono text-blue-300">
-                      {steps[currentStep].queue.join(", ") || "Empty"}
-                    </span>
-                  </div>
-
-                  <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-4">
-                    <div className="flex items-center gap-2 mb-2">
-                      <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                      <span className="text-sm font-semibold text-red-400">
-                        Current Node
-                      </span>
-                    </div>
-                    <span className="font-mono text-red-300">
-                      {steps[currentStep].current || "None"}
-                    </span>
-                  </div>
-                </div>
-              )}
             </div>
           )}
 
@@ -810,19 +679,152 @@ export default function EnhancedBFSVisualizer() {
           )}
         </div>
       </div>
-      {/* Main Canvas */}
-      <div className="flex-1 mt-16 p-6">
+
+      {/* Main Visualization Area */}
+      <div className="flex-1 p-6 mt-16">
         <div
           ref={cyRef}
           className="w-full h-full bg-gray-800/30 backdrop-blur-sm rounded-xl border border-gray-700/50 shadow-2xl"
         />
       </div>
+
+      {/* Right Sidebar - Statistics & Info */}
+      <div className="w-90 bg-gray-800/50 backdrop-blur-xl border-l border-gray-700/50 flex flex-col mt-16 overflow-y-auto">
+        <div className="p-6 border-b border-gray-700/50">
+          <h2 className="text-lg font-semibold flex items-center gap-2">
+            <BarChart3 size={18} />
+            Statistics & Info
+          </h2>
+        </div>
+
+        <div className="p-6 space-y-6">
+          {/* Stats Grid */}
+          <div className="grid grid-cols-2 gap-4">
+            <StatCard
+              icon={Target}
+              value={
+                steps[currentStep] ? [...steps[currentStep].visited].length : 0
+              }
+              label="Visited"
+              color="green"
+            />
+            <StatCard
+              icon={Activity}
+              value={steps[currentStep] ? steps[currentStep].queue.length : 0}
+              label="In Queue"
+              color="blue"
+            />
+            <StatCard
+              icon={Maximize2}
+              value={numNodes}
+              label="Total Nodes"
+              color="yellow"
+            />
+            <StatCard
+              icon={Clock}
+              value={`${
+                Math.round(((currentStep + 1) / steps.length) * 100) || 0
+              }%`}
+              label="Progress"
+              color="red"
+            />
+          </div>
+
+          {/* Step Info */}
+          <div className="bg-gray-700/30 backdrop-blur-sm rounded-xl p-5 border border-gray-600/30">
+            <h3 className="text-lg font-semibold text-gray-200 mb-4">
+              Current Step
+            </h3>
+            <div className="space-y-3">
+              <div className="flex justify-between">
+                <span className="text-gray-300">Step:</span>
+                <span className="font-mono text-blue-400">
+                  {currentStep + 1} / {steps.length}
+                </span>
+              </div>
+              <div className="w-full bg-gray-600 rounded-full h-2">
+                <div
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 h-2 rounded-full transition-all duration-300"
+                  style={{
+                    width: `${((currentStep + 1) / steps.length) * 100}%`,
+                  }}
+                />
+              </div>
+            </div>
+          </div>
+
+          {/* Distance Array */}
+          <div className="bg-gray-700/30 backdrop-blur-sm rounded-xl p-5 border border-gray-600/30">
+            <h3 className="text-lg font-semibold text-gray-200 mb-4">
+              Distance Array
+            </h3>
+            <div className="grid grid-cols-4 gap-2">
+              {Array.from({ length: numNodes }, (_, i) => {
+                const distance = steps[currentStep]?.distances[i] ?? "∞";
+                return (
+                  <div
+                    key={i}
+                    className="flex justify-between bg-gray-600/50 rounded-lg px-3 py-2"
+                  >
+                    <span className="text-gray-300 font-mono">{i}:</span>
+                    <span className="text-yellow-400 font-mono font-bold">
+                      {distance}
+                    </span>
+                  </div>
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Current State */}
+          {steps[currentStep] && (
+            <div className="space-y-4">
+              <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                  <span className="text-sm font-semibold text-green-400">
+                    Visited Nodes
+                  </span>
+                </div>
+                <span className="font-mono text-green-300">
+                  {[...steps[currentStep].visited].join(", ") || "None"}
+                </span>
+              </div>
+
+              <div className="bg-blue-500/20 border border-blue-500/30 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                  <span className="text-sm font-semibold text-blue-400">
+                    Queue
+                  </span>
+                </div>
+                <span className="font-mono text-blue-300">
+                  {steps[currentStep].queue.join(", ") || "Empty"}
+                </span>
+              </div>
+
+              <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-4">
+                <div className="flex items-center gap-2 mb-2">
+                  <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                  <span className="text-sm font-semibold text-red-400">
+                    Current Node
+                  </span>
+                </div>
+                <span className="font-mono text-red-300">
+                  {steps[currentStep].current || "None"}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       <Alert
         isOpen={alertConfig.isOpen}
         message={alertConfig.message}
         type={alertConfig.type}
         onClose={closeAlert}
-        customButtons={alertConfig.customButtons} // Add this prop
+        customButtons={alertConfig.customButtons}
       />
     </div>
   );

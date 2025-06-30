@@ -685,12 +685,12 @@ const AlgorithmHomePage = () => {
               </h4>
               <ul className="space-y-3">
                 <li>
-                  <a
-                    href="#"
+                  <button
+                    onClick={() => navigate("/blogs")}
                     className="text-gray-400 hover:text-cyan-400 transition-colors duration-300"
                   >
                     Blog
-                  </a>
+                  </button>
                 </li>
                 <li>
                   <a
