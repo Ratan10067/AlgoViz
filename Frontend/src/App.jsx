@@ -11,6 +11,8 @@ import BlogPage from "./components/BlogPage";
 import CheatSheet from "./components/CheatSheet";
 import ComingSoonPage from "./components/ComingSoon";
 import NotFoundPage from "./components/PageNotFound";
+import SupportPage from "./components/SupportPage";
+import AboutPage from "./components/AboutPage";
 function App() {
   return (
     <>
@@ -26,7 +28,8 @@ function App() {
           <Route path="/blogs" element={<BlogPage />} />
           <Route path="/cheatsheet" element={<CheatSheet />} />
           <Route path="/coming-soon" element={<ComingSoonPage />} />
-          <Route path="/page-not-found" element={<NotFoundPage />} />
+          <Route path="/support" element={<SupportPage />} />
+          <Route path="/about" element={<AboutPage />} />
         </Routes>
       </BrowserRouter>
     </>

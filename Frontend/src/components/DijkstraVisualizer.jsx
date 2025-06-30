@@ -839,7 +839,7 @@ export default function DijkstraVisualizer() {
           </h2>
         </div>
 
-        <div className="p-6 space-y-6">
+        <div className="p-3 space-y-6">
           {/* Stats Grid */}
           <div className="grid grid-cols-2 gap-4">
             <StatCard

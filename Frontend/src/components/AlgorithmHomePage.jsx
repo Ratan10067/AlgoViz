@@ -669,12 +669,12 @@ const AlgorithmHomePage = () => {
                   </a>
                 </li>
                 <li>
-                  <a
-                    href="#"
+                  <button
+                    onClick={() => navigate("/about")}
                     className="text-gray-400 hover:text-cyan-400 transition-colors duration-300"
                   >
                     About
-                  </a>
+                  </button>
                 </li>
               </ul>
             </div>
@@ -709,12 +709,12 @@ const AlgorithmHomePage = () => {
                   </a>
                 </li>
                 <li>
-                  <a
-                    href="#"
+                  <button
+                    onClick={() => navigate("/support")}
                     className="text-gray-400 hover:text-cyan-400 transition-colors duration-300"
                   >
                     Support
-                  </a>
+                  </button>
                 </li>
               </ul>
             </div>
