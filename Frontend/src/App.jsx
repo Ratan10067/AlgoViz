@@ -13,6 +13,7 @@ import ComingSoonPage from "./components/ComingSoon";
 import NotFoundPage from "./components/PageNotFound";
 import SupportPage from "./components/SupportPage";
 import AboutPage from "./components/AboutPage";
+import UserProfilePage from "./components/UserProfilePage";
 function App() {
   return (
     <>
@@ -30,6 +31,7 @@ function App() {
           <Route path="/coming-soon" element={<ComingSoonPage />} />
           <Route path="/support" element={<SupportPage />} />
           <Route path="/about" element={<AboutPage />} />
+          <Route path="/user-profile" element={<UserProfilePage />} />
         </Routes>
       </BrowserRouter>
     </>

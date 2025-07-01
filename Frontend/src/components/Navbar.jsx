@@ -1,35 +1,26 @@
 import React, { useState, useRef, useEffect } from "react";
 import {
   Code,
-  User,
-  LogIn,
-  UserPlus,
-  LogOut,
   ChevronDown,
   BookOpen,
   Cpu,
   FileText,
+  LogIn,
+  UserPlus,
+  User,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+
 const Navbar = () => {
-  const [isUserDropdownOpen, setIsUserDropdownOpen] = useState(false);
   const [isResourcesDropdownOpen, setIsResourcesDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const userDropdownRef = useRef(null);
+  const [showAuthModal, setShowAuthModal] = useState(false);
   const resourcesDropdownRef = useRef(null);
   const mobileMenuRef = useRef(null);
-  // Simulate navigation - replace with your actual navigation logic
   const navigate = useNavigate();
 
   useEffect(() => {
     const handleClickOutside = (event) => {
-      if (
-        userDropdownRef.current &&
-        !userDropdownRef.current.contains(event.target)
-      ) {
-        setIsUserDropdownOpen(false);
-      }
       if (
         resourcesDropdownRef.current &&
         !resourcesDropdownRef.current.contains(event.target)
@@ -48,26 +39,6 @@ const Navbar = () => {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  const handleLogin = () => {
-    setIsUserDropdownOpen(false);
-    navigate("/signin");
-  };
-
-  const handleRegister = () => {
-    setIsUserDropdownOpen(false);
-    navigate("/register");
-  };
-
-  const handleLogout = () => {
-    setIsLoggedIn(false);
-    setIsUserDropdownOpen(false);
-  };
-
-  const handleProfile = () => {
-    setIsUserDropdownOpen(false);
-    navigate("/profile");
-  };
-
   const handleLogoClick = () => {
     navigate("/");
   };
@@ -78,8 +49,24 @@ const Navbar = () => {
     setIsMobileMenuOpen(false);
   };
 
+  const handleLogin = () => {
+    setShowAuthModal(false);
+    navigate("/signin");
+  };
+
+  const handleRegister = () => {
+    setShowAuthModal(false);
+    navigate("/register");
+  };
+
+  const handleProfile = () => {
+    setShowAuthModal(false);
+    navigate("/profile");
+  };
+
   return (
     <nav className="relative z-50 container mx-auto px-6 py-4 flex justify-between items-center">
+      {/* Logo */}
       <div
         className="flex items-center space-x-2 cursor-pointer"
         onClick={handleLogoClick}
@@ -88,8 +75,8 @@ const Navbar = () => {
         <span className="text-2xl font-bold text-white">AlgoViz</span>
       </div>
 
-      {/* Right Side Navigation Items */}
-      <div className="hidden md:flex items-center space-x-6">
+      {/* Centered Navigation Items */}
+      <div className="hidden md:flex items-center space-x-6 absolute left-1/2 -translate-x-1/2">
         {/* Home Link */}
         <button
           onClick={() => handleNavigation("/")}
@@ -153,7 +140,79 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Mobile Menu Button and User Icon */}
+      {/* Get Started Button */}
+      <div className="flex items-center">
+        <button
+          onClick={() => setShowAuthModal(true)}
+          className="ml-4 px-6 py-2 bg-gradient-to-r from-cyan-600 to-teal-600 text-white rounded-xl hover:from-cyan-700 hover:to-teal-700 transition-all duration-300 shadow-lg hover:shadow-cyan-500/25 transform hover:scale-105 active:scale-95"
+          aria-label="Get Started"
+        >
+          Get Started
+        </button>
+      </div>
+
+      {/* Auth Modal */}
+      {showAuthModal && (
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur"
+          onClick={() => setShowAuthModal(false)}
+          aria-modal="true"
+          role="dialog"
+        >
+          <div
+            className="bg-slate-900 rounded-2xl p-8 max-w-xs w-full shadow-2xl border border-cyan-500/30 relative"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <button
+              className="absolute top-3 right-3 text-slate-400 hover:text-red-400"
+              onClick={() => setShowAuthModal(false)}
+              aria-label="Close"
+            >
+              <svg
+                className="w-5 h-5"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M6 18L18 6M6 6l12 12"
+                />
+              </svg>
+            </button>
+            <h2 className="text-2xl font-bold mb-6 text-center text-cyan-400">
+              Welcome
+            </h2>
+            <div className="flex flex-col space-y-4">
+              <button
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-600 text-white font-semibold hover:from-cyan-700 hover:to-teal-700 transition-all duration-300 flex items-center justify-center gap-2"
+                onClick={handleLogin}
+              >
+                <LogIn className="w-5 h-5" />
+                Sign In
+              </button>
+              <button
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-semibold hover:from-teal-700 hover:to-cyan-700 transition-all duration-300 flex items-center justify-center gap-2"
+                onClick={handleRegister}
+              >
+                <UserPlus className="w-5 h-5" />
+                Register
+              </button>
+              <button
+                className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 flex items-center justify-center gap-2"
+                onClick={handleProfile}
+              >
+                <User className="w-5 h-5" />
+                Profile
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mobile Menu Button */}
       <div className="md:hidden flex items-center space-x-3">
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
@@ -173,78 +232,6 @@ const Navbar = () => {
             />
           </svg>
         </button>
-        {/* User Icon for Mobile */}
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsUserDropdownOpen(!isUserDropdownOpen);
-          }}
-          className="p-2 rounded-lg hover:bg-gray-800 transition-colors duration-300 focus:outline-none"
-        >
-          <User className="w-6 h-6 text-gray-300" />
-        </button>
-      </div>
-
-      {/* User Dropdown - Desktop Only */}
-      <div className="hidden md:block relative z-50" ref={userDropdownRef}>
-        <button
-          onClick={(e) => {
-            e.stopPropagation();
-            setIsUserDropdownOpen(!isUserDropdownOpen);
-          }}
-          className="p-2 rounded-lg hover:bg-gray-800 transition-colors duration-300 focus:outline-none"
-        >
-          <User className="w-6 h-6 text-gray-300" />
-        </button>
-
-        {isUserDropdownOpen && (
-          <div
-            className="absolute right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-xl border border-gray-700 py-1 z-[1000]"
-            onClick={(e) => e.stopPropagation()}
-          >
-            {!isLoggedIn ? (
-              <>
-                <button
-                  onClick={handleLogin}
-                  className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 w-full text-left"
-                >
-                  <LogIn className="w-4 h-4" />
-                  <span>Sign In</span>
-                </button>
-                <button
-                  onClick={handleRegister}
-                  className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 w-full text-left"
-                >
-                  <UserPlus className="w-4 h-4" />
-                  <span>Register</span>
-                </button>
-              </>
-            ) : (
-              <>
-                <div className="px-4 py-2 border-b border-gray-700">
-                  <p className="text-sm text-gray-400">Signed in as</p>
-                  <p className="text-sm font-medium text-white">
-                    user@example.com
-                  </p>
-                </div>
-                <button
-                  onClick={handleProfile}
-                  className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 w-full text-left"
-                >
-                  <User className="w-4 h-4" />
-                  <span>Profile</span>
-                </button>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 w-full text-left"
-                >
-                  <LogOut className="w-4 h-4" />
-                  <span>Sign Out</span>
-                </button>
-              </>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Mobile Navigation Menu */}
@@ -303,54 +290,15 @@ const Navbar = () => {
                 <span>Big O Guide</span>
               </button>
             </div>
+            {/* Get Started Button for Mobile Menu */}
+            <button
+              onClick={() => setShowAuthModal(true)}
+              className="w-full mt-4 px-4 py-2 bg-gradient-to-r from-cyan-600 to-teal-600 text-white rounded-xl hover:from-cyan-700 hover:to-teal-700 transition-all duration-300 shadow-lg"
+              aria-label="Get Started"
+            >
+              Get Started
+            </button>
           </div>
-        </div>
-      )}
-
-      {/* Mobile User Dropdown */}
-      {isUserDropdownOpen && (
-        <div className="md:hidden absolute top-full right-6 mt-2 w-48 bg-gray-800 rounded-lg shadow-xl border border-gray-700 py-1 z-[1000]">
-          {!isLoggedIn ? (
-            <>
-              <button
-                onClick={handleLogin}
-                className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 w-full text-left"
-              >
-                <LogIn className="w-4 h-4" />
-                <span>Sign In</span>
-              </button>
-              <button
-                onClick={handleRegister}
-                className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 w-full text-left"
-              >
-                <UserPlus className="w-4 h-4" />
-                <span>Register</span>
-              </button>
-            </>
-          ) : (
-            <>
-              <div className="px-4 py-2 border-b border-gray-700">
-                <p className="text-sm text-gray-400">Signed in as</p>
-                <p className="text-sm font-medium text-white">
-                  user@example.com
-                </p>
-              </div>
-              <button
-                onClick={handleProfile}
-                className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 w-full text-left"
-              >
-                <User className="w-4 h-4" />
-                <span>Profile</span>
-              </button>
-              <button
-                onClick={handleLogout}
-                className="flex items-center space-x-2 px-4 py-2 text-gray-300 hover:bg-gray-700 w-full text-left"
-              >
-                <LogOut className="w-4 h-4" />
-                <span>Sign Out</span>
-              </button>
-            </>
-          )}
         </div>
       )}
     </nav>
