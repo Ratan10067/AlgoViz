@@ -8,6 +8,7 @@ import {
   LogIn,
   UserPlus,
   User,
+  LogOut,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -15,7 +16,17 @@ const Navbar = () => {
   const [isResourcesDropdownOpen, setIsResourcesDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
+  const [showUserDropdown, setShowUserDropdown] = useState(false);
+  // This would typically come from your auth context/state management
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
+  const [user, setUser] = useState({
+    name: "Alex Johnson",
+    avatar:
+      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
+  });
+
   const resourcesDropdownRef = useRef(null);
+  const userDropdownRef = useRef(null);
   const mobileMenuRef = useRef(null);
   const navigate = useNavigate();
 
@@ -26,6 +37,12 @@ const Navbar = () => {
         !resourcesDropdownRef.current.contains(event.target)
       ) {
         setIsResourcesDropdownOpen(false);
+      }
+      if (
+        userDropdownRef.current &&
+        !userDropdownRef.current.contains(event.target)
+      ) {
+        setShowUserDropdown(false);
       }
       if (
         mobileMenuRef.current &&
@@ -60,8 +77,25 @@ const Navbar = () => {
   };
 
   const handleProfile = () => {
+    setShowUserDropdown(false);
+    setIsMobileMenuOpen(false);
+    navigate("/user-profile");
+  };
+
+  const handleLogout = () => {
+    // Handle logout logic here (clear tokens, reset state, etc.)
+    setIsLoggedIn(false);
+    setUser(null);
+    setShowUserDropdown(false);
+    setIsMobileMenuOpen(false);
+    // Optionally redirect to home
+    navigate("/");
+  };
+
+  // Simulate login - replace this with your actual login logic
+  const simulateLogin = () => {
+    setIsLoggedIn(true);
     setShowAuthModal(false);
-    navigate("/profile");
   };
 
   return (
@@ -140,19 +174,61 @@ const Navbar = () => {
         </div>
       </div>
 
-      {/* Get Started Button */}
+      {/* Authentication Section */}
       <div className="flex items-center">
-        <button
-          onClick={() => setShowAuthModal(true)}
-          className="ml-4 px-6 py-2 bg-gradient-to-r from-cyan-600 to-teal-600 text-white rounded-xl hover:from-cyan-700 hover:to-teal-700 transition-all duration-300 shadow-lg hover:shadow-cyan-500/25 transform hover:scale-105 active:scale-95"
-          aria-label="Get Started"
-        >
-          Get Started
-        </button>
+        {!isLoggedIn ? (
+          // Show Get Started button when not logged in
+          <button
+            onClick={() => setShowAuthModal(true)}
+            className="ml-4 px-6 py-2 bg-gradient-to-r from-cyan-600 to-teal-600 text-white rounded-xl hover:from-cyan-700 hover:to-teal-700 transition-all duration-300 shadow-lg hover:shadow-cyan-500/25 transform hover:scale-105 active:scale-95"
+            aria-label="Get Started"
+          >
+            Get Started
+          </button>
+        ) : (
+          // Show user dropdown when logged in
+          <div className="relative" ref={userDropdownRef}>
+            <button
+              onClick={() => setShowUserDropdown(!showUserDropdown)}
+              className="ml-4 flex items-center space-x-2 p-2 rounded-full hover:bg-gray-700 transition-colors duration-300"
+              aria-label="User Menu"
+            >
+              <img
+                src={user.avatar}
+                alt="User Avatar"
+                className="w-8 h-8 rounded-full border-2 border-cyan-400"
+              />
+              <ChevronDown className="w-4 h-4 text-gray-300" />
+            </button>
+
+            {showUserDropdown && (
+              <div className="absolute top-full right-0 mt-2 w-48 bg-gray-800 rounded-lg shadow-xl border border-gray-700 py-2 z-[1000]">
+                <div className="px-4 py-2 border-b border-gray-700">
+                  <p className="text-sm font-medium text-white">{user.name}</p>
+                  <p className="text-xs text-gray-400">Welcome back!</p>
+                </div>
+                <button
+                  onClick={handleProfile}
+                  className="flex items-center space-x-2 w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors cursor-pointer"
+                >
+                  <User className="w-4 h-4" />
+                  <span>Profile</span>
+                </button>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center space-x-2 w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-red-400 transition-colors cursor-pointer"
+                >
+                  <LogOut className="w-4 h-4" />
+                  <span>Logout</span>
+                </button>
+              </div>
+            )}
+          </div>
+        )}
       </div>
 
-      {/* Auth Modal */}
-      {showAuthModal && (
+      {/* Auth Modal - Only for Sign In/Register */}
+      {showAuthModal && !isLoggedIn && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur"
           onClick={() => setShowAuthModal(false)}
@@ -183,7 +259,7 @@ const Navbar = () => {
               </svg>
             </button>
             <h2 className="text-2xl font-bold mb-6 text-center text-cyan-400">
-              Welcome
+              Welcome to AlgoViz
             </h2>
             <div className="flex flex-col space-y-4">
               <button
@@ -199,13 +275,6 @@ const Navbar = () => {
               >
                 <UserPlus className="w-5 h-5" />
                 Register
-              </button>
-              <button
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold hover:from-blue-700 hover:to-indigo-700 transition-all duration-300 flex items-center justify-center gap-2"
-                onClick={handleProfile}
-              >
-                <User className="w-5 h-5" />
-                Profile
               </button>
             </div>
           </div>
@@ -290,14 +359,49 @@ const Navbar = () => {
                 <span>Big O Guide</span>
               </button>
             </div>
-            {/* Get Started Button for Mobile Menu */}
-            <button
-              onClick={() => setShowAuthModal(true)}
-              className="w-full mt-4 px-4 py-2 bg-gradient-to-r from-cyan-600 to-teal-600 text-white rounded-xl hover:from-cyan-700 hover:to-teal-700 transition-all duration-300 shadow-lg"
-              aria-label="Get Started"
-            >
-              Get Started
-            </button>
+
+            {/* Mobile Authentication Section */}
+            <div className="border-t border-gray-700 pt-4">
+              {!isLoggedIn ? (
+                <button
+                  onClick={() => setShowAuthModal(true)}
+                  className="w-full px-4 py-2 bg-gradient-to-r from-cyan-600 to-teal-600 text-white rounded-xl hover:from-cyan-700 hover:to-teal-700 transition-all duration-300 shadow-lg"
+                  aria-label="Get Started"
+                >
+                  Get Started
+                </button>
+              ) : (
+                <div className="space-y-2">
+                  <div className="flex items-center space-x-3 px-4 py-2">
+                    <img
+                      src={user.avatar}
+                      alt="User Avatar"
+                      className="w-8 h-8 rounded-full border-2 border-cyan-400"
+                    />
+                    <div>
+                      <p className="text-sm font-medium text-white">
+                        {user.name}
+                      </p>
+                      <p className="text-xs text-gray-400">Welcome back!</p>
+                    </div>
+                  </div>
+                  <button
+                    onClick={handleProfile}
+                    className="flex items-center space-x-2 w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors rounded"
+                  >
+                    <User className="w-4 h-4" />
+                    <span>Profile</span>
+                  </button>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center space-x-2 w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-red-400 transition-colors rounded"
+                  >
+                    <LogOut className="w-4 h-4" />
+                    <span>Logout</span>
+                  </button>
+                </div>
+              )}
+            </div>
           </div>
         </div>
       )}
