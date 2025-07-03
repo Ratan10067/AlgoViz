@@ -1,7 +1,7 @@
 # CodeMaze: Algorithm Visualization Platform 🎯
 
 <div align="center">
-  <img src="Frontend/public/logo.png" alt="CodeMaze Logo" width="200"/>
+  <img src="Frontend/src/assets/logo.png" alt="CodeMaze Logo" width="200"/>
   <p><em>Master algorithms through interactive visualization</em></p>
 </div>
 
@@ -129,7 +129,8 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 
 ## 👥 Team
 
-- Developer: [Your Name](https://github.com/yourusername)
+- Developer: [Ratan Kumar](https://github.com/Ratan10067)
+- Developer: [Anup Kumar](https://github.com/me-sirius)
 
 ## 🙏 Acknowledgments
 
