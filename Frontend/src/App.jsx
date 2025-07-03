@@ -32,6 +32,7 @@ function App() {
           <Route path="/support" element={<SupportPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/user-profile" element={<UserProfilePage />} />
+          <Route path="/testing" element={<UserProfilePage />} />
         </Routes>
       </BrowserRouter>
     </>
