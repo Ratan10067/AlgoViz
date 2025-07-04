@@ -1,9 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  PanelGroup,
-  Panel,
-  PanelResizeHandle,
-} from "react-resizable-panels";
+import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 
 import CodeMirror from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
@@ -11,8 +7,20 @@ import { oneDark } from "@codemirror/theme-one-dark";
 import { EditorView } from "@codemirror/view";
 
 import {
-  Play, Pause, SkipForward, RotateCcw, Settings, BarChart3, Code2,
-  Activity, Target, Clock, Maximize2, ArrowLeft, AlertTriangle, Shuffle,
+  Play,
+  Pause,
+  SkipForward,
+  RotateCcw,
+  Settings,
+  BarChart3,
+  Code2,
+  Activity,
+  Target,
+  Clock,
+  Maximize2,
+  ArrowLeft,
+  AlertTriangle,
+  Shuffle,
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
@@ -45,20 +53,22 @@ const bubbleSortSourceCode = `function bubbleSort(arr) {
 
 export default function BubbleSortVisualizer() {
   const navigate = useNavigate();
-  
+
   // Array state
   const [arraySize, setArraySize] = useState(12);
-  const [customArray, setCustomArray] = useState("64,34,25,12,22,11,90,88,76,50,77,13");
+  const [customArray, setCustomArray] = useState(
+    "64,34,25,12,22,11,90,88,76,50,77,13"
+  );
   const [currentArray, setCurrentArray] = useState([]);
   const [useRandomArray, setUseRandomArray] = useState(false);
-  
+
   // Animation state
   const [steps, setSteps] = useState([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [started, setStarted] = useState(false);
   const [speed, setSpeed] = useState(800);
-  
+
   // UI state
   const [activeRightTab, setActiveRightTab] = useState("stats");
   const [arrayValidationError, setArrayValidationError] = useState("");
@@ -70,10 +80,10 @@ export default function BubbleSortVisualizer() {
     type: "error",
     customButtons: null,
   });
-  
+
   // New features state
-  const [sortDirection, setSortDirection] = useState('ascending');
-  const [dataType, setDataType] = useState('number');
+  const [sortDirection, setSortDirection] = useState("ascending");
+  const [dataType, setDataType] = useState("number");
 
   const handleBack = () => {
     setAlertConfig({
@@ -89,7 +99,9 @@ export default function BubbleSortVisualizer() {
             Leave
           </button>
           <button
-            onClick={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
+            onClick={() =>
+              setAlertConfig((prev) => ({ ...prev, isOpen: false }))
+            }
             className="px-6 py-3 bg-gradient-to-r from-gray-500 to-gray-600 text-white rounded-xl transition-all duration-300 hover:scale-105 shadow-lg"
           >
             Stay
@@ -101,12 +113,32 @@ export default function BubbleSortVisualizer() {
 
   // Generate random array
   const generateRandomArray = (size) => {
-    if (dataType === 'number') {
-      return Array.from({ length: size }, () => Math.floor(Math.random() * 100) + 1);
+    if (dataType === "number") {
+      return Array.from(
+        { length: size },
+        () => Math.floor(Math.random() * 100) + 1
+      );
     } else {
-      const words = ['apple', 'banana', 'cherry', 'date', 'elderberry', 'fig', 
-                    'grape', 'honeydew', 'kiwi', 'lemon', 'mango', 'nectarine',
-                    'orange', 'pear', 'quince', 'raspberry', 'strawberry', 'tangerine'];
+      const words = [
+        "apple",
+        "banana",
+        "cherry",
+        "date",
+        "elderberry",
+        "fig",
+        "grape",
+        "honeydew",
+        "kiwi",
+        "lemon",
+        "mango",
+        "nectarine",
+        "orange",
+        "pear",
+        "quince",
+        "raspberry",
+        "strawberry",
+        "tangerine",
+      ];
       return Array.from({ length: size }, () => {
         const randomIndex = Math.floor(Math.random() * words.length);
         return words[randomIndex];
@@ -123,7 +155,7 @@ export default function BubbleSortVisualizer() {
 
       const values = arrayString
         .split(",")
-        .map(s => s.trim())
+        .map((s) => s.trim())
         .filter(Boolean);
 
       if (values.length < 2) {
@@ -134,8 +166,8 @@ export default function BubbleSortVisualizer() {
         throw new Error("Array cannot have more than 30 elements");
       }
 
-      if (dataType === 'number') {
-        const numbers = values.map(num => {
+      if (dataType === "number") {
+        const numbers = values.map((num) => {
           const parsed = parseInt(num, 10);
           if (isNaN(parsed)) {
             throw new Error(`"${num}" is not a valid number`);
@@ -154,7 +186,6 @@ export default function BubbleSortVisualizer() {
         setIsValidArray(true);
         return values;
       }
-        
     } catch (error) {
       setArrayValidationError(error.message);
       setIsValidArray(false);
@@ -183,12 +214,12 @@ export default function BubbleSortVisualizer() {
       comparisons,
       swaps,
       outerLoop: 0,
-      innerLoop: 0
+      innerLoop: 0,
     });
 
     for (let i = 0; i < n - 1; i++) {
       let swapped = false;
-      
+
       // Start outer loop
       frames.push({
         array: [...arr],
@@ -202,18 +233,18 @@ export default function BubbleSortVisualizer() {
         comparisons,
         swaps,
         outerLoop: i,
-        innerLoop: -1
+        innerLoop: -1,
       });
 
       for (let j = 0; j < n - i - 1; j++) {
         comparisons++;
-        
+
         // Compare elements
-        const compareAction = 
-          sortDirection === 'ascending' 
+        const compareAction =
+          sortDirection === "ascending"
             ? `Compare ${arr[j]} and ${arr[j + 1]}`
             : `Compare ${arr[j + 1]} and ${arr[j]}`;
-        
+
         frames.push({
           array: [...arr],
           comparing: [j, j + 1],
@@ -226,18 +257,20 @@ export default function BubbleSortVisualizer() {
           comparisons,
           swaps,
           outerLoop: i,
-          innerLoop: j
+          innerLoop: j,
         });
 
         let shouldSwap = false;
-        if (sortDirection === 'ascending') {
-          shouldSwap = dataType === 'number' 
-            ? arr[j] > arr[j + 1]
-            : arr[j].localeCompare(arr[j + 1]) > 0;
+        if (sortDirection === "ascending") {
+          shouldSwap =
+            dataType === "number"
+              ? arr[j] > arr[j + 1]
+              : arr[j].localeCompare(arr[j + 1]) > 0;
         } else {
-          shouldSwap = dataType === 'number' 
-            ? arr[j] < arr[j + 1]
-            : arr[j].localeCompare(arr[j + 1]) < 0;
+          shouldSwap =
+            dataType === "number"
+              ? arr[j] < arr[j + 1]
+              : arr[j].localeCompare(arr[j + 1]) < 0;
         }
 
         if (shouldSwap) {
@@ -245,12 +278,12 @@ export default function BubbleSortVisualizer() {
           [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]];
           swapped = true;
           swaps++;
-          
-          const swapAction = 
-            sortDirection === 'ascending'
+
+          const swapAction =
+            sortDirection === "ascending"
               ? `Swap ${arr[j + 1]} and ${arr[j]}`
               : `Swap ${arr[j]} and ${arr[j + 1]}`;
-          
+
           frames.push({
             array: [...arr],
             comparing: [],
@@ -263,7 +296,7 @@ export default function BubbleSortVisualizer() {
             comparisons,
             swaps,
             outerLoop: i,
-            innerLoop: j
+            innerLoop: j,
           });
         }
       }
@@ -281,7 +314,7 @@ export default function BubbleSortVisualizer() {
         comparisons,
         swaps,
         outerLoop: i,
-        innerLoop: -1
+        innerLoop: -1,
       });
 
       if (!swapped) {
@@ -297,7 +330,7 @@ export default function BubbleSortVisualizer() {
           comparisons,
           swaps,
           outerLoop: i,
-          innerLoop: -1
+          innerLoop: -1,
         });
         break;
       }
@@ -316,7 +349,7 @@ export default function BubbleSortVisualizer() {
       comparisons,
       swaps,
       outerLoop: -1,
-      innerLoop: -1
+      innerLoop: -1,
     });
 
     setSteps(frames);
@@ -327,14 +360,14 @@ export default function BubbleSortVisualizer() {
   // Generate array
   const handleGenerateArray = () => {
     let array;
-    
+
     if (useRandomArray) {
       array = generateRandomArray(arraySize);
       setCustomArray(array.join(","));
     } else {
       array = validateArray(customArray);
     }
-    
+
     if (array.length === 0 || !isValidArray) return;
 
     setCurrentArray(array);
@@ -368,15 +401,15 @@ export default function BubbleSortVisualizer() {
   // Animation loop
   useEffect(() => {
     if (!playing) return;
-    
+
     const timer = setTimeout(() => {
       if (currentStep < steps.length - 1) {
-        setCurrentStep(prev => prev + 1);
+        setCurrentStep((prev) => prev + 1);
       } else {
         setPlaying(false);
       }
     }, speed);
-    
+
     return () => clearTimeout(timer);
   }, [playing, currentStep, steps.length, speed]);
 
@@ -404,13 +437,17 @@ export default function BubbleSortVisualizer() {
     };
 
     return (
-      <div className={`bg-gradient-to-br ${colorClasses[color]} border rounded-xl p-4 backdrop-blur-sm`}>
+      <div
+        className={`bg-gradient-to-br ${colorClasses[color]} border rounded-xl p-4 backdrop-blur-sm`}
+      >
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-lg bg-${color}-500/20`}>
             <Icon size={20} className={`text-${color}-400`} />
           </div>
           <div className="min-w-0 flex-1">
-            <div className="text-2xl font-bold text-white truncate">{value}</div>
+            <div className="text-2xl font-bold text-white truncate">
+              {value}
+            </div>
             <div className="text-sm text-gray-300">{label}</div>
           </div>
         </div>
@@ -424,12 +461,10 @@ export default function BubbleSortVisualizer() {
 
     const step = steps[currentStep];
     const maxValue = Math.max(
-      ...step.array.map(val => 
-        typeof val === 'number' ? val : val.length
-      ),
+      ...step.array.map((val) => (typeof val === "number" ? val : val.length)),
       1
     );
-    const isStringArray = typeof step.array[0] === 'string';
+    const isStringArray = typeof step.array[0] === "string";
 
     return (
       <div className="w-full h-full flex items-center justify-center p-8">
@@ -454,7 +489,7 @@ export default function BubbleSortVisualizer() {
             }
 
             const height = Math.max(
-              ((isStringArray ? value.length : value) / maxValue) * 300, 
+              ((isStringArray ? value.length : value) / maxValue) * 300,
               30
             );
 
@@ -465,11 +500,13 @@ export default function BubbleSortVisualizer() {
               >
                 <div
                   className={`${barColor} ${extraClasses} rounded-t-lg transition-all duration-300 flex items-end justify-center pb-2 min-w-[40px] ${
-                    isStringArray ? 'w-[80px]' : ''
+                    isStringArray ? "w-[80px]" : ""
                   }`}
                   style={{ height: `${height}px` }}
                 >
-                  <span className={`${textColor} text-sm font-bold truncate px-1 max-w-full`}>
+                  <span
+                    className={`${textColor} text-sm font-bold truncate px-1 max-w-full`}
+                  >
                     {value}
                   </span>
                 </div>
@@ -517,7 +554,9 @@ export default function BubbleSortVisualizer() {
               <div className="p-4 border-b border-gray-700/50">
                 <div className="flex items-center gap-3">
                   <Settings size={20} className="text-purple-400" />
-                  <h2 className="text-lg font-semibold text-gray-200">Array Settings</h2>
+                  <h2 className="text-lg font-semibold text-gray-200">
+                    Array Settings
+                  </h2>
                 </div>
               </div>
 
@@ -529,9 +568,9 @@ export default function BubbleSortVisualizer() {
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     {[
-                      { value: 'number', label: "Numbers" },
-                      { value: 'string', label: "Strings" }
-                    ].map(type => (
+                      { value: "number", label: "Numbers" },
+                      { value: "string", label: "Strings" },
+                    ].map((type) => (
                       <button
                         key={type.label}
                         onClick={() => setDataType(type.value)}
@@ -554,9 +593,9 @@ export default function BubbleSortVisualizer() {
                   </label>
                   <div className="grid grid-cols-2 gap-2">
                     <button
-                      onClick={() => setSortDirection('ascending')}
+                      onClick={() => setSortDirection("ascending")}
                       className={`py-2 px-3 rounded-xl font-medium transition-all duration-200 text-sm ${
-                        sortDirection === 'ascending'
+                        sortDirection === "ascending"
                           ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg"
                           : "bg-gray-700/50 text-gray-300 hover:bg-gray-600/50"
                       }`}
@@ -564,9 +603,9 @@ export default function BubbleSortVisualizer() {
                       Ascending
                     </button>
                     <button
-                      onClick={() => setSortDirection('descending')}
+                      onClick={() => setSortDirection("descending")}
                       className={`py-2 px-3 rounded-xl font-medium transition-all duration-200 text-sm ${
-                        sortDirection === 'descending'
+                        sortDirection === "descending"
                           ? "bg-gradient-to-r from-blue-600 to-blue-700 text-white shadow-lg"
                           : "bg-gray-700/50 text-gray-300 hover:bg-gray-600/50"
                       }`}
@@ -584,8 +623,8 @@ export default function BubbleSortVisualizer() {
                   <div className="grid grid-cols-2 gap-2">
                     {[
                       { value: false, label: "Custom" },
-                      { value: true, label: "Random" }
-                    ].map(type => (
+                      { value: true, label: "Random" },
+                    ].map((type) => (
                       <button
                         key={type.label}
                         onClick={() => setUseRandomArray(type.value)}
@@ -612,7 +651,9 @@ export default function BubbleSortVisualizer() {
                       min="2"
                       max="30"
                       value={arraySize}
-                      onChange={e => setArraySize(parseInt(e.target.value) || 2)}
+                      onChange={(e) =>
+                        setArraySize(parseInt(e.target.value) || 2)
+                      }
                       className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
                     />
                   </div>
@@ -627,14 +668,23 @@ export default function BubbleSortVisualizer() {
                     <textarea
                       rows={3}
                       value={customArray}
-                      onChange={e => setCustomArray(e.target.value)}
+                      onChange={(e) => setCustomArray(e.target.value)}
                       className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white font-mono text-sm resize-none focus:ring-2 focus:ring-purple-500 focus:border-transparent transition-all duration-200"
-                      placeholder={dataType === 'number' ? "64,34,25,12,22,11,90" : "apple,banana,cherry,date"}
+                      placeholder={
+                        dataType === "number"
+                          ? "64,34,25,12,22,11,90"
+                          : "apple,banana,cherry,date"
+                      }
                     />
                     {arrayValidationError && (
                       <div className="mt-2 flex items-center gap-2 p-2 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
-                        <AlertTriangle size={14} className="text-yellow-400 flex-shrink-0" />
-                        <span className="text-xs text-yellow-300">{arrayValidationError}</span>
+                        <AlertTriangle
+                          size={14}
+                          className="text-yellow-400 flex-shrink-0"
+                        />
+                        <span className="text-xs text-yellow-300">
+                          {arrayValidationError}
+                        </span>
                       </div>
                     )}
                   </div>
@@ -714,7 +764,7 @@ export default function BubbleSortVisualizer() {
                       max={2000}
                       step={100}
                       value={speed}
-                      onChange={e => setSpeed(Number(e.target.value))}
+                      onChange={(e) => setSpeed(Number(e.target.value))}
                       className="w-full h-2 bg-gray-700 rounded-lg appearance-none cursor-pointer"
                     />
                     <div className="flex justify-between text-xs text-gray-400">
@@ -723,7 +773,7 @@ export default function BubbleSortVisualizer() {
                     </div>
                   </div>
                 </div>
-                
+
                 {/* Color Legend */}
                 <div className="pt-4 border-t border-gray-700/50">
                   <h3 className="text-lg font-semibold text-gray-200 mb-3">
@@ -732,15 +782,21 @@ export default function BubbleSortVisualizer() {
                   <div className="space-y-3">
                     <div className="flex items-center gap-3 p-3 bg-yellow-500/20 border border-yellow-500/30 rounded-xl">
                       <div className="w-4 h-4 bg-yellow-500 rounded-sm"></div>
-                      <span className="text-sm text-yellow-300">Yellow highlight: Comparison operation</span>
+                      <span className="text-sm text-yellow-300">
+                        Yellow highlight: Comparison operation
+                      </span>
                     </div>
                     <div className="flex items-center gap-3 p-3 bg-red-500/20 border border-red-500/30 rounded-xl">
                       <div className="w-4 h-4 bg-red-500 rounded-sm"></div>
-                      <span className="text-sm text-red-300">Red highlight: Swap operation</span>
+                      <span className="text-sm text-red-300">
+                        Red highlight: Swap operation
+                      </span>
                     </div>
                     <div className="flex items-center gap-3 p-3 bg-green-500/20 border border-green-500/30 rounded-xl">
                       <div className="w-4 h-4 bg-green-500 rounded-sm"></div>
-                      <span className="text-sm text-green-300">Green bars: Sorted elements</span>
+                      <span className="text-sm text-green-300">
+                        Green bars: Sorted elements
+                      </span>
                     </div>
                   </div>
                 </div>
@@ -764,8 +820,16 @@ export default function BubbleSortVisualizer() {
             <div className="h-full bg-gray-800/50 backdrop-blur-xl border-l border-gray-700/50 flex flex-col">
               <div className="p-4 border-b border-gray-700/50">
                 <div className="flex flex-col gap-2">
-                  <TabButton id="stats" icon={BarChart3} label="Statistics & Info" />
-                  <TabButton id="algorithm" icon={Code2} label="Algorithm Code" />
+                  <TabButton
+                    id="stats"
+                    icon={BarChart3}
+                    label="Statistics & Info"
+                  />
+                  <TabButton
+                    id="algorithm"
+                    icon={Code2}
+                    label="Algorithm Code"
+                  />
                 </div>
               </div>
 
@@ -793,7 +857,13 @@ export default function BubbleSortVisualizer() {
                       />
                       <StatCard
                         icon={Clock}
-                        value={steps.length > 0 ? `${Math.round(((currentStep + 1) / steps.length) * 100)}%` : "0%"}
+                        value={
+                          steps.length > 0
+                            ? `${Math.round(
+                                ((currentStep + 1) / steps.length) * 100
+                              )}%`
+                            : "0%"
+                        }
                         label="Progress"
                         color="green"
                       />
@@ -801,7 +871,9 @@ export default function BubbleSortVisualizer() {
 
                     {/* Step Info */}
                     <div className="bg-gray-700/30 backdrop-blur-sm rounded-xl p-4 border border-gray-600/30">
-                      <h3 className="text-lg font-semibold text-gray-200 mb-3">Current Step</h3>
+                      <h3 className="text-lg font-semibold text-gray-200 mb-3">
+                        Current Step
+                      </h3>
                       <div className="space-y-2">
                         <div className="flex justify-between">
                           <span className="text-gray-300">Step:</span>
@@ -813,7 +885,11 @@ export default function BubbleSortVisualizer() {
                           <div
                             className="bg-gradient-to-r from-purple-500 to-pink-600 h-2 rounded-full transition-all duration-300"
                             style={{
-                              width: `${steps.length > 0 ? ((currentStep + 1) / steps.length) * 100 : 0}%`,
+                              width: `${
+                                steps.length > 0
+                                  ? ((currentStep + 1) / steps.length) * 100
+                                  : 0
+                              }%`,
                             }}
                           />
                         </div>
@@ -836,7 +912,9 @@ export default function BubbleSortVisualizer() {
                             </span>
                           </div>
                           <span className="font-mono text-purple-300 text-sm">
-                            {steps[currentStep].outerLoop >= 0 ? `Pass ${steps[currentStep].outerLoop + 1}` : "Not started"}
+                            {steps[currentStep].outerLoop >= 0
+                              ? `Pass ${steps[currentStep].outerLoop + 1}`
+                              : "Not started"}
                           </span>
                         </div>
 
@@ -848,7 +926,9 @@ export default function BubbleSortVisualizer() {
                             </span>
                           </div>
                           <span className="font-mono text-blue-300 text-sm">
-                            {steps[currentStep].innerLoop >= 0 ? `Position ${steps[currentStep].innerLoop}` : "Not active"}
+                            {steps[currentStep].innerLoop >= 0
+                              ? `Position ${steps[currentStep].innerLoop}`
+                              : "Not active"}
                           </span>
                         </div>
 
@@ -877,7 +957,7 @@ export default function BubbleSortVisualizer() {
                           Bubble Sort Implementation
                         </h3>
                       </div>
-                      
+
                       <div className="flex-1 overflow-auto">
                         <CodeMirror
                           value={bubbleSortSourceCode}
@@ -890,28 +970,28 @@ export default function BubbleSortVisualizer() {
                                 fontFamily: '"Fira Code", monospace',
                                 fontSize: "14px",
                                 backgroundColor: "transparent",
-                                height: "100%"
+                                height: "100%",
                               },
                               ".cm-content": {
-                                padding: "10px 0"
+                                padding: "10px 0",
                               },
                               ".cm-line": {
-                                padding: "0 16px"
+                                padding: "0 16px",
                               },
                               ".cm-activeLine": {
-                                backgroundColor: "rgba(99, 102, 241, 0.2)"
+                                backgroundColor: "rgba(99, 102, 241, 0.2)",
                               },
                               ".cm-activeLineGutter": {
-                                backgroundColor: "rgba(99, 102, 241, 0.3)"
-                              }
-                            })
+                                backgroundColor: "rgba(99, 102, 241, 0.3)",
+                              },
+                            }),
                           ]}
                           theme={oneDark}
                           editable={false}
                           basicSetup={{
                             lineNumbers: true,
                             highlightActiveLineGutter: true,
-                            highlightActiveLine: true
+                            highlightActiveLine: true,
                           }}
                         />
                       </div>
@@ -925,31 +1005,36 @@ export default function BubbleSortVisualizer() {
                         <li className="flex items-start gap-2">
                           <span className="text-purple-400">•</span>
                           <span>
-                            <span className="font-semibold">Line 6:</span> Outer loop runs n-1 times
+                            <span className="font-semibold">Line 6:</span> Outer
+                            loop runs n-1 times
                           </span>
                         </li>
                         <li className="flex items-start gap-2">
                           <span className="text-purple-400">•</span>
                           <span>
-                            <span className="font-semibold">Line 7:</span> Flag to detect if any swap occurred
+                            <span className="font-semibold">Line 7:</span> Flag
+                            to detect if any swap occurred
                           </span>
                         </li>
                         <li className="flex items-start gap-2">
                           <span className="text-purple-400">•</span>
                           <span>
-                            <span className="font-semibold">Line 9-10:</span> Inner loop for comparisons
+                            <span className="font-semibold">Line 9-10:</span>{" "}
+                            Inner loop for comparisons
                           </span>
                         </li>
                         <li className="flex items-start gap-2">
                           <span className="text-purple-400">•</span>
                           <span>
-                            <span className="font-semibold">Line 12-16:</span> Swap adjacent elements if out of order
+                            <span className="font-semibold">Line 12-16:</span>{" "}
+                            Swap adjacent elements if out of order
                           </span>
                         </li>
                         <li className="flex items-start gap-2">
                           <span className="text-purple-400">•</span>
                           <span>
-                            <span className="font-semibold">Line 20:</span> Early termination if no swaps
+                            <span className="font-semibold">Line 20:</span>{" "}
+                            Early termination if no swaps
                           </span>
                         </li>
                       </ul>

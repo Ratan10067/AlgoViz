@@ -10,7 +10,9 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@codemirror/lang-javascript": "^6.2.4",
     "@tailwindcss/vite": "^4.1.11",
+    "@uiw/react-codemirror": "^4.23.14",
     "axios": "^1.10.0",
     "cytoscape": "^3.32.0",
     "cytoscape-cose-bilkent": "^4.1.0",
