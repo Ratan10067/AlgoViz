@@ -12,7 +12,7 @@ import {
 import CodeMirror from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
 import { oneDark } from "@codemirror/theme-one-dark";
-import { EditorView, Decoration } from "@codemirror/view";
+import { EditorView } from "@codemirror/view";
 
 import {
   Play, Pause, SkipForward, RotateCcw, Settings, BarChart3, Code2,
@@ -26,31 +26,23 @@ import Alert from "./Alert";
 cytoscape.use(coseBilkent);
 cytoscape.use(edgehandles);
 
-const bfsSourceCode = `function bfs(graph, start) {
-  const visited = new Set();
-  const queue = [start];
-  const distances = { [start]: 0 };
-
-  while (queue.length > 0) {
-    const current = queue.shift();             // Line 6
-    
-    if (!visited.has(current)) {               // Line 8
-      visited.add(current);                    // Line 9
-      
-      for (const neighbor of graph[current]) { // Line 11
-        if (!visited.has(neighbor) &&
-            !queue.includes(neighbor)) {       // Line 13
-          queue.push(neighbor);                // Line 14
-          distances[neighbor] = distances[current] + 1; // Line 15
-        }
-      }
+const dfsSourceCode = `function dfs(graph, node, visited, discovery, finish, time) {
+  visited.add(node);                         // Line 2
+  discovery[node] = time.current++;          // Line 3
+  
+  for (const neighbor of graph[node]) {      // Line 5
+    if (!visited.has(neighbor)) {            // Line 6
+      // Tree edge - recursive call
+      dfs(graph, neighbor, visited, discovery, finish, time); // Line 8
+    } else if (!finish[neighbor]) {          // Line 9
+      // Back edge (cycle detected)
     }
   }
   
-  return distances;                            // Line 21
+  finish[node] = time.current++;             // Line 13
 }`;
 
-export default function EnhancedBFSVisualizer() {
+export default function DFSRecursiveVisualizer() {
   const cyRef = useRef(null);
   const cyInstance = useRef(null);
   const editorRef = useRef(null);
@@ -76,9 +68,7 @@ export default function EnhancedBFSVisualizer() {
   const [edgeValidationError, setEdgeValidationError] = useState("");
   const [isValidGraph, setIsValidGraph] = useState(false);
   const [currentHighlightedLine, setCurrentHighlightedLine] = useState(null);
-
   const [isResizing, setIsResizing] = useState(false);
-
   const [alertConfig, setAlertConfig] = useState({
     isOpen: false,
     message: "",
@@ -110,7 +100,7 @@ export default function EnhancedBFSVisualizer() {
     });
   };
 
-  // Enhanced edge validation
+  // Edge validation
   const validateEdges = (edgeString, nodeCount) => {
     try {
       if (!edgeString.trim()) {
@@ -142,7 +132,6 @@ export default function EnhancedBFSVisualizer() {
       setEdgeValidationError("");
       setIsValidGraph(true);
 
-      // Return edges based on graph type
       if (graphType === "undirected") {
         const seen = new Set();
         return edges.filter(e => {
@@ -161,7 +150,7 @@ export default function EnhancedBFSVisualizer() {
     }
   };
 
-  // Enhanced resize effect
+  // Resize handling
   useEffect(() => {
     const handleResize = () => {
       if (cyInstance.current) {
@@ -170,13 +159,10 @@ export default function EnhancedBFSVisualizer() {
       }
     };
 
-    // Debounced resize function
     const debouncedResize = setTimeout(handleResize, 150);
-    
     return () => clearTimeout(debouncedResize);
   }, [isResizing, activeRightTab]);
 
-  // Additional effect for window resize
   useEffect(() => {
     const handleWindowResize = () => {
       if (cyInstance.current) {
@@ -188,82 +174,157 @@ export default function EnhancedBFSVisualizer() {
     return () => window.removeEventListener('resize', handleWindowResize);
   }, []);
 
-  // ensure the graph updates immediately
   useEffect(() => {
     handleGenerateGraph();
   }, [graphType]);
 
-  // Fixed BFS step computation
-  const computeBFSSteps = (nodesCount, edgesArr, start) => {
+  // Recursive DFS step computation
+  const computeDFSRecursiveSteps = (nodesCount, edgesArr, start) => {
+    // Build adjacency list
     const adj = {};
     for (let i = 0; i < nodesCount; i++) adj[i] = [];
-    edgesArr.forEach(e => adj[e.from].push(e.to));
-
-    const visited = new Set();
-    const queue = [parseInt(start)];
-    const distances = { [start]: 0 };
-    const frames = [];
-
-    // Initial state
-    frames.push({
-      visited: new Set(),
-      queue: [...queue],
-      current: null,
-      distances: { ...distances },
-      lineNumber: 1,
-      action: "Initialize"
+    
+    edgesArr.forEach(e => {
+      adj[e.from].push(e.to);
+      if (graphType === "undirected") {
+        adj[e.to].push(e.from);
+      }
     });
 
-    while (queue.length > 0) {
-      // Dequeue step
-      const current = queue.shift();
+    const visited = new Set();
+    const discovery = {};
+    const finish = {};
+    const time = { current: 1 };
+    const frames = [];
+    const callStack = [];
+    const treeEdges = [];
+    const backEdges = [];
+
+    // Recursive DFS function
+    const dfs = (node) => {
+      // Entering node
+      visited.add(node);
+      discovery[node] = time.current++;
+      callStack.push(node);
+      
       frames.push({
         visited: new Set(visited),
-        queue: [...queue],
-        current,
-        distances: { ...distances },
-        lineNumber: 6,
-        action: `Dequeue node ${current}`
+        callStack: [...callStack],
+        current: node,
+        discovery: { ...discovery },
+        finish: { ...finish },
+        treeEdges: [...treeEdges],
+        backEdges: [...backEdges],
+        lineNumber: 2,
+        action: `Entering node ${node} (discovery: ${discovery[node]})`
       });
 
-      if (!visited.has(current)) {
-        // Mark as visited
-        visited.add(current);
-        frames.push({
-          visited: new Set(visited),
-          queue: [...queue],
-          current,
-          distances: { ...distances },
-          lineNumber: 9,
-          action: `Mark node ${current} as visited`
-        });
+      for (const neighbor of adj[node] || []) {
+        if (!visited.has(neighbor)) {
+          // Tree edge
+          treeEdges.push(`${node}-${neighbor}`);
+          
+          frames.push({
+            visited: new Set(visited),
+            callStack: [...callStack],
+            current: node,
+            discovery: { ...discovery },
+            finish: { ...finish },
+            treeEdges: [...treeEdges],
+            backEdges: [...backEdges],
+            lineNumber: 6,
+            action: `Found unvisited neighbor ${neighbor} (tree edge)`
+          });
 
-        // Process neighbors
-        for (const neighbor of adj[current] || []) {
-          if (!visited.has(neighbor) && !queue.includes(neighbor)) {
-            queue.push(neighbor);
-            distances[neighbor] = distances[current] + 1;
-            frames.push({
-              visited: new Set(visited),
-              queue: [...queue],
-              current,
-              distances: { ...distances },
-              lineNumber: 14,
-              action: `Add neighbor ${neighbor} to queue`
-            });
-          }
+          // Recursive call
+          frames.push({
+            visited: new Set(visited),
+            callStack: [...callStack],
+            current: node,
+            discovery: { ...discovery },
+            finish: { ...finish },
+            treeEdges: [...treeEdges],
+            backEdges: [...backEdges],
+            lineNumber: 8,
+            action: `Recursing to neighbor ${neighbor}`
+          });
+
+          dfs(neighbor);
+        } else if (!finish[neighbor]) {
+          // Back edge (cycle)
+          backEdges.push(`${node}-${neighbor}`);
+          
+          frames.push({
+            visited: new Set(visited),
+            callStack: [...callStack],
+            current: node,
+            discovery: { ...discovery },
+            finish: { ...finish },
+            treeEdges: [...treeEdges],
+            backEdges: [...backEdges],
+            lineNumber: 9,
+            action: `Found back edge to ${neighbor} (cycle detected)`
+          });
+        } else {
+          frames.push({
+            visited: new Set(visited),
+            callStack: [...callStack],
+            current: node,
+            discovery: { ...discovery },
+            finish: { ...finish },
+            treeEdges: [...treeEdges],
+            backEdges: [...backEdges],
+            lineNumber: 5,
+            action: `Checking neighbor ${neighbor} (already finished)`
+          });
         }
       }
-    }
+
+      // Exiting node
+      finish[node] = time.current++;
+      callStack.pop();
+      
+      frames.push({
+        visited: new Set(visited),
+        callStack: [...callStack],
+        current: callStack.length ? callStack[callStack.length - 1] : null,
+        discovery: { ...discovery },
+        finish: { ...finish },
+        treeEdges: [...treeEdges],
+        backEdges: [...backEdges],
+        lineNumber: 13,
+        action: `Exiting node ${node} (finish: ${finish[node]})`
+      });
+    };
+
+    // Initial call
+    callStack.push(parseInt(start));
+    frames.push({
+      visited: new Set(),
+      callStack: [...callStack],
+      current: null,
+      discovery: {},
+      finish: {},
+      treeEdges: [],
+      backEdges: [],
+      lineNumber: 1,
+      action: `Starting DFS from node ${start}`
+    });
+
+    // Start DFS
+    dfs(parseInt(start));
 
     // Final state
     frames.push({
       visited: new Set(visited),
-      queue: [],
+      callStack: [],
       current: null,
-      distances: { ...distances },
-      lineNumber: 21,
-      action: "Algorithm complete"
+      discovery: { ...discovery },
+      finish: { ...finish },
+      treeEdges: [...treeEdges],
+      backEdges: [...backEdges],
+      lineNumber: 14,
+      action: "DFS completed"
     });
 
     setSteps(frames);
@@ -282,7 +343,7 @@ export default function EnhancedBFSVisualizer() {
       container: cyRef.current,
       elements: {
         nodes: Array.from({ length: numNodes }, (_, i) => ({
-          data: { id: `${i}`, label: `${i}`, distance: "∞" },
+          data: { id: `${i}`, label: `${i}` },
         })),
         edges: edges.map((e, idx) => ({
           data: { id: `e${idx}`, source: `${e.from}`, target: `${e.to}` },
@@ -326,7 +387,7 @@ export default function EnhancedBFSVisualizer() {
           },
         },
         {
-          selector: "node.queued",
+          selector: "node.inStack",
           style: {
             "background-color": "#3b82f6",
             "border-color": "#60a5fa",
@@ -342,18 +403,26 @@ export default function EnhancedBFSVisualizer() {
             "target-arrow-shape": graphType === "directed" ? "triangle" : "triangle",
             "target-arrow-color": "#64748b",
             "arrow-scale": 1.5,
-            // Add this line for double-headed arrows on undirected edges
             "source-arrow-shape": graphType === "undirected" ? "triangle" : "none",
             "source-arrow-color": "#64748b",
           },
         },
         {
-          selector: "edge.highlighted",
+          selector: "edge.treeEdge",
           style: {
-            width: 5,
+            width: 4,
+            "line-color": "#10b981",
+            "target-arrow-color": "#10b981",
+            "box-shadow": "0 0 10px #10b981",
+          },
+        },
+        {
+          selector: "edge.backEdge",
+          style: {
+            "line-style": "dashed",
+            "line-dash-pattern": [5, 5],
             "line-color": "#f59e0b",
             "target-arrow-color": "#f59e0b",
-            "box-shadow": "0 0 10px #f59e0b",
           },
         },
       ],
@@ -369,10 +438,10 @@ export default function EnhancedBFSVisualizer() {
     });
 
     cyInstance.current = cy;
-    computeBFSSteps(numNodes, edges, startNode);
+    computeDFSRecursiveSteps(numNodes, edges, startNode);
   };
 
-  // Validate edges on change
+  // Validate edges
   useEffect(() => {
     validateEdges(edgeList, numNodes);
   }, [edgeList, numNodes, graphType]);
@@ -384,24 +453,30 @@ export default function EnhancedBFSVisualizer() {
 
     const step = steps[currentStep];
     cy.batch(() => {
-      cy.nodes().removeClass("visited queued current");
+      cy.nodes().removeClass("visited inStack current");
       step.visited.forEach(id => cy.$(`#${id}`).addClass("visited"));
-      step.queue.forEach(id => cy.$(`#${id}`).addClass("queued"));
+      step.callStack.forEach(id => cy.$(`#${id}`).addClass("inStack"));
       if (step.current !== null) cy.$(`#${step.current}`).addClass("current");
 
-      cy.nodes().forEach(n => {
-        const distance = step.distances[n.id()] ?? "∞";
-        n.data("label", `${n.id()} (${distance})`);
+      // Highlight tree and back edges
+      cy.edges().removeClass("treeEdge backEdge");
+      step.treeEdges.forEach(edgeId => {
+        const [source, target] = edgeId.split("-");
+        cy.edges().filter(e => 
+          e.source().id() === source && e.target().id() === target ||
+          (graphType === "undirected" && e.source().id() === target && e.target().id() === source)
+        ).addClass("treeEdge");
       });
-
-      cy.edges().removeClass("highlighted");
-      if (step.current !== null) {
-        cy.$(`edge[source="${step.current}"], edge[target="${step.current}"]`)
-          .addClass("highlighted");
-      }
+      
+      step.backEdges.forEach(edgeId => {
+        const [source, target] = edgeId.split("-");
+        cy.edges().filter(e => 
+          e.source().id() === source && e.target().id() === target ||
+          (graphType === "undirected" && e.source().id() === target && e.target().id() === source)
+        ).addClass("backEdge");
+      });
     });
 
-    // Update code highlighting
     setCurrentHighlightedLine(step.lineNumber);
   }, [currentStep, steps]);
 
@@ -440,6 +515,7 @@ export default function EnhancedBFSVisualizer() {
       green: "from-green-500/20 to-green-600/20 border-green-500/30",
       yellow: "from-yellow-500/20 to-yellow-600/20 border-yellow-500/30",
       red: "from-red-500/20 to-red-600/20 border-red-500/30",
+      purple: "from-purple-500/20 to-purple-600/20 border-purple-500/30",
     };
 
     return (
@@ -481,7 +557,7 @@ export default function EnhancedBFSVisualizer() {
               <Activity size={18} className="text-white" />
             </div>
             <h1 className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              BFS Algorithm Visualizer
+              DFS Recursive Visualizer
             </h1>
           </div>
 
@@ -500,7 +576,6 @@ export default function EnhancedBFSVisualizer() {
           direction="horizontal" 
           onLayout={(sizes) => {
             setIsResizing(false);
-            // Force canvas resize after layout stabilizes
             setTimeout(() => {
               if (cyInstance.current) {
                 cyInstance.current.resize();
@@ -683,10 +758,10 @@ export default function EnhancedBFSVisualizer() {
                   </div>
                 </div>
 
-                {/* Color Legend - moved from right to left panel */}
+                {/* Recursive DFS Legend */}
                 <div className="bg-gray-700/30 backdrop-blur-sm rounded-xl p-4 border border-gray-600/30 mt-4">
                   <h4 className="font-semibold text-gray-200 mb-3">
-                    Color Legend
+                    DFS Color Legend
                   </h4>
                   <div className="space-y-2">
                     {[
@@ -697,7 +772,7 @@ export default function EnhancedBFSVisualizer() {
                       },
                       {
                         color: "bg-blue-500",
-                        label: "Nodes in queue",
+                        label: "Nodes in call stack",
                         textColor: "text-blue-300",
                       },
                       {
@@ -709,6 +784,16 @@ export default function EnhancedBFSVisualizer() {
                         color: "bg-green-500",
                         label: "Visited nodes",
                         textColor: "text-green-300",
+                      },
+                      {
+                        color: "bg-green-500",
+                        label: "Tree edges (DFS path)",
+                        textColor: "text-green-300",
+                      },
+                      {
+                        color: "bg-yellow-500",
+                        label: "Back edges (non-tree)",
+                        textColor: "text-yellow-300",
                       },
                     ].map((item, idx) => (
                       <div key={idx} className="flex items-center gap-3">
@@ -732,9 +817,7 @@ export default function EnhancedBFSVisualizer() {
             onDragging={(isDragging) => {
               setIsResizing(isDragging);
               if (!isDragging && cyInstance.current) {
-                setTimeout(() => {
-                  cyInstance.current.resize();
-                }, 50);
+                setTimeout(() => cyInstance.current.resize(), 50);
               }
             }} 
           />
@@ -756,9 +839,7 @@ export default function EnhancedBFSVisualizer() {
             onDragging={(isDragging) => {
               setIsResizing(isDragging);
               if (!isDragging && cyInstance.current) {
-                setTimeout(() => {
-                  cyInstance.current.resize();
-                }, 50);
+                setTimeout(() => cyInstance.current.resize(), 50);
               }
             }} 
           />
@@ -806,9 +887,9 @@ export default function EnhancedBFSVisualizer() {
                       <StatCard
                         icon={Activity}
                         value={
-                          steps[currentStep] ? steps[currentStep].queue.length : 0
+                          steps[currentStep] ? steps[currentStep].callStack.length : 0
                         }
-                        label="In Queue"
+                        label="Call Stack Size"
                         color="blue"
                       />
                       <StatCard
@@ -853,66 +934,94 @@ export default function EnhancedBFSVisualizer() {
                       </div>
                     </div>
 
-                    {/* Distance Array */}
+                    {/* Discovery/Finish Times */}
                     <div className="bg-gray-700/30 backdrop-blur-sm rounded-xl p-4 border border-gray-600/30">
                       <h3 className="text-lg font-semibold text-gray-200 mb-3">
-                        Distance Array
+                        Node Timing Information
                       </h3>
                       <div className="grid grid-cols-4 gap-2">
                         {Array.from({ length: numNodes }, (_, i) => {
-                          const distance = steps[currentStep]?.distances[i] ?? "∞";
+                          const discovery = steps[currentStep]?.discovery[i] || "";
+                          const finish = steps[currentStep]?.finish[i] || "";
+                          
                           return (
                             <div
                               key={i}
-                              className="flex justify-between bg-gray-600/50 rounded-lg px-2 py-1"
+                              className={`flex flex-col items-center justify-center rounded-lg p-2 text-center ${
+                                steps[currentStep]?.current == i 
+                                  ? "bg-gradient-to-br from-red-500/20 to-red-600/20 border border-red-500/30"
+                                  : steps[currentStep]?.callStack.includes(i)
+                                  ? "bg-gradient-to-br from-blue-500/20 to-blue-600/20 border border-blue-500/30"
+                                  : steps[currentStep]?.visited.has(i)
+                                  ? "bg-gradient-to-br from-green-500/20 to-green-600/20 border border-green-500/30"
+                                  : "bg-gray-600/50"
+                              }`}
                             >
-                              <span className="text-gray-300 font-mono text-sm">{i}:</span>
-                              <span className="text-yellow-400 font-mono font-bold text-sm">
-                                {distance}
-                              </span>
+                              <div className="text-gray-300 text-sm font-semibold">Node {i}</div>
+                              <div className="flex gap-1 text-xs">
+                                {discovery && (
+                                  <div className="text-green-400">D: {discovery}</div>
+                                )}
+                                {finish && (
+                                  <div className="text-purple-400">F: {finish}</div>
+                                )}
+                              </div>
                             </div>
                           );
                         })}
                       </div>
                     </div>
 
-                    {/* Current State */}
+                    {/* Call Stack Visualization */}
                     {steps[currentStep] && (
-                      <div className="space-y-3">
-                        <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-3">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
-                            <span className="text-sm font-semibold text-green-400">
-                              Visited Nodes
-                            </span>
+                      <div className="bg-gray-700/30 backdrop-blur-sm rounded-xl p-4 border border-gray-600/30">
+                        <h3 className="text-lg font-semibold text-gray-200 mb-3">
+                          Call Stack Visualization
+                        </h3>
+                        <div className="flex flex-col">
+                          <div className="text-sm text-gray-400 mb-2">
+                            Current stack depth: {steps[currentStep].callStack.length}
                           </div>
-                          <span className="font-mono text-green-300 text-sm">
-                            {[...steps[currentStep].visited].join(", ") || "None"}
-                          </span>
-                        </div>
-
-                        <div className="bg-blue-500/20 border border-blue-500/30 rounded-xl p-3">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
-                            <span className="text-sm font-semibold text-blue-400">
-                              Queue
-                            </span>
+                          
+                          <div className="flex flex-col-reverse space-y-reverse space-y-1 max-h-60 overflow-y-auto p-2 bg-gray-800/50 rounded-lg">
+                            {steps[currentStep].callStack.map((node, index) => (
+                              <div 
+                                key={index} 
+                                className={`p-3 rounded-lg ${
+                                  index === steps[currentStep].callStack.length - 1 
+                                    ? "bg-gradient-to-r from-red-600/30 to-red-700/30 border border-red-500/30" 
+                                    : "bg-gradient-to-r from-blue-600/20 to-blue-700/20 border border-blue-500/20"
+                                }`}
+                              >
+                                <div className="flex justify-between items-center">
+                                  <div className="flex items-center gap-2">
+                                    <div className={`w-3 h-3 rounded-full ${
+                                      index === steps[currentStep].callStack.length - 1 
+                                        ? "bg-red-500" 
+                                        : "bg-blue-500"
+                                    }`}></div>
+                                    <span className="font-mono font-bold">Node {node}</span>
+                                  </div>
+                                  <div className="text-xs text-gray-400">
+                                    Depth: {steps[currentStep].callStack.length - index}
+                                  </div>
+                                </div>
+                                
+                                {steps[currentStep].discovery[node] && (
+                                  <div className="mt-2 text-xs flex justify-between">
+                                    <span className="text-green-400">D: {steps[currentStep].discovery[node]}</span>
+                                    <span className="text-purple-400">F: {steps[currentStep].finish[node] || "?"}</span>
+                                  </div>
+                                )}
+                              </div>
+                            ))}
+                            
+                            {steps[currentStep].callStack.length === 0 && (
+                              <div className="text-center py-4 text-gray-500">
+                                Call stack is empty
+                              </div>
+                            )}
                           </div>
-                          <span className="font-mono text-blue-300 text-sm">
-                            {steps[currentStep].queue.join(", ") || "Empty"}
-                          </span>
-                        </div>
-
-                        <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-3">
-                          <div className="flex items-center gap-2 mb-2">
-                            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
-                            <span className="text-sm font-semibold text-red-400">
-                              Current Node
-                            </span>
-                          </div>
-                          <span className="font-mono text-red-300 text-sm">
-                            {steps[currentStep].current !== null ? steps[currentStep].current : "None"}
-                          </span>
                         </div>
                       </div>
                     )}
@@ -925,28 +1034,19 @@ export default function EnhancedBFSVisualizer() {
                       <div className="flex items-center gap-2 p-3 border-b border-gray-600/30">
                         <Code2 size={18} className="text-blue-400" />
                         <h3 className="text-lg font-semibold text-gray-200">
-                          BFS Implementation
+                          Recursive DFS Implementation
                         </h3>
                       </div>
                       <div className="relative">
                         <CodeMirror
-                          value={bfsSourceCode}
+                          value={dfsSourceCode}
                           extensions={[
                             javascript(),
                             EditorView.theme({
-                              "&": {
-                                fontSize: "14px",
-                              },
-                              ".cm-content": {
-                                padding: "16px",
-                                minHeight: "300px",
-                              },
-                              ".cm-focused": {
-                                outline: "none",
-                              },
-                              ".cm-line": {
-                                padding: "2px 0",
-                              },
+                              "&": { fontSize: "14px" },
+                              ".cm-content": { padding: "16px", minHeight: "300px" },
+                              ".cm-focused": { outline: "none" },
+                              ".cm-line": { padding: "2px 0" },
                               [`&.cm-editor.cm-focused .cm-line:nth-child(${currentHighlightedLine})`]: {
                                 backgroundColor: "rgba(245, 158, 11, 0.2)",
                                 borderLeft: "4px solid #f59e0b",
@@ -963,16 +1063,13 @@ export default function EnhancedBFSVisualizer() {
                             dropCursor: false,
                             allowMultipleSelections: false,
                           }}
-                          onCreateEditor={(view) => {
-                            editorRef.current = view;
-                          }}
                         />
                       </div>
                     </div>
 
                     <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-xl p-4">
                       <h4 className="font-semibold text-gray-200 mb-3">
-                        Algorithm Complexity
+                        Recursive DFS Properties
                       </h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
@@ -984,7 +1081,15 @@ export default function EnhancedBFSVisualizer() {
                           <span className="font-mono text-blue-400">O(V)</span>
                         </div>
                         <div className="text-xs text-gray-400 mt-2">
-                          V = number of vertices, E = number of edges
+                          V = vertices, E = edges. Space complexity comes from the call stack depth.
+                        </div>
+                        <div className="mt-3 text-gray-300">
+                          <span className="font-semibold text-purple-300">Tree Edges:</span> 
+                          <span> Edges that are part of the DFS tree</span>
+                        </div>
+                        <div className="text-gray-300">
+                          <span className="font-semibold text-yellow-300">Back Edges:</span> 
+                          <span> Edges to ancestors in the DFS tree (indicate cycles)</span>
                         </div>
                       </div>
                     </div>
@@ -1003,6 +1108,14 @@ export default function EnhancedBFSVisualizer() {
         onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
         customButtons={alertConfig.customButtons}
       />
+      
+      <style jsx>{`
+        @keyframes pulse {
+          0% { background-color: rgba(245, 158, 11, 0.2); }
+          50% { background-color: rgba(245, 158, 11, 0.1); }
+          100% { background-color: rgba(245, 158, 11, 0.2); }
+        }
+      `}</style>
     </div>
   );
 }
