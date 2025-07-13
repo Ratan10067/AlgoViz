@@ -1,16 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import cytoscape from "cytoscape";
-import coseBilkent from "cytoscape-cose-bilkent";
-import edgehandles from "cytoscape-edgehandles";
-
+import cytoscape from "../utils/cytoscapeSetup";
 import {
   PanelGroup,
   Panel,
   PanelResizeHandle,
 } from "react-resizable-panels";
-
-import { oneDark } from "@codemirror/theme-one-dark";
-import { EditorView } from "@codemirror/view";
 
 import {
   Play, Pause, SkipForward, RotateCcw, Settings, BarChart3, Code2,
@@ -22,9 +16,9 @@ import Alert from "./Alert";
 import BasicCodeDisplay from "./BasicCodeDisplay";
 import { bfs as bfsCode } from "../algorithms/codeExamples";
 
-// Register Cytoscape extensions
-cytoscape.use(coseBilkent);
-cytoscape.use(edgehandles);
+// Remove the Cytoscape extensions registration lines
+// cytoscape.use(coseBilkent);
+// cytoscape.use(edgehandles);
 
 export default function EnhancedBFSVisualizer() {
   const cyRef = useRef(null);

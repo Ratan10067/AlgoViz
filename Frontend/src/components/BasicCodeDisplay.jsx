@@ -1,6 +1,7 @@
-import React, { useState } from "react";
-import { ChevronDown } from "lucide-react";
+import React, { useState, useRef, useEffect } from "react";
+import { Maximize2, WrapText } from "lucide-react";
 import ErrorBoundary from "./ErrorBoundary";
+import SimpleCodeBlock from "./SimpleCodeBlock";
 
 const BasicCodeDisplay = ({
   cppCode,
@@ -9,113 +10,107 @@ const BasicCodeDisplay = ({
   highlightedLine = null,
   className = "",
 }) => {
-  const [selectedLanguage, setSelectedLanguage] = useState("cpp");
-  const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+  // state for fullscreen
+  const [isFullScreen, setIsFullScreen] = useState(false);
+  // state for line‐wrapping
+  const [isWrapped, setIsWrapped] = useState(false);
 
-  const languageOptions = [
-    { id: "cpp", name: "C++" },
-    { id: "python", name: "Python" },
-    { id: "javascript", name: "JavaScript" },
-  ];
+  const fullScreenRef = useRef(null);
 
-  // Get the appropriate code based on selection
-  const getCode = () => {
-    switch (selectedLanguage) {
-      case "cpp":
-        return cppCode;
-      case "python":
-        return pythonCode;
-      case "javascript":
-        return jsCode;
-      default:
-        return cppCode;
+  // Fullscreen change listener
+  useEffect(() => {
+    function handleFullScreenChange() {
+      setIsFullScreen(
+        document.fullscreenElement === fullScreenRef.current
+      );
+    }
+    document.addEventListener("fullscreenchange", handleFullScreenChange);
+    return () =>
+      document.removeEventListener(
+        "fullscreenchange",
+        handleFullScreenChange
+      );
+  }, []);
+
+  // Toggle fullscreen on/off
+  const toggleFullScreen = () => {
+    if (!isFullScreen) {
+      fullScreenRef.current?.requestFullscreen();
+    } else {
+      document.exitFullscreen();
     }
   };
 
-  const code = getCode();
-  const currentLanguageOption = languageOptions.find(lang => lang.id === selectedLanguage);
-  
-  // Split the code into lines for line highlighting
-  const codeLines = code.split('\n');
+  // Escape key exits fullscreen
+  useEffect(() => {
+    if (!isFullScreen) return;
+    const onKeyDown = (e) => {
+      if (e.key === "Escape" && document.fullscreenElement) {
+        document.exitFullscreen();
+      }
+    };
+    window.addEventListener("keydown", onKeyDown);
+    return () => window.removeEventListener("keydown", onKeyDown);
+  }, [isFullScreen]);
+
+  // Toggle line wrapping
+  const toggleWrap = () => {
+    setIsWrapped((prev) => !prev);
+  };
+
+  // sanitize incoming code props
+  const sanitizedCppCode = cppCode ? String(cppCode) : "";
+  const sanitizedPythonCode = pythonCode ? String(pythonCode) : "";
+  const sanitizedJsCode = jsCode ? String(jsCode) : "";
 
   return (
     <ErrorBoundary>
-      <div className={`relative ${className}`}>
-        {/* Language selector dropdown */}
-        <div className="flex justify-end mb-2">
-          <div className="relative">
-            <button
-              onClick={() => setIsDropdownOpen(!isDropdownOpen)}
-              className="flex items-center space-x-2 px-3 py-1.5 bg-gray-800 text-white rounded-md hover:bg-gray-700 transition-colors duration-200"
-            >
-              <span>{currentLanguageOption?.name || "Language"}</span>
-              <ChevronDown className="w-4 h-4" />
-            </button>
-            
-            {isDropdownOpen && (
-              <div className="absolute right-0 mt-1 w-36 bg-gray-800 border border-gray-700 rounded-md shadow-lg z-10">
-                {languageOptions.map(language => (
-                  <button
-                    key={language.id}
-                    className={`block w-full text-left px-4 py-2 text-sm hover:bg-gray-700 transition-colors duration-200 ${
-                      selectedLanguage === language.id ? "text-cyan-400" : "text-white"
-                    }`}
-                    onClick={() => {
-                      setSelectedLanguage(language.id);
-                      setIsDropdownOpen(false);
-                    }}
-                  >
-                    {language.name}
-                  </button>
-                ))}
-              </div>
-            )}
-          </div>
+      <div
+        ref={fullScreenRef}
+        className={`relative bg-black ${
+          isFullScreen
+            ? "fixed inset-0 z-50 flex flex-col h-screen w-screen"
+            : "w-full h-full"
+        }`}
+        style={{ minHeight: 0 }}
+      >
+        {/* BOTH buttons in one corner, side-by-side */}
+        <div className="absolute top-2 right-2 z-10 flex space-x-2">
+          {/* Wrap toggle */}
+          <button
+            className="p-2 bg-gray-800/80 rounded hover:bg-gray-700 text-white"
+            onClick={toggleWrap}
+            title={isWrapped ? "Disable Line Wrap" : "Enable Line Wrap"}
+          >
+            <WrapText size={18} />
+          </button>
+
+          {/* Fullscreen toggle */}
+          <button
+            className="p-2 bg-gray-800/80 rounded hover:bg-gray-700 text-white"
+            onClick={toggleFullScreen}
+            title={isFullScreen ? "Exit Full Screen" : "Full Screen"}
+          >
+            <Maximize2 size={18} />
+          </button>
         </div>
 
-        {/* Code display */}
-        <div className="rounded-lg overflow-hidden border border-gray-700 bg-gray-900 font-mono text-sm text-white">
-          <div className="p-4 overflow-x-auto">
-            {codeLines.map((line, index) => {
-              // Apply very simple syntax highlighting
-              const lineWithHighlighting = applyBasicHighlighting(line, selectedLanguage);
-              
-              return (
-                <div 
-                  key={index} 
-                  className={`${highlightedLine === index + 1 ? 'bg-green-900/30 border-l-4 border-green-500 pl-2' : ''} whitespace-pre`}
-                >
-                  <span className="inline-block w-8 mr-2 text-gray-500 select-none text-right">{index + 1}</span>
-                  {lineWithHighlighting}
-                </div>
-              );
-            })}
-          </div>
+        <div className="flex-1 flex flex-col h-full min-h-0">
+          <SimpleCodeBlock
+            cppCode={sanitizedCppCode}
+            pythonCode={sanitizedPythonCode}
+            jsCode={sanitizedJsCode}
+            highlightedLine={highlightedLine}
+            className={`w-full h-full min-h-0 text-lg ${className}`}
+            isFullScreen={isFullScreen}
+            isWrapped={isWrapped}
+            onToggleFullScreen={toggleFullScreen}
+            onToggleWrap={toggleWrap}
+          />
         </div>
       </div>
     </ErrorBoundary>
   );
 };
 
-// Very basic syntax highlighting function
-function applyBasicHighlighting(line, language) {
-  // Split the line into parts that we can color differently
-  const parts = [];
-  
-  // Handle comments
-  if (line.includes('//')) {
-    const commentIndex = line.indexOf('//');
-    const code = line.substring(0, commentIndex);
-    const comment = line.substring(commentIndex);
-    
-    if (code) parts.push(<span key="code">{code}</span>);
-    parts.push(<span key="comment" className="text-gray-500">{comment}</span>);
-    
-    return parts;
-  }
-  
-  // If no special highlighting, just return the line
-  return line;
-}
-
-export default BasicCodeDisplay; 
+export default BasicCodeDisplay;

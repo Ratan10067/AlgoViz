@@ -40,6 +40,7 @@ function App() {
           <Route path="/support" element={<SupportPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/user-profile" element={<UserProfilePage />} />
+          <Route path="/page-not-found" element={<NotFoundPage />} />
         </Routes>
       </BrowserRouter>
     </>

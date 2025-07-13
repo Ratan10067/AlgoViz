@@ -4,43 +4,14 @@ import {
   Panel,
   PanelResizeHandle,
 } from "react-resizable-panels";
-import CodeMirror from "@uiw/react-codemirror";
-import { javascript } from "@codemirror/lang-javascript";
-import { oneDark } from "@codemirror/theme-one-dark";
-import { EditorView } from "@codemirror/view";
 import {
   Play, Pause, SkipForward, RotateCcw, Settings, BarChart3, Code2,
   Activity, Target, Clock, Maximize2, ArrowLeft, AlertTriangle, Shuffle, ArrowDown, ArrowUp
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Alert from "./Alert";
-
-const mergeSortSourceCode = `function mergeSort(arr) {
-  if (arr.length <= 1) return arr;
-  
-  const mid = Math.floor(arr.length / 2);
-  const left = mergeSort(arr.slice(0, mid));
-  const right = mergeSort(arr.slice(mid));
-  
-  return merge(left, right);
-}
-
-function merge(left, right) {
-  let result = [];
-  let i = 0, j = 0;
-  
-  while (i < left.length && j < right.length) {
-    if (left[i] < right[j]) {
-      result.push(left[i]);
-      i++;
-    } else {
-      result.push(right[j]);
-      j++;
-    }
-  }
-  
-  return result.concat(left.slice(i)).concat(right.slice(j));
-}`;
+import BasicCodeDisplay from "./BasicCodeDisplay";
+import { mergeSort as mergeSortCode } from "../algorithms/codeExamples";
 
 export default function MergeSortVisualizer() {
   const navigate = useNavigate();
@@ -987,40 +958,11 @@ export default function MergeSortVisualizer() {
                       </div>
                       
                       <div className="flex-1 overflow-auto">
-                        <CodeMirror
-                          value={mergeSortSourceCode}
-                          height="100%"
-                          extensions={[
-                            javascript({ jsx: true }),
-                            EditorView.lineWrapping,
-                            EditorView.theme({
-                              "&": {
-                                fontFamily: '"Fira Code", monospace',
-                                fontSize: "14px",
-                                backgroundColor: "transparent",
-                                height: "100%"
-                              },
-                              ".cm-content": {
-                                padding: "10px 0"
-                              },
-                              ".cm-line": {
-                                padding: "0 16px"
-                              },
-                              ".cm-activeLine": {
-                                backgroundColor: "rgba(99, 102, 241, 0.2)"
-                              },
-                              ".cm-activeLineGutter": {
-                                backgroundColor: "rgba(99, 102, 241, 0.3)"
-                              }
-                            })
-                          ]}
-                          theme={oneDark}
-                          editable={false}
-                          basicSetup={{
-                            lineNumbers: true,
-                            highlightActiveLineGutter: true,
-                            highlightActiveLine: true
-                          }}
+                        <BasicCodeDisplay
+                          cppCode={mergeSortCode.cpp}
+                          pythonCode={mergeSortCode.python}
+                          jsCode={mergeSortCode.javascript}
+                          className="h-full"
                         />
                       </div>
                     </div>

@@ -1,18 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import cytoscape from "cytoscape";
-import coseBilkent from "cytoscape-cose-bilkent";
-import edgehandles from "cytoscape-edgehandles";
-
+import cytoscape from "../utils/cytoscapeSetup";
 import {
   PanelGroup,
   Panel,
   PanelResizeHandle,
 } from "react-resizable-panels";
-
-import CodeMirror from "@uiw/react-codemirror";
-import { javascript } from "@codemirror/lang-javascript";
-import { oneDark } from "@codemirror/theme-one-dark";
-import { EditorView } from "@codemirror/view";
 
 import {
   Play, Pause, SkipForward, RotateCcw, Settings, BarChart3, Code2,
@@ -21,26 +13,12 @@ import {
 
 import { useNavigate } from "react-router-dom";
 import Alert from "./Alert";
+import BasicCodeDisplay from "./BasicCodeDisplay";
+import { dfs as dfsCode } from "../algorithms/codeExamples";
 
-// Register Cytoscape extensions
-cytoscape.use(coseBilkent);
-cytoscape.use(edgehandles);
-
-const dfsSourceCode = `function dfs(graph, node, visited, discovery, finish, time) {
-  visited.add(node);                         // Line 2
-  discovery[node] = time.current++;          // Line 3
-  
-  for (const neighbor of graph[node]) {      // Line 5
-    if (!visited.has(neighbor)) {            // Line 6
-      // Tree edge - recursive call
-      dfs(graph, neighbor, visited, discovery, finish, time); // Line 8
-    } else if (!finish[neighbor]) {          // Line 9
-      // Back edge (cycle detected)
-    }
-  }
-  
-  finish[node] = time.current++;             // Line 13
-}`;
+// Remove the Cytoscape extensions registration lines
+// cytoscape.use(coseBilkent);
+// cytoscape.use(edgehandles);
 
 export default function DFSRecursiveVisualizer() {
   const cyRef = useRef(null);
@@ -1038,31 +1016,12 @@ export default function DFSRecursiveVisualizer() {
                         </h3>
                       </div>
                       <div className="relative">
-                        <CodeMirror
-                          value={dfsSourceCode}
-                          extensions={[
-                            javascript(),
-                            EditorView.theme({
-                              "&": { fontSize: "14px" },
-                              ".cm-content": { padding: "16px", minHeight: "300px" },
-                              ".cm-focused": { outline: "none" },
-                              ".cm-line": { padding: "2px 0" },
-                              [`&.cm-editor.cm-focused .cm-line:nth-child(${currentHighlightedLine})`]: {
-                                backgroundColor: "rgba(245, 158, 11, 0.2)",
-                                borderLeft: "4px solid #f59e0b",
-                                paddingLeft: "12px",
-                                animation: "pulse 2s infinite",
-                              },
-                            }),
-                          ]}
-                          theme={oneDark}
-                          editable={false}
-                          basicSetup={{
-                            lineNumbers: true,
-                            foldGutter: false,
-                            dropCursor: false,
-                            allowMultipleSelections: false,
-                          }}
+                        <BasicCodeDisplay
+                          cppCode={dfsCode.cpp}
+                          pythonCode={dfsCode.python}
+                          jsCode={dfsCode.javascript}
+                          highlightedLine={currentHighlightedLine}
+                          className="min-h-[300px]"
                         />
                       </div>
                     </div>

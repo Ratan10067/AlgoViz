@@ -1,18 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import cytoscape from "cytoscape";
-import coseBilkent from "cytoscape-cose-bilkent";
-import edgehandles from "cytoscape-edgehandles";
-
+import cytoscape from "../utils/cytoscapeSetup";
 import {
   PanelGroup,
   Panel,
   PanelResizeHandle,
 } from "react-resizable-panels";
-
-import CodeMirror from "@uiw/react-codemirror";
-import { javascript } from "@codemirror/lang-javascript";
-import { oneDark } from "@codemirror/theme-one-dark";
-import { EditorView, Decoration } from "@codemirror/view";
 
 import {
   Play, Pause, SkipForward, RotateCcw, Settings, BarChart3, Code2,
@@ -21,44 +13,12 @@ import {
 
 import { useNavigate } from "react-router-dom";
 import Alert from "./Alert";
+import BasicCodeDisplay from "./BasicCodeDisplay";
+import { dijkstra as dijkstraCode } from "../algorithms/codeExamples";
 
-// Register Cytoscape extensions
-cytoscape.use(coseBilkent);
-cytoscape.use(edgehandles);
-
-const dijkstraSourceCode = `function dijkstra(graph, start) {
-  const distances = {};
-  const visited = new Set();
-  const pq = new PriorityQueue();
-  
-  // Initialize distances
-  for (const node in graph) {
-    distances[node] = node === start ? 0 : Infinity;
-  }
-  
-  pq.enqueue(start, 0); // Line 11
-  
-  while (!pq.isEmpty()) {
-    const current = pq.dequeue().element; // Line 14
-    
-    if (visited.has(current)) continue; // Line 16
-    
-    visited.add(current); // Line 18
-    
-    for (const neighbor of graph[current]) {
-      const { node: neighborNode, weight } = neighbor; // Line 21
-      
-      const distanceToNeighbor = distances[current] + weight; // Line 23
-      
-      if (distanceToNeighbor < distances[neighborNode]) { // Line 25
-        distances[neighborNode] = distanceToNeighbor; // Line 26
-        pq.enqueue(neighborNode, distanceToNeighbor); // Line 27
-      }
-    }
-  }
-  
-  return distances; // Line 32
-}`;
+// Remove the Cytoscape extensions registration lines
+// cytoscape.use(coseBilkent);
+// cytoscape.use(edgehandles);
 
 export default function DijkstraVisualizer() {
   const cyRef = useRef(null);
@@ -69,9 +29,9 @@ export default function DijkstraVisualizer() {
   // Graph state
   const [numNodes, setNumNodes] = useState(8);
   const [edgeList, setEdgeList] = useState(
-    "0-1:4,0-2:1,1-3:1,1-4:3,2-4:2,2-5:5,3-6:2,4-6:4,4-7:1,5-7:3"
+    "0-1:4,0-2:8,1-3:3,1-4:2,2-4:5,2-5:9,3-6:1,4-6:7,4-7:6,5-7:3"
   );
-  const [graphType, setGraphType] = useState("undirected");
+  const [graphType, setGraphType] = useState("directed");
   const [startNode, setStartNode] = useState("0");
 
   // Animation state
@@ -86,9 +46,7 @@ export default function DijkstraVisualizer() {
   const [edgeValidationError, setEdgeValidationError] = useState("");
   const [isValidGraph, setIsValidGraph] = useState(false);
   const [currentHighlightedLine, setCurrentHighlightedLine] = useState(null);
-
   const [isResizing, setIsResizing] = useState(false);
-
   const [alertConfig, setAlertConfig] = useState({
     isOpen: false,
     message: "",
@@ -132,18 +90,37 @@ export default function DijkstraVisualizer() {
         .map(s => s.trim())
         .filter(Boolean)
         .map(pair => {
-          // Split by ':' to separate nodes and weight
-          const [nodes, weightStr] = pair.split(":").map(s => s.trim());
-          if (!nodes || !weightStr) {
-            throw new Error(`Missing weight in edge: "${pair}". Format = source-target:weight`);
+          // Try the correct format a-b:w first
+          let from, to, weight;
+          
+          if (pair.includes(':')) {
+            // Format: a-b:w
+            const [nodes, weightStr] = pair.split(":").map(s => s.trim());
+            if (!nodes || !weightStr) {
+              throw new Error(`Missing weight in edge: "${pair}". Format = source-target:weight`);
+            }
+            const [fromStr, toStr] = nodes.split("-").map(s => s.trim());
+            from = parseInt(fromStr, 10);
+            to = parseInt(toStr, 10);
+            weight = parseInt(weightStr, 10);
+          } else if (pair.includes('-')) {
+            // Legacy format: a-b-w (for backward compatibility)
+            const parts = pair.split("-").map(s => s.trim());
+            if (parts.length !== 3) {
+              throw new Error(`Invalid edge format: "${pair}". Format should be source-target:weight`);
+            }
+            from = parseInt(parts[0], 10);
+            to = parseInt(parts[1], 10);
+            weight = parseInt(parts[2], 10);
+            
+            // Show warning for legacy format
+            console.warn(`Legacy edge format detected: "${pair}". Please use the format "source-target:weight" instead.`);
+          } else {
+            throw new Error(`Invalid edge format: "${pair}". Format should be source-target:weight`);
           }
-          const [fromStr, toStr] = nodes.split("-").map(s => s.trim());
-          const from = parseInt(fromStr, 10);
-          const to = parseInt(toStr, 10);
-          const weight = parseInt(weightStr, 10);
 
           if (isNaN(from) || isNaN(to) || isNaN(weight)) {
-            throw new Error(`Invalid edge format: "${pair}"`);
+            throw new Error(`Invalid edge format: "${pair}". All values must be numbers.`);
           }
 
           if (from < 0 || to < 0 || from >= nodeCount || to >= nodeCount) {
@@ -996,43 +973,12 @@ export default function DijkstraVisualizer() {
                         </h3>
                       </div>
                       <div className="relative">
-                        <CodeMirror
-                          value={dijkstraSourceCode}
-                          extensions={[
-                            javascript(),
-                            EditorView.theme({
-                              "&": {
-                                fontSize: "14px",
-                              },
-                              ".cm-content": {
-                                padding: "16px",
-                                minHeight: "300px",
-                              },
-                              ".cm-focused": {
-                                outline: "none",
-                              },
-                              ".cm-line": {
-                                padding: "2px 0",
-                              },
-                              [`&.cm-editor.cm-focused .cm-line:nth-child(${currentHighlightedLine})`]: {
-                                backgroundColor: "rgba(245, 158, 11, 0.2)",
-                                borderLeft: "4px solid #f59e0b",
-                                paddingLeft: "12px",
-                                animation: "pulse 2s infinite",
-                              },
-                            }),
-                          ]}
-                          theme={oneDark}
-                          editable={false}
-                          basicSetup={{
-                            lineNumbers: true,
-                            foldGutter: false,
-                            dropCursor: false,
-                            allowMultipleSelections: false,
-                          }}
-                          onCreateEditor={(view) => {
-                            editorRef.current = view;
-                          }}
+                        <BasicCodeDisplay
+                          cppCode={dijkstraCode.cpp}
+                          pythonCode={dijkstraCode.python}
+                          jsCode={dijkstraCode.javascript}
+                          highlightedLine={currentHighlightedLine}
+                          className="min-h-[300px]"
                         />
                       </div>
                     </div>
