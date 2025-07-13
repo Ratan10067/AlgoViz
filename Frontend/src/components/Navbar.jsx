@@ -9,21 +9,20 @@ import {
   UserPlus,
   User,
   LogOut,
+  Home,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import ResponsiveButton from "./ResponsiveButton";
+import { useAuth } from "../context/UserContext";
 
 const Navbar = () => {
   const [isResourcesDropdownOpen, setIsResourcesDropdownOpen] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showUserDropdown, setShowUserDropdown] = useState(false);
-  // This would typically come from your auth context/state management
-  const [isLoggedIn, setIsLoggedIn] = useState(false);
-  const [user, setUser] = useState({
-    name: "Alex Johnson",
-    avatar:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=40&h=40&fit=crop&crop=face",
-  });
+  
+  // Use the auth context instead of local state
+  const { user, isAuthenticated, logout } = useAuth();
 
   const resourcesDropdownRef = useRef(null);
   const userDropdownRef = useRef(null);
@@ -83,50 +82,53 @@ const Navbar = () => {
   };
 
   const handleLogout = () => {
-    // Handle logout logic here (clear tokens, reset state, etc.)
-    setIsLoggedIn(false);
-    setUser(null);
+    // Use the logout function from auth context
+    logout();
     setShowUserDropdown(false);
     setIsMobileMenuOpen(false);
-    // Optionally redirect to home
     navigate("/");
   };
 
   // Simulate login - replace this with your actual login logic
   const simulateLogin = () => {
-    setIsLoggedIn(true);
+    // setIsLoggedIn(true); // This line is removed as per the new_code
     setShowAuthModal(false);
   };
 
   return (
     <nav className="relative z-50 container mx-auto px-6 py-4 flex justify-between items-center">
       {/* Logo */}
-      <div
+      <button
         className="flex items-center space-x-2 cursor-pointer"
         onClick={handleLogoClick}
       >
         <Code className="w-8 h-8 text-cyan-400" />
         <span className="text-2xl font-bold text-white">AlgoViz</span>
-      </div>
+      </button>
 
       {/* Centered Navigation Items */}
       <div className="hidden md:flex items-center space-x-6 absolute left-1/2 -translate-x-1/2">
         {/* Home Link */}
-        <button
+        <ResponsiveButton
           onClick={() => handleNavigation("/")}
-          className="text-gray-300 hover:text-white transition-colors duration-300 py-2 cursor-pointer"
+          variant="ghost"
+          size="sm"
+          icon={<Home className="w-4 h-4" />}
+          iconPosition="left"
         >
           Home
-        </button>
+        </ResponsiveButton>
 
         {/* Algorithms Link */}
-        <button
+        <ResponsiveButton
           onClick={() => handleNavigation("/algorithms")}
-          className="flex items-center space-x-1 text-gray-300 hover:text-white transition-colors duration-300 py-2 cursor-pointer"
+          variant="ghost"
+          size="sm"
+          icon={<Cpu className="w-4 h-4" />}
+          iconPosition="left"
         >
-          <Cpu className="w-4 h-4" />
-          <span>Algorithms</span>
-        </button>
+          Algorithms
+        </ResponsiveButton>
 
         {/* Resources Dropdown */}
         <div className="relative" ref={resourcesDropdownRef}>
@@ -176,15 +178,16 @@ const Navbar = () => {
 
       {/* Authentication Section */}
       <div className="flex items-center">
-        {!isLoggedIn ? (
+        {!isAuthenticated ? (
           // Show Get Started button when not logged in
-          <button
+          <ResponsiveButton
             onClick={() => setShowAuthModal(true)}
-            className="ml-4 px-6 py-2 bg-gradient-to-r from-cyan-600 to-teal-600 text-white rounded-xl hover:from-cyan-700 hover:to-teal-700 transition-all duration-300 shadow-lg hover:shadow-cyan-500/25 transform hover:scale-105 active:scale-95"
-            aria-label="Get Started"
+            variant="primary"
+            size="md"
+            className="ml-4"
           >
             Get Started
-          </button>
+          </ResponsiveButton>
         ) : (
           // Show user dropdown when logged in
           <div className="relative" ref={userDropdownRef}>
@@ -193,11 +196,17 @@ const Navbar = () => {
               className="ml-4 flex items-center space-x-2 p-2 rounded-full hover:bg-gray-700 transition-colors duration-300"
               aria-label="User Menu"
             >
-              <img
-                src={user.avatar}
-                alt="User Avatar"
-                className="w-8 h-8 rounded-full border-2 border-cyan-400"
-              />
+              {user.avatar ? (
+                <img
+                  src={user.avatar}
+                  alt="User Avatar"
+                  className="w-8 h-8 rounded-full border-2 border-cyan-400"
+                />
+              ) : (
+                <div className="w-8 h-8 rounded-full border-2 border-cyan-400 flex items-center justify-center bg-gray-700">
+                  <User className="w-4 h-4 text-cyan-400" />
+                </div>
+              )}
               <ChevronDown className="w-4 h-4 text-gray-300" />
             </button>
 
@@ -228,7 +237,7 @@ const Navbar = () => {
       </div>
 
       {/* Auth Modal - Only for Sign In/Register */}
-      {showAuthModal && !isLoggedIn && (
+      {showAuthModal && !isAuthenticated && (
         <div
           className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 backdrop-blur"
           onClick={() => setShowAuthModal(false)}
@@ -249,6 +258,7 @@ const Navbar = () => {
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
               >
                 <path
                   strokeLinecap="round"
@@ -258,151 +268,155 @@ const Navbar = () => {
                 />
               </svg>
             </button>
-            <h2 className="text-2xl font-bold mb-6 text-center text-cyan-400">
-              Welcome to AlgoViz
-            </h2>
-            <div className="flex flex-col space-y-4">
-              <button
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-cyan-600 to-teal-600 text-white font-semibold hover:from-cyan-700 hover:to-teal-700 transition-all duration-300 flex items-center justify-center gap-2"
+            <div className="text-center mb-6">
+              <h2 className="text-2xl font-bold text-white">Welcome</h2>
+              <p className="text-slate-400 mt-1">
+                Sign in or create an account to continue
+              </p>
+            </div>
+            <div className="space-y-4">
+              <ResponsiveButton
                 onClick={handleLogin}
+                variant="primary"
+                fullWidth
+                size="lg"
+                icon={<LogIn className="w-5 h-5" />}
+                iconPosition="left"
               >
-                <LogIn className="w-5 h-5" />
                 Sign In
-              </button>
-              <button
-                className="w-full py-3 rounded-xl bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-semibold hover:from-teal-700 hover:to-cyan-700 transition-all duration-300 flex items-center justify-center gap-2"
+              </ResponsiveButton>
+              <ResponsiveButton
                 onClick={handleRegister}
+                variant="outline"
+                fullWidth
+                size="lg"
+                icon={<UserPlus className="w-5 h-5" />}
+                iconPosition="left"
               >
-                <UserPlus className="w-5 h-5" />
-                Register
-              </button>
+                Create Account
+              </ResponsiveButton>
             </div>
           </div>
         </div>
       )}
 
       {/* Mobile Menu Button */}
-      <div className="md:hidden flex items-center space-x-3">
+      <div className="md:hidden flex items-center">
         <button
           onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-          className="text-gray-300 hover:text-white p-1"
+          className="text-gray-300 hover:text-white focus:outline-none"
+          aria-label="Toggle menu"
         >
           <svg
             className="w-6 h-6"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
+            xmlns="http://www.w3.org/2000/svg"
           >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M4 6h16M4 12h16M4 18h16"
-            />
+            {isMobileMenuOpen ? (
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M6 18L18 6M6 6l12 12"
+              />
+            ) : (
+              <path
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                strokeWidth={2}
+                d="M4 6h16M4 12h16M4 18h16"
+              />
+            )}
           </svg>
         </button>
       </div>
 
-      {/* Mobile Navigation Menu */}
+      {/* Mobile Menu */}
       {isMobileMenuOpen && (
         <div
           ref={mobileMenuRef}
-          className="md:hidden absolute top-full left-0 right-0 bg-gray-800 border-t border-gray-700 z-[1000]"
-          onClick={(e) => e.stopPropagation()}
+          className="absolute top-full left-0 right-0 bg-gray-800 mt-2 py-2 px-4 rounded-lg shadow-xl border border-gray-700 md:hidden z-50"
         >
-          <div className="px-6 py-4 space-y-4">
-            <button
-              onClick={() => handleNavigation("/")}
-              className="block w-full text-left text-gray-300 hover:text-white transition-colors duration-300 py-2"
-            >
-              Home
-            </button>
-
-            <button
-              onClick={() => handleNavigation("/algorithms")}
-              className="flex items-center space-x-2 w-full text-left text-gray-300 hover:text-white transition-colors duration-300 py-2"
-            >
-              <Cpu className="w-4 h-4" />
-              <span>Algorithms</span>
-            </button>
-
-            <div className="border-t border-gray-700 pt-4">
-              <p className="text-xs text-gray-400 uppercase tracking-wide mb-2">
-                Resources
-              </p>
+          <button
+            onClick={() => handleNavigation("/")}
+            className="block w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors rounded-md"
+          >
+            Home
+          </button>
+          <button
+            onClick={() => handleNavigation("/algorithms")}
+            className="block w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors rounded-md"
+          >
+            Algorithms
+          </button>
+          <button
+            onClick={() => handleNavigation("/blogs")}
+            className="block w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors rounded-md"
+          >
+            Blogs
+          </button>
+          <button
+            onClick={() => handleNavigation("/tutorials")}
+            className="block w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors rounded-md"
+          >
+            Tutorials
+          </button>
+          <button
+            onClick={() => handleNavigation("/cheatsheet")}
+            className="block w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors rounded-md"
+          >
+            Cheat Sheet
+          </button>
+          <button
+            onClick={() => handleNavigation("/complexity-guide")}
+            className="block w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors rounded-md"
+          >
+            Big O Guide
+          </button>
+          {!isAuthenticated ? (
+            <div className="mt-4 space-y-2">
               <button
-                onClick={() => handleNavigation("/blogs")}
-                className="flex items-center space-x-2 w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors rounded"
+                onClick={handleLogin}
+                className="block w-full text-center px-4 py-2 bg-cyan-600 hover:bg-cyan-700 text-white rounded-md transition-colors"
               >
-                <FileText className="w-4 h-4" />
-                <span>Blogs</span>
+                Sign In
               </button>
               <button
-                onClick={() => handleNavigation("/tutorials")}
-                className="flex items-center space-x-2 w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors rounded"
+                onClick={handleRegister}
+                className="block w-full text-center px-4 py-2 border border-gray-600 text-gray-300 hover:bg-gray-700 hover:text-white rounded-md transition-colors"
               >
-                <BookOpen className="w-4 h-4" />
-                <span>Tutorials</span>
-              </button>
-              <button
-                onClick={() => handleNavigation("/cheatsheet")}
-                className="flex items-center space-x-2 w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors rounded"
-              >
-                <Code className="w-4 h-4" />
-                <span>Cheat Sheet</span>
-              </button>
-              <button
-                onClick={() => handleNavigation("/complexity-guide")}
-                className="flex items-center space-x-2 w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors rounded"
-              >
-                <Cpu className="w-4 h-4" />
-                <span>Big O Guide</span>
+                Create Account
               </button>
             </div>
-
-            {/* Mobile Authentication Section */}
-            <div className="border-t border-gray-700 pt-4">
-              {!isLoggedIn ? (
-                <button
-                  onClick={() => setShowAuthModal(true)}
-                  className="w-full px-4 py-2 bg-gradient-to-r from-cyan-600 to-teal-600 text-white rounded-xl hover:from-cyan-700 hover:to-teal-700 transition-all duration-300 shadow-lg"
-                  aria-label="Get Started"
-                >
-                  Get Started
-                </button>
-              ) : (
-                <div className="space-y-2">
-                  <div className="flex items-center space-x-3 px-4 py-2">
-                    <img
-                      src={user.avatar}
-                      alt="User Avatar"
-                      className="w-8 h-8 rounded-full border-2 border-cyan-400"
-                    />
-                    <div>
-                      <p className="text-sm font-medium text-white">
-                        {user.name}
-                      </p>
-                      <p className="text-xs text-gray-400">Welcome back!</p>
-                    </div>
-                  </div>
-                  <button
-                    onClick={handleProfile}
-                    className="flex items-center space-x-2 w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors rounded"
-                  >
-                    <User className="w-4 h-4" />
-                    <span>Profile</span>
-                  </button>
-                  <button
-                    onClick={handleLogout}
-                    className="flex items-center space-x-2 w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-red-400 transition-colors rounded"
-                  >
-                    <LogOut className="w-4 h-4" />
-                    <span>Logout</span>
-                  </button>
+          ) : (
+            <div className="mt-4 border-t border-gray-700 pt-4">
+              <div className="flex items-center px-4 py-2">
+                <img
+                  src={user.avatar}
+                  alt="User Avatar"
+                  className="w-8 h-8 rounded-full border-2 border-cyan-400 mr-3"
+                />
+                <div>
+                  <p className="text-sm font-medium text-white">{user.name}</p>
+                  <p className="text-xs text-gray-400">Welcome back!</p>
                 </div>
-              )}
+              </div>
+              <button
+                onClick={handleProfile}
+                className="block w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-white transition-colors rounded-md"
+              >
+                Profile
+              </button>
+              <button
+                onClick={handleLogout}
+                className="block w-full text-left px-4 py-2 text-gray-300 hover:bg-gray-700 hover:text-red-400 transition-colors rounded-md"
+              >
+                Logout
+              </button>
             </div>
-          </div>
+          )}
         </div>
       )}
     </nav>

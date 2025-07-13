@@ -173,8 +173,8 @@ const AlgorithmHomePage = () => {
       algorithms: [
         { name: "Binary Search Tree", difficulty: "Medium", time: "O(log n)", id: "bst" },
         { name: "AVL Tree", difficulty: "Hard", time: "O(log n)", id: "avl-tree" },
-        { name: "Depth First Search", difficulty: "Medium", time: "O(V + E)", id: "dfs" },
-        { name: "Breadth First Search", difficulty: "Medium", time: "O(V + E)", id: "bfs" },
+        { name: "Depth First Search (DFS)", difficulty: "Medium", time: "O(V*E)", id: "dfs" },
+        { name: "Breadth First Search (BFS)", difficulty: "Medium", time: "O(V + E)", id: "bfs" },
         { name: "Dijkstra's Algorithm", difficulty: "Hard", time: "O(V²)", id: "dijkstra" },
         { name: "Tree Traversals", difficulty: "Easy", time: "O(n)", id: "tree-traversal" },
       ],

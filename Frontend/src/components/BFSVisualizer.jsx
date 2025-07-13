@@ -9,10 +9,8 @@ import {
   PanelResizeHandle,
 } from "react-resizable-panels";
 
-import CodeMirror from "@uiw/react-codemirror";
-import { javascript } from "@codemirror/lang-javascript";
 import { oneDark } from "@codemirror/theme-one-dark";
-import { EditorView, Decoration } from "@codemirror/view";
+import { EditorView } from "@codemirror/view";
 
 import {
   Play, Pause, SkipForward, RotateCcw, Settings, BarChart3, Code2,
@@ -21,34 +19,12 @@ import {
 
 import { useNavigate } from "react-router-dom";
 import Alert from "./Alert";
+import BasicCodeDisplay from "./BasicCodeDisplay";
+import { bfs as bfsCode } from "../algorithms/codeExamples";
 
 // Register Cytoscape extensions
 cytoscape.use(coseBilkent);
 cytoscape.use(edgehandles);
-
-const bfsSourceCode = `function bfs(graph, start) {
-  const visited = new Set();
-  const queue = [start];
-  const distances = { [start]: 0 };
-
-  while (queue.length > 0) {
-    const current = queue.shift();             // Line 6
-    
-    if (!visited.has(current)) {               // Line 8
-      visited.add(current);                    // Line 9
-      
-      for (const neighbor of graph[current]) { // Line 11
-        if (!visited.has(neighbor) &&
-            !queue.includes(neighbor)) {       // Line 13
-          queue.push(neighbor);                // Line 14
-          distances[neighbor] = distances[current] + 1; // Line 15
-        }
-      }
-    }
-  }
-  
-  return distances;                            // Line 21
-}`;
 
 export default function EnhancedBFSVisualizer() {
   const cyRef = useRef(null);
@@ -929,43 +905,12 @@ export default function EnhancedBFSVisualizer() {
                         </h3>
                       </div>
                       <div className="relative">
-                        <CodeMirror
-                          value={bfsSourceCode}
-                          extensions={[
-                            javascript(),
-                            EditorView.theme({
-                              "&": {
-                                fontSize: "14px",
-                              },
-                              ".cm-content": {
-                                padding: "16px",
-                                minHeight: "300px",
-                              },
-                              ".cm-focused": {
-                                outline: "none",
-                              },
-                              ".cm-line": {
-                                padding: "2px 0",
-                              },
-                              [`&.cm-editor.cm-focused .cm-line:nth-child(${currentHighlightedLine})`]: {
-                                backgroundColor: "rgba(245, 158, 11, 0.2)",
-                                borderLeft: "4px solid #f59e0b",
-                                paddingLeft: "12px",
-                                animation: "pulse 2s infinite",
-                              },
-                            }),
-                          ]}
-                          theme={oneDark}
-                          editable={false}
-                          basicSetup={{
-                            lineNumbers: true,
-                            foldGutter: false,
-                            dropCursor: false,
-                            allowMultipleSelections: false,
-                          }}
-                          onCreateEditor={(view) => {
-                            editorRef.current = view;
-                          }}
+                        <BasicCodeDisplay
+                          cppCode={bfsCode.cpp}
+                          pythonCode={bfsCode.python}
+                          jsCode={bfsCode.javascript}
+                          highlightedLine={currentHighlightedLine}
+                          className="min-h-[300px]"
                         />
                       </div>
                     </div>

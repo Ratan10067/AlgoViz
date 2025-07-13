@@ -16,6 +16,7 @@ import {
 } from "lucide-react";
 import Alert from "./Alert";
 import { useNavigate } from "react-router-dom";
+import ResponsiveButton from "./ResponsiveButton";
 
 // import anupPhoto from "../assets/subject.png"; 
 
@@ -32,6 +33,16 @@ export default function AboutPage() {
     window.scrollTo(0, 0);
   }, []);
 
+  const handleBackClick = () => {
+    try {
+      navigate("/");
+    } catch (error) {
+      console.error("Navigation error:", error);
+      // Fallback to window.location if navigate fails
+      window.location.href = "/";
+    }
+  };
+
   const teamMembers = [
     {
       name: "Ratan",
@@ -42,12 +53,12 @@ export default function AboutPage() {
     {
       name: "Anup",
       role: "Frontend",
-      bio: "Anup architects the platform's robust and secure foundation. His expertise in modern web security and browser technologies ensures a reliable and safe learning environment.",
+      bio: "Crafts intuitive and performant user interfaces for the platform. His expertise in modern frontend frameworks and web technologies ensures a seamless user experience.",
       photoUrl: null, // Using the imported image variable
     },
     {
-      name: "AIs",
-      role: "Yahi to main hai",
+      name: "3rd Person",
+      role: "Waiting",
       bio: "The silent partners dedicated to crafting clear tutorials and providing instant insights, translating complex concepts into practical lessons for all learners.",
       photoUrl: null, 
     },
@@ -148,32 +159,37 @@ export default function AboutPage() {
         .step-circle {
             background: rgba(30, 41, 59, 0.5);
         }
+        .decorative-blob {
+          z-index: -1;
+        }
       `}</style>
 
       <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Back Button */}
-        <button onClick={() => {
-            console.log("Back button clicked"); // Check if this logs
-            console.log("Navigate function:", navigate); // Check if navigate exists
-            navigate("/");
-            console.log("Navigate called"); // Check if this executes
-          }} className="mb-8 flex items-center text-slate-400 hover:text-cyan-400 transition-colors duration-300 group"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2 transition-transform duration-300 group-hover:-translate-x-1" />
-          <span >Back</span>
-        </button>
+        {/* Back Button - Added z-index to ensure it's above decorative elements */}
+        <div className="relative z-10">
+          <ResponsiveButton
+            onClick={handleBackClick}
+            className="mb-8 hover:cursor-pointer"
+            variant="ghost"
+            size="md"
+            icon={<ArrowLeft className="w-5 h-5" />}
+            iconPosition="left"
+          >
+            Back to Home
+          </ResponsiveButton>
+        </div>
 
         {/* Hero Section */}
-        <div className="text-center mb-20 relative">
-          <div className="absolute -top-20 -left-20 w-72 h-72 bg-cyan-500/10 rounded-full filter blur-3xl opacity-50 animate-pulse"></div>
-          <div className="absolute -bottom-20 -right-20 w-72 h-72 bg-violet-500/10 rounded-full filter blur-3xl opacity-50 animate-pulse delay-2000"></div>
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+        <div className="text-center mt-20 mb-20 relative">
+          <div className="absolute -top-20 -left-20 w-72 h-72 bg-cyan-500/10 rounded-full filter blur-3xl opacity-50 animate-pulse decorative-blob"></div>
+          <div className="absolute -bottom-20 -right-20 w-72 h-72 bg-violet-500/10 rounded-full filter blur-3xl opacity-50 animate-pulse delay-2000 decorative-blob"></div>
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 relative z-1">
             Master Data Structures & Algorithms
             <span className="block text-3xl md:text-4xl bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent mt-2 font-normal">
               Through Interactive Visualization
             </span>
           </h1>
-          <p className="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed relative z-1 mt-10">
             We transform complex algorithms into intuitive visual experiences,
             making DSA learning engaging, effective, and accessible for
             everyone.
@@ -181,7 +197,7 @@ export default function AboutPage() {
         </div>
 
         {/* Meet the Team Section */}
-        <div className="mb-20">
+        <div className="mb-20 relative z-1">
           <h2 className="text-4xl font-bold text-white mb-10 text-center">
             Meet the Team
           </h2>
@@ -218,7 +234,7 @@ export default function AboutPage() {
         </div>
 
         {/* What We Do Section */}
-        <div className="mb-20">
+        <div className="mb-20 relative z-1">
           <h2 className="text-4xl font-bold text-white mb-10 text-center">
             What We Do
           </h2>
@@ -249,7 +265,7 @@ export default function AboutPage() {
         </div>
 
         {/* Stats Section */}
-        <div className="mb-20">
+        <div className="mb-20 relative z-1">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {stats.map((stat, index) => (
               <div key={index} className="text-center glassmorphism-card rounded-2xl p-6">
@@ -263,7 +279,7 @@ export default function AboutPage() {
         </div>
 
         {/* Benefits Section */}
-        <div className="mb-20">
+        <div className="mb-20 relative z-1">
           <h2 className="text-4xl font-bold text-white mb-10 text-center">
             Why Choose Our Platform?
           </h2>
@@ -285,7 +301,7 @@ export default function AboutPage() {
         </div>
 
         {/* Learning Path Section */}
-        <div className="mb-20">
+        <div className="mb-20 relative z-1">
           <h2 className="text-4xl font-bold text-white mb-10 text-center">
             Your Learning Journey
           </h2>
@@ -332,7 +348,7 @@ export default function AboutPage() {
         </div>
 
         {/* Featured Content */}
-        <div className="mb-20">
+        <div className="mb-20 relative z-1">
           <h2 className="text-4xl font-bold text-white mb-10 text-center">
             What You'll Find Here
           </h2>
@@ -365,7 +381,7 @@ export default function AboutPage() {
         </div>
 
         {/* Call to Action */}
-        <div className="text-center glassmorphism-card rounded-2xl p-10">
+        <div className="text-center glassmorphism-card rounded-2xl p-10 relative z-1">
           <h2 className="text-3xl font-bold text-white mb-4">
             Ready to Master DSA?
           </h2>

@@ -36,9 +36,16 @@ userSchema.methods.generateAuthToken = function () {
   });
   return token;
 };
-userSchema.methods.comparePassword = function (enteredPassword) {
-  console.log(enteredPassword, this.password);
-  return bcrypt.compare(enteredPassword, this.password);
+userSchema.methods.comparePassword = async function (enteredPassword) {
+  console.log("Comparing passwords:", enteredPassword, this.password);
+  try {
+    const isMatch = await bcrypt.compare(enteredPassword, this.password);
+    console.log("Password match result:", isMatch);
+    return isMatch;
+  } catch (error) {
+    console.error("Password comparison error:", error);
+    return false;
+  }
 };
 userSchema.statics.hashPassword = async function (password) {
   return await bcrypt.hash(password, 10);
