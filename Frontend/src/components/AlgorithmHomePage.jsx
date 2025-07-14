@@ -369,9 +369,6 @@ const AlgorithmHomePage = () => {
         }
       `}</style>
 
-      {/* Navigation Bar */}
-      <Navbar />
-
       {/* Hero Section */}
       <header className="relative overflow-hidden liquid-bg">
         <div className="container mx-auto px-6 py-24 text-center relative z-10">

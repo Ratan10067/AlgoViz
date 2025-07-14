@@ -16,10 +16,6 @@ import Alert from "./Alert";
 import BasicCodeDisplay from "./BasicCodeDisplay";
 import { dijkstra as dijkstraCode } from "../algorithms/codeExamples";
 
-// Remove the Cytoscape extensions registration lines
-// cytoscape.use(coseBilkent);
-// cytoscape.use(edgehandles);
-
 export default function DijkstraVisualizer() {
   const cyRef = useRef(null);
   const cyInstance = useRef(null);
@@ -187,19 +183,29 @@ export default function DijkstraVisualizer() {
     // eslint-disable-next-line
   }, [graphType]);
 
-  // Dijkstra's algorithm step computation
-  const computeDijkstraSteps = (nodesCount, edgesArr, start) => {
+  // Dijkstra's algorithm step computation - fixed to handle undirected graphs
+  const computeDijkstraSteps = (nodesCount, edgesArr, start, graphType) => {
+    // Convert start to string for consistency
+    const startStr = String(start);
+    
     // Build adjacency list with weights
     const adj = {};
     for (let i = 0; i < nodesCount; i++) adj[i] = [];
-    edgesArr.forEach(e => adj[e.from].push({ node: e.to, weight: e.weight }));
+    
+    // Add both directions for undirected graphs
+    edgesArr.forEach(e => {
+      adj[e.from].push({ node: e.to, weight: e.weight });
+      if (graphType === "undirected") {
+        adj[e.to].push({ node: e.from, weight: e.weight });
+      }
+    });
 
     // Initialize data structures
     const distances = Array(nodesCount).fill(Infinity);
     distances[start] = 0;
 
     const visited = new Set();
-    const pq = [{ id: start, dist: 0 }]; // Priority queue simulation
+    const pq = [{ id: startStr, dist: 0 }]; // Priority queue simulation
     const frames = [];
 
     // Initial state
@@ -250,10 +256,12 @@ export default function DijkstraVisualizer() {
         action: `Mark node ${current} as visited`
       });
 
-      // Process neighbors
-      for (const neighbor of adj[current] || []) {
+      // Process neighbors - convert to number for array access
+      const currentNum = parseInt(current);
+      for (const neighbor of adj[currentNum] || []) {
         const { node: neighborNode, weight } = neighbor;
-        const newDist = distances[current] + weight;
+        const neighborStr = String(neighborNode);
+        const newDist = distances[currentNum] + weight;
 
         frames.push({
           visited: new Set(visited),
@@ -261,12 +269,12 @@ export default function DijkstraVisualizer() {
           current,
           distances: [...distances],
           lineNumber: 23,
-          action: `Check neighbor ${neighborNode} (new dist: ${newDist}, current dist: ${distances[neighborNode]})`
+          action: `Check neighbor ${neighborStr} (new dist: ${newDist}, current dist: ${distances[neighborNode]})`
         });
 
         if (newDist < distances[neighborNode]) {
           distances[neighborNode] = newDist;
-          pq.push({ id: neighborNode, dist: newDist });
+          pq.push({ id: neighborStr, dist: newDist });
 
           frames.push({
             visited: new Set(visited),
@@ -274,7 +282,7 @@ export default function DijkstraVisualizer() {
             current,
             distances: [...distances],
             lineNumber: 26,
-            action: `Update node ${neighborNode} to distance ${newDist}`
+            action: `Update node ${neighborStr} to distance ${newDist}`
           });
         }
       }
@@ -407,7 +415,7 @@ export default function DijkstraVisualizer() {
     });
 
     cyInstance.current = cy;
-    computeDijkstraSteps(numNodes, edges, parseInt(startNode));
+    computeDijkstraSteps(numNodes, edges, parseInt(startNode), graphType);
   };
 
   // Validate edges on change
@@ -441,7 +449,9 @@ export default function DijkstraVisualizer() {
       // Highlight edges from current node
       cy.edges().removeClass("highlighted");
       if (step.current !== null) {
-        cy.$(`edge[source="${step.current}"], edge[target="${step.current}"]`)
+        // Convert current node to string for selector
+        const currentNode = String(step.current);
+        cy.$(`edge[source="${currentNode}"], edge[target="${currentNode}"]`)
           .addClass("highlighted");
       }
     });
@@ -500,12 +510,6 @@ export default function DijkstraVisualizer() {
         </div>
       </div>
     );
-  };
-
-  // Calculate progress value
-  const getProgressValue = () => {
-    if (!started || !steps.length) return "Nil";
-    return `${Math.round(((currentStep + 1) / steps.length) * 100)}%`;
   };
 
   return (
@@ -627,7 +631,7 @@ export default function DijkstraVisualizer() {
                     placeholder="0-1:4,1-2:3,2-3:2..."
                   />
                   {edgeValidationError && (
-                    <div className="mt-2 flex items-center gap-2 p-2 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
+                    <div className="mt极狐 flex items-center gap-2 p-2 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
                       <AlertTriangle size={14} className="text-yellow-400 flex-shrink-0" />
                       <span className="text-xs text-yellow-300">{edgeValidationError}</span>
                     </div>
@@ -656,7 +660,7 @@ export default function DijkstraVisualizer() {
                 <button
                   onClick={handleGenerateGraph}
                   disabled={!isValidGraph}
-                  className={`w-full py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg transform ${isValidGraph
+                  className={`w-full py-3 rounded-xl font-semib极狐 transition-all duration-200 shadow-lg transform ${isValidGraph
                     ? "bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 hover:scale-105 text-white"
                     : "bg-gray-600 text-gray-400 cursor-not-allowed"
                     }`}
@@ -863,8 +867,8 @@ export default function DijkstraVisualizer() {
                       />
                       <StatCard
                         icon={Clock}
-                        value={getProgressValue()}
-                        label="Progress"
+                        value={steps.length}
+                        label="Total Steps"
                         color="red"
                       />
                     </div>
@@ -898,7 +902,7 @@ export default function DijkstraVisualizer() {
                     </div>
 
                     {/* Distance Array */}
-                    <div className="bg-gray-700/30 backdrop-blur-sm rounded-xl p-4 border border-gray-600/30">
+                    <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-4 border border-gray-600/30">
                       <h3 className="text-lg font-semibold text-gray-200 mb-3">
                         Distance Array
                       </h3>

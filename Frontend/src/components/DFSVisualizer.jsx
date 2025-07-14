@@ -275,8 +275,9 @@ export default function DFSRecursiveVisualizer() {
       });
     };
 
-    // Initial call
-    callStack.push(parseInt(start));
+    // Fix: Ensure start node is parsed as number
+    const startNodeNum = parseInt(start);
+    callStack.push(startNodeNum);
     frames.push({
       visited: new Set(),
       callStack: [...callStack],
@@ -290,7 +291,7 @@ export default function DFSRecursiveVisualizer() {
     });
 
     // Start DFS
-    dfs(parseInt(start));
+    dfs(startNodeNum);
 
     // Final state
     frames.push({

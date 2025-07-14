@@ -1,5 +1,6 @@
 import "./App.css";
 import { BrowserRouter, Route, Routes } from "react-router-dom";
+import ScrollToTop from "./components/ScrollToTop";
 import AlgorithmHomePage from "./components/AlgorithmHomePage";
 import AlgorithmVisualizerPage from "./components/AlgorithmVisualizerPage";
 import BubbleSort from "./components/BubbleSort";
@@ -18,31 +19,39 @@ import NotFoundPage from "./components/PageNotFound";
 import SupportPage from "./components/SupportPage";
 import AboutPage from "./components/AboutPage";
 import UserProfilePage from "./components/UserProfilePage";
+import MainLayout from "./components/MainLayout";
+
 function App() {
   return (
     <>
-      <BrowserRouter>
-        <Routes>
+      <ScrollToTop />
+      <Routes>
+        {/* Routes that include Navbar via layout */}
+        <Route element={<MainLayout />}>
           <Route path="/" element={<AlgorithmHomePage />} />
-          <Route path="/signin" element={<SignIn />} />
-          <Route path="/register" element={<SignUp />} />
-          <Route path="/visualizer" element={<AlgorithmVisualizerPage />} />
-          <Route path="/bubble-sort" element={<BubbleSort />} />
-          <Route path="/quick-sort" element={<QuickSort />} />
-          <Route path="/merge-sort" element={<MergeSort />} />
-          <Route path="/bfs-visualizer" element={<BFSVisualizer />} />
-          <Route path="/dfs-visualizer" element={<DFSVisualizer />} />
-          <Route path="/dijkstra-visualizer" element={<DijkstraVisualizer />} />
-          <Route path="/view-documentation" element={<DocumentationModal />} />
           <Route path="/blogs" element={<BlogPage />} />
           <Route path="/cheatsheet" element={<CheatSheet />} />
-          <Route path="/coming-soon" element={<ComingSoonPage />} />
-          <Route path="/support" element={<SupportPage />} />
           <Route path="/about" element={<AboutPage />} />
-          <Route path="/user-profile" element={<UserProfilePage />} />
-          <Route path="/page-not-found" element={<NotFoundPage />} />
-        </Routes>
-      </BrowserRouter>
+          <Route path="/support" element={<SupportPage />} />
+          {/* Add more as needed */}
+        </Route>
+
+        {/* Routes without Navbar */}
+        <Route path="/signin" element={<SignIn />} />
+        <Route path="/register" element={<SignUp />} />
+        <Route path="/user-profile" element={<UserProfilePage />} />
+        <Route path="/visualizer" element={<AlgorithmVisualizerPage />} />
+        <Route path="/view-documentation" element={<DocumentationModal />} />
+        <Route path="/bubble-sort" element={<BubbleSort />} />
+        <Route path="/quick-sort" element={<QuickSort />} />
+        <Route path="/merge-sort" element={<MergeSort />} />
+        <Route path="/bfs-visualizer" element={<BFSVisualizer />} />
+        <Route path="/dfs-visualizer" element={<DFSVisualizer />} />
+        <Route path="/dijkstra-visualizer" element={<DijkstraVisualizer />} />
+        <Route path="/coming-soon" element={<ComingSoonPage />} />
+        <Route path="/page-not-found" element={<NotFoundPage />} />
+        <Route path="*" element={<NotFoundPage />} />
+      </Routes>
     </>
   );
 }

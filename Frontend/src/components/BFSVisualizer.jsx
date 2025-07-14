@@ -164,10 +164,17 @@ export default function EnhancedBFSVisualizer() {
   }, [graphType]);
 
   // Fixed BFS step computation
-  const computeBFSSteps = (nodesCount, edgesArr, start) => {
+  const computeBFSSteps = (nodesCount, edgesArr, start, graphType) => {
     const adj = {};
     for (let i = 0; i < nodesCount; i++) adj[i] = [];
-    edgesArr.forEach(e => adj[e.from].push(e.to));
+    
+    // Build adjacency list for undirected graphs
+    edgesArr.forEach(e => {
+      adj[e.from].push(e.to);
+      if (graphType === "undirected") {
+        adj[e.to].push(e.from);
+      }
+    });
 
     const visited = new Set();
     const queue = [parseInt(start)];
@@ -339,7 +346,7 @@ export default function EnhancedBFSVisualizer() {
     });
 
     cyInstance.current = cy;
-    computeBFSSteps(numNodes, edges, startNode);
+    computeBFSSteps(numNodes, edges, startNode, graphType);
   };
 
   // Validate edges on change
