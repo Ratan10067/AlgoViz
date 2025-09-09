@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import cytoscape from "../utils/cytoscapeSetup";
+import cytoscape from "../../../utils/cytoscapeSetup.js";
 import {
   PanelGroup,
   Panel,
@@ -12,9 +12,9 @@ import {
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
-import Alert from "./Alert";
-import BasicCodeDisplay from "./BasicCodeDisplay";
-import { dijkstra as dijkstraCode } from "../algorithms/codeExamples";
+import Alert from "../../Alert.jsx";
+import BasicCodeDisplay from "../../BasicCodeDisplay.jsx";
+import { dijkstra as dijkstraCode } from "../../../algorithms/codeExamples.js";
 
 export default function DijkstraVisualizer() {
   const cyRef = useRef(null);

@@ -1,5 +1,6 @@
 import React from "react";
 import { twMerge } from "tailwind-merge";
+import { useTheme } from "../context/ThemeContext";
 
 /**
  * ResponsiveButton - A versatile button component with various style options
@@ -32,6 +33,7 @@ const ResponsiveButton = ({
   type = "button",
   ...props
 }) => {
+  const { theme } = useTheme();
   // Base classes
   const baseClasses = "inline-flex items-center justify-center font-medium transition-all duration-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-offset-gray-900";
   
@@ -44,7 +46,7 @@ const ResponsiveButton = ({
     xl: "px-8 py-4 text-lg",
   };
   
-  // Variant classes
+  // Variant classes with theme awareness
   const variantClasses = {
     primary: "bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-700 hover:to-blue-700 text-white shadow-lg hover:shadow-cyan-500/25 focus:ring-cyan-500",
     secondary: "bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700 text-white shadow-lg hover:shadow-purple-500/25 focus:ring-purple-500",
@@ -52,8 +54,12 @@ const ResponsiveButton = ({
     danger: "bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-700 hover:to-orange-700 text-white shadow-lg hover:shadow-red-500/25 focus:ring-red-500",
     warning: "bg-gradient-to-r from-yellow-500 to-amber-500 hover:from-yellow-600 hover:to-amber-600 text-white shadow-lg hover:shadow-yellow-500/25 focus:ring-yellow-500",
     info: "bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 text-white shadow-lg hover:shadow-blue-500/25 focus:ring-blue-500",
-    outline: "bg-transparent border border-gray-600 hover:border-gray-400 text-gray-300 hover:text-white focus:ring-gray-500",
-    ghost: "bg-transparent hover:bg-gray-800 text-gray-300 hover:text-white focus:ring-gray-500",
+    outline: theme === 'dark' 
+      ? "bg-transparent border border-gray-600 hover:border-gray-400 text-gray-300 hover:text-white focus:ring-gray-500"
+      : "bg-transparent border border-gray-300 hover:border-gray-400 text-gray-700 hover:text-gray-900 focus:ring-gray-500",
+    ghost: theme === 'dark' 
+      ? "bg-transparent hover:bg-gray-800 text-gray-300 hover:text-white focus:ring-gray-500"
+      : "bg-transparent hover:bg-gray-100 text-gray-700 hover:text-gray-900 focus:ring-gray-500",
   };
   
   // Loading and disabled classes

@@ -474,6 +474,684 @@ unordered_map<int, int> bfs(const unordered_map<int, vector<int>>& graph, int st
 }`
 };
 
+// Binary Search
+export const binarySearch = {
+  cpp: `#include <bits/stdc++.h>
+using namespace std;
+
+int binarySearch(vector<int> arr, int target) {
+  int left = 0;                             // Line 1
+  int right = arr.size() - 1;               // Line 2
+  
+  while (left <= right) {                   // Line 3
+    int mid = left + (right - left) / 2;    // Line 4
+    
+    if (arr[mid] == target) {               // Line 5
+      return mid;                           // Line 6
+    } else if (arr[mid] < target) {         // Line 7
+      left = mid + 1;                       // Line 8
+    } else {                                // Line 9
+      right = mid - 1;                      // Line 10
+    }
+  }
+  
+  return -1;                                // Line 11
+}`,
+
+  python: `def binary_search(arr, target):
+    left = 0                                # Line 1
+    right = len(arr) - 1                    # Line 2
+    
+    while left <= right:                    # Line 3
+        mid = left + (right - left) // 2    # Line 4
+        
+        if arr[mid] == target:              # Line 5
+            return mid                      # Line 6
+        elif arr[mid] < target:             # Line 7
+            left = mid + 1                  # Line 8
+        else:                               # Line 9
+            right = mid - 1                 # Line 10
+    
+    return -1                               # Line 11`,
+
+  javascript: `function binarySearch(arr, target) {
+  let left = 0;                             // Line 1
+  let right = arr.length - 1;               // Line 2
+  
+  while (left <= right) {                   // Line 3
+    const mid = Math.floor(left + (right - left) / 2);  // Line 4
+    
+    if (arr[mid] === target) {              // Line 5
+      return mid;                           // Line 6
+    } else if (arr[mid] < target) {         // Line 7
+      left = mid + 1;                       // Line 8
+    } else {                                // Line 9
+      right = mid - 1;                      // Line 10
+    }
+  }
+  
+  return -1;                                // Line 11
+}`
+};
+
+// Linear Search
+export const linearSearch = {
+  cpp: `#include <bits/stdc++.h>
+using namespace std;
+
+int linearSearch(vector<int> arr, int target) {
+  for (int i = 0; i < arr.size(); i++) {    // Line 1
+    if (arr[i] == target) {                 // Line 3
+      return i;                             // Line 4
+    }                                       // Line 6
+  }
+  return -1;                                // Line 7
+}`,
+
+  python: `def linear_search(arr, target):
+    for i in range(len(arr)):               # Line 1
+        if arr[i] == target:                # Line 3
+            return i                        # Line 4
+                                            # Line 6
+    return -1                               # Line 7`,
+
+  javascript: `function linearSearch(arr, target) {
+  for (let i = 0; i < arr.length; i++) {   // Line 1
+    if (arr[i] === target) {                // Line 3
+      return i;                             // Line 4
+    }                                       // Line 6
+  }
+  return -1;                                // Line 7
+}`
+};
+
+// Heap Sort
+export const heapSort = {
+  cpp: `#include <bits/stdc++.h>
+using namespace std;
+
+void heapify(vector<int>& arr, int n, int i) {
+  int largest = i;                          // Line 1
+  int left = 2 * i + 1;                     // Line 2
+  int right = 2 * i + 2;                    // Line 3
+  
+  if (left < n && arr[left] > arr[largest]) // Line 7
+    largest = left;                         // Line 8
+    
+  if (right < n && arr[right] > arr[largest]) // Line 11
+    largest = right;                        // Line 12
+    
+  if (largest != i) {                       // Line 15
+    swap(arr[i], arr[largest]);             // Line 16
+    heapify(arr, n, largest);               // Line 17
+  }
+}
+
+void heapSort(vector<int>& arr) {
+  int n = arr.size();
+  
+  // Build heap                             // Line 3
+  for (int i = n / 2 - 1; i >= 0; i--)     // Line 4
+    heapify(arr, n, i);
+    
+  // Extract elements from heap            // Line 6
+  for (int i = n - 1; i > 0; i--) {        // Line 7
+    swap(arr[0], arr[i]);                   // Line 8
+    heapify(arr, i, 0);                     // Line 9
+  }
+}`,
+
+  python: `def heapify(arr, n, i):
+    largest = i                             # Line 1
+    left = 2 * i + 1                        # Line 2
+    right = 2 * i + 2                       # Line 3
+    
+    if left < n and arr[left] > arr[largest]:  # Line 7
+        largest = left                      # Line 8
+        
+    if right < n and arr[right] > arr[largest]:  # Line 11
+        largest = right                     # Line 12
+        
+    if largest != i:                        # Line 15
+        arr[i], arr[largest] = arr[largest], arr[i]  # Line 16
+        heapify(arr, n, largest)            # Line 17
+
+def heap_sort(arr):
+    n = len(arr)
+    
+    # Build heap                           # Line 3
+    for i in range(n // 2 - 1, -1, -1):    # Line 4
+        heapify(arr, n, i)
+        
+    # Extract elements from heap          # Line 6
+    for i in range(n - 1, 0, -1):          # Line 7
+        arr[0], arr[i] = arr[i], arr[0]     # Line 8
+        heapify(arr, i, 0)                  # Line 9`,
+
+  javascript: `function heapify(arr, n, i) {
+  let largest = i;                          // Line 1
+  let left = 2 * i + 1;                     // Line 2
+  let right = 2 * i + 2;                    // Line 3
+  
+  if (left < n && arr[left] > arr[largest]) // Line 7
+    largest = left;                         // Line 8
+    
+  if (right < n && arr[right] > arr[largest]) // Line 11
+    largest = right;                        // Line 12
+    
+  if (largest !== i) {                      // Line 15
+    [arr[i], arr[largest]] = [arr[largest], arr[i]]; // Line 16
+    heapify(arr, n, largest);               // Line 17
+  }
+}
+
+function heapSort(arr) {
+  const n = arr.length;
+  
+  // Build heap                            // Line 3
+  for (let i = Math.floor(n / 2) - 1; i >= 0; i--) // Line 4
+    heapify(arr, n, i);
+    
+  // Extract elements from heap           // Line 6
+  for (let i = n - 1; i > 0; i--) {        // Line 7
+    [arr[0], arr[i]] = [arr[i], arr[0]];    // Line 8
+    heapify(arr, i, 0);                     // Line 9
+  }
+}`
+};
+
+// Tree Traversal
+export const treeTraversal = {
+  cpp: `struct TreeNode {
+    int val;
+    TreeNode* left;
+    TreeNode* right;
+    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+};
+
+// Inorder Traversal: Left -> Root -> Right
+void inorderTraversal(TreeNode* root) {
+    if (root == nullptr) return;            // Line 1
+    
+    inorderTraversal(root->left);           // Line 2
+    cout << root->val << " ";               // Line 3
+    inorderTraversal(root->right);          // Line 4
+}
+
+// Preorder Traversal: Root -> Left -> Right  
+void preorderTraversal(TreeNode* root) {
+    if (root == nullptr) return;            // Line 1
+    
+    cout << root->val << " ";               // Line 2
+    preorderTraversal(root->left);          // Line 3
+    preorderTraversal(root->right);         // Line 4
+}
+
+// Postorder Traversal: Left -> Right -> Root
+void postorderTraversal(TreeNode* root) {
+    if (root == nullptr) return;            // Line 1
+    
+    postorderTraversal(root->left);         // Line 2
+    postorderTraversal(root->right);        // Line 3
+    cout << root->val << " ";               // Line 4
+}`,
+
+  python: `class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+# Inorder Traversal: Left -> Root -> Right
+def inorder_traversal(root):
+    if not root:                            # Line 1
+        return
+    
+    inorder_traversal(root.left)            # Line 2
+    print(root.val, end=" ")                # Line 3
+    inorder_traversal(root.right)           # Line 4
+
+# Preorder Traversal: Root -> Left -> Right
+def preorder_traversal(root):
+    if not root:                            # Line 1
+        return
+        
+    print(root.val, end=" ")                # Line 2
+    preorder_traversal(root.left)           # Line 3
+    preorder_traversal(root.right)          # Line 4
+
+# Postorder Traversal: Left -> Right -> Root
+def postorder_traversal(root):
+    if not root:                            # Line 1
+        return
+        
+    postorder_traversal(root.left)          # Line 2
+    postorder_traversal(root.right)         # Line 3
+    print(root.val, end=" ")                # Line 4`,
+
+  javascript: `class TreeNode {
+  constructor(val, left = null, right = null) {
+    this.val = val;
+    this.left = left;
+    this.right = right;
+  }
+}
+
+// Inorder Traversal: Left -> Root -> Right
+function inorderTraversal(root) {
+  if (!root) return;                        // Line 1
+  
+  inorderTraversal(root.left);              // Line 2
+  console.log(root.val);                    // Line 3
+  inorderTraversal(root.right);             // Line 4
+}
+
+// Preorder Traversal: Root -> Left -> Right
+function preorderTraversal(root) {
+  if (!root) return;                        // Line 1
+  
+  console.log(root.val);                    // Line 2
+  preorderTraversal(root.left);             // Line 3
+  preorderTraversal(root.right);            // Line 4
+}
+
+// Postorder Traversal: Left -> Right -> Root
+function postorderTraversal(root) {
+  if (!root) return;                        // Line 1
+  
+  postorderTraversal(root.left);            // Line 2
+  postorderTraversal(root.right);           // Line 3
+  console.log(root.val);                    // Line 4
+}`
+};
+
+// Fibonacci Sequence
+export const fibonacci = {
+  cpp: `// Iterative Approach - O(n) time, O(1) space
+int fibonacciIterative(int n) {
+    if (n <= 1) return n;                   // Line 1
+    
+    int a = 0, b = 1;                       // Line 2
+    for (int i = 2; i <= n; i++) {          // Line 3
+        int temp = a + b;                   // Line 4
+        a = b;                              // Line 5
+        b = temp;                           // Line 6
+    }
+    return b;                               // Line 7
+}
+
+// Recursive Approach - O(2^n) time, O(n) space
+int fibonacciRecursive(int n) {
+    if (n <= 1) return n;                   // Line 2
+    return fibonacciRecursive(n-1) + fibonacciRecursive(n-2); // Line 4
+}
+
+// Dynamic Programming - O(n) time, O(n) space
+int fibonacciDP(int n) {
+    if (n <= 1) return n;                   // Line 1
+    
+    vector<int> dp(n + 1);                  // Line 2
+    dp[0] = 0;                              // Line 2
+    dp[1] = 1;                              // Line 3
+    
+    for (int i = 2; i <= n; i++) {          // Line 5
+        dp[i] = dp[i-1] + dp[i-2];          // Line 5
+    }
+    return dp[n];                           // Line 6
+}`,
+
+  python: `# Iterative Approach - O(n) time, O(1) space
+def fibonacci_iterative(n):
+    if n <= 1:
+        return n                            # Line 1
+    
+    a, b = 0, 1                             # Line 2
+    for i in range(2, n + 1):               # Line 3
+        temp = a + b                        # Line 4
+        a = b                               # Line 5
+        b = temp                            # Line 6
+    return b                                # Line 7
+
+# Recursive Approach - O(2^n) time, O(n) space
+def fibonacci_recursive(n):
+    if n <= 1:
+        return n                            # Line 2
+    return fibonacci_recursive(n-1) + fibonacci_recursive(n-2)  # Line 4
+
+# Dynamic Programming - O(n) time, O(n) space
+def fibonacci_dp(n):
+    if n <= 1:
+        return n                            # Line 1
+    
+    dp = [0] * (n + 1)                      # Line 2
+    dp[0] = 0                               # Line 2
+    dp[1] = 1                               # Line 3
+    
+    for i in range(2, n + 1):               # Line 5
+        dp[i] = dp[i-1] + dp[i-2]           # Line 5
+    return dp[n]                            # Line 6`,
+
+  javascript: `// Iterative Approach - O(n) time, O(1) space
+function fibonacciIterative(n) {
+  if (n <= 1) return n;                     // Line 1
+  
+  let a = 0, b = 1;                         // Line 2
+  for (let i = 2; i <= n; i++) {            // Line 3
+    const temp = a + b;                     // Line 4
+    a = b;                                  // Line 5
+    b = temp;                               // Line 6
+  }
+  return b;                                 // Line 7
+}
+
+// Recursive Approach - O(2^n) time, O(n) space
+function fibonacciRecursive(n) {
+  if (n <= 1) return n;                     // Line 2
+  return fibonacciRecursive(n-1) + fibonacciRecursive(n-2); // Line 4
+}
+
+// Dynamic Programming - O(n) time, O(n) space
+function fibonacciDP(n) {
+  if (n <= 1) return n;                     // Line 1
+  
+  const dp = new Array(n + 1);             // Line 2
+  dp[0] = 0;                                // Line 2
+  dp[1] = 1;                                // Line 3
+  
+  for (let i = 2; i <= n; i++) {            // Line 5
+    dp[i] = dp[i-1] + dp[i-2];              // Line 5
+  }
+  return dp[n];                             // Line 6
+}`
+};
+
+// Binary Search Tree
+export const bst = {
+  cpp: `struct TreeNode {
+    int val;
+    TreeNode* left;
+    TreeNode* right;
+    TreeNode(int x) : val(x), left(nullptr), right(nullptr) {}
+};
+
+// Insert operation
+TreeNode* insert(TreeNode* root, int val) {
+    if (root == nullptr) {                  // Line 2
+        return new TreeNode(val);
+    }
+    
+    if (val < root->val) {                  // Line 4
+        root->left = insert(root->left, val);
+    } else if (val > root->val) {           // Line 6
+        root->right = insert(root->right, val);
+    }
+    return root;                            // Line 8
+}
+
+// Search operation
+bool search(TreeNode* root, int val) {
+    if (root == nullptr) return false;      // Line 2
+    if (val == root->val) return true;      // Line 3
+    
+    if (val < root->val) {                  // Line 5
+        return search(root->left, val);
+    } else {                                // Line 7
+        return search(root->right, val);
+    }
+}`,
+
+  python: `class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+# Insert operation
+def insert(root, val):
+    if not root:                            # Line 2
+        return TreeNode(val)
+    
+    if val < root.val:                      # Line 4
+        root.left = insert(root.left, val)
+    elif val > root.val:                    # Line 6
+        root.right = insert(root.right, val)
+    return root                             # Line 8
+
+# Search operation  
+def search(root, val):
+    if not root:                            # Line 2
+        return False
+    if val == root.val:                     # Line 3
+        return True
+        
+    if val < root.val:                      # Line 5
+        return search(root.left, val)
+    else:                                   # Line 7
+        return search(root.right, val)`,
+
+  javascript: `class TreeNode {
+  constructor(val, left = null, right = null) {
+    this.val = val;
+    this.left = left;
+    this.right = right;
+  }
+}
+
+// Insert operation
+function insert(root, val) {
+  if (!root) {                              // Line 2
+    return new TreeNode(val);
+  }
+  
+  if (val < root.val) {                     // Line 4
+    root.left = insert(root.left, val);
+  } else if (val > root.val) {              // Line 6
+    root.right = insert(root.right, val);
+  }
+  return root;                              // Line 8
+}
+
+// Search operation
+function search(root, val) {
+  if (!root) return false;                  // Line 2
+  if (val === root.val) return true;        // Line 3
+  
+  if (val < root.val) {                     // Line 5
+    return search(root.left, val);
+  } else {                                  // Line 7
+    return search(root.right, val);
+  }
+}`
+};
+
+// AVL Tree  
+export const avlTree = {
+  cpp: `struct AVLNode {
+    int val, height;
+    AVLNode* left;
+    AVLNode* right;
+    AVLNode(int x) : val(x), height(1), left(nullptr), right(nullptr) {}
+};
+
+int getHeight(AVLNode* node) {              // Line 2
+    return node ? node->height : 0;
+}
+
+int getBalance(AVLNode* node) {             // Line 5
+    return node ? getHeight(node->left) - getHeight(node->right) : 0;
+}
+
+AVLNode* rotateRight(AVLNode* y) {          // Line 8
+    AVLNode* x = y->left;
+    AVLNode* T2 = x->right;
+    
+    x->right = y;
+    y->left = T2;
+    
+    y->height = 1 + max(getHeight(y->left), getHeight(y->right));
+    x->height = 1 + max(getHeight(x->left), getHeight(x->right));
+    
+    return x;
+}`,
+
+  python: `class AVLNode:
+    def __init__(self, val):
+        self.val = val
+        self.height = 1
+        self.left = None
+        self.right = None
+
+def get_height(node):                       # Line 2
+    return node.height if node else 0
+
+def get_balance(node):                      # Line 5
+    return get_height(node.left) - get_height(node.right) if node else 0
+
+def rotate_right(y):                        # Line 8
+    x = y.left
+    T2 = x.right
+    
+    x.right = y
+    y.left = T2
+    
+    y.height = 1 + max(get_height(y.left), get_height(y.right))
+    x.height = 1 + max(get_height(x.left), get_height(x.right))
+    
+    return x`,
+
+  javascript: `class AVLNode {
+  constructor(val) {
+    this.val = val;
+    this.height = 1;
+    this.left = null;
+    this.right = null;
+  }
+}
+
+function getHeight(node) {                  // Line 2
+  return node ? node.height : 0;
+}
+
+function getBalance(node) {                 // Line 5
+  return node ? getHeight(node.left) - getHeight(node.right) : 0;
+}
+
+function rotateRight(y) {                   // Line 8
+  const x = y.left;
+  const T2 = x.right;
+  
+  x.right = y;
+  y.left = T2;
+  
+  y.height = 1 + Math.max(getHeight(y.left), getHeight(y.right));
+  x.height = 1 + Math.max(getHeight(x.left), getHeight(x.right));
+  
+  return x;
+}`
+};
+
+// Knapsack Problem
+export const knapsack = {
+  cpp: `int knapsack(int W, vector<int>& weights, vector<int>& values, int n) {
+    vector<vector<int>> dp(n + 1, vector<int>(W + 1, 0));
+    
+    for (int i = 1; i <= n; i++) {            // Line 3
+        for (int w = 1; w <= W; w++) {        // Line 4
+            if (weights[i-1] <= w) {          // Line 5
+                dp[i][w] = max(values[i-1] + dp[i-1][w-weights[i-1]], 
+                              dp[i-1][w]);    // Line 6
+            } else {                          // Line 7
+                dp[i][w] = dp[i-1][w];        // Line 8
+            }
+        }
+    }
+    
+    return dp[n][W];                          // Line 12
+}`,
+
+  python: `def knapsack(W, weights, values, n):
+    dp = [[0 for _ in range(W + 1)] for _ in range(n + 1)]
+    
+    for i in range(1, n + 1):                 # Line 3
+        for w in range(1, W + 1):             # Line 4
+            if weights[i-1] <= w:             # Line 5
+                dp[i][w] = max(values[i-1] + dp[i-1][w-weights[i-1]], 
+                              dp[i-1][w])     # Line 6
+            else:                             # Line 7
+                dp[i][w] = dp[i-1][w]         # Line 8
+    
+    return dp[n][W]                           # Line 11`,
+
+  javascript: `function knapsack(W, weights, values, n) {
+  const dp = Array(n + 1).fill().map(() => Array(W + 1).fill(0));
+  
+  for (let i = 1; i <= n; i++) {              // Line 3
+    for (let w = 1; w <= W; w++) {            // Line 4
+      if (weights[i-1] <= w) {                // Line 5
+        dp[i][w] = Math.max(values[i-1] + dp[i-1][w-weights[i-1]], 
+                           dp[i-1][w]);       // Line 6
+      } else {                                // Line 7
+        dp[i][w] = dp[i-1][w];                // Line 8
+      }
+    }
+  }
+  
+  return dp[n][W];                            // Line 12
+}`
+};
+
+// Longest Common Subsequence
+export const lcs = {
+  cpp: `int longestCommonSubsequence(string text1, string text2) {
+    int m = text1.length();
+    int n = text2.length();
+    vector<vector<int>> dp(m + 1, vector<int>(n + 1, 0));
+    
+    for (int i = 1; i <= m; i++) {            // Line 5
+        for (int j = 1; j <= n; j++) {        // Line 6
+            if (text1[i-1] == text2[j-1]) {   // Line 7
+                dp[i][j] = dp[i-1][j-1] + 1;  // Line 8
+            } else {                          // Line 9
+                dp[i][j] = max(dp[i-1][j], dp[i][j-1]); // Line 10
+            }
+        }
+    }
+    
+    return dp[m][n];                          // Line 14
+}`,
+
+  python: `def longest_common_subsequence(text1, text2):
+    m, n = len(text1), len(text2)
+    dp = [[0] * (n + 1) for _ in range(m + 1)]
+    
+    for i in range(1, m + 1):                 # Line 5
+        for j in range(1, n + 1):             # Line 6
+            if text1[i-1] == text2[j-1]:      # Line 7
+                dp[i][j] = dp[i-1][j-1] + 1   # Line 8
+            else:                             # Line 9
+                dp[i][j] = max(dp[i-1][j], dp[i][j-1]) # Line 10
+    
+    return dp[m][n]                           # Line 12`,
+
+  javascript: `function longestCommonSubsequence(text1, text2) {
+  const m = text1.length;
+  const n = text2.length;
+  const dp = Array(m + 1).fill().map(() => Array(n + 1).fill(0));
+  
+  for (let i = 1; i <= m; i++) {              // Line 5
+    for (let j = 1; j <= n; j++) {            // Line 6
+      if (text1[i-1] === text2[j-1]) {        // Line 7
+        dp[i][j] = dp[i-1][j-1] + 1;          // Line 8
+      } else {                                // Line 9
+        dp[i][j] = Math.max(dp[i-1][j], dp[i][j-1]); // Line 10
+      }
+    }
+  }
+  
+  return dp[m][n];                            // Line 14
+}`
+};
+
 // DFS
 export const dfs = {
   cpp: `#include <bits/stdc++.h>

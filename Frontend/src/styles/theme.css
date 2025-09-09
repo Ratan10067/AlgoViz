@@ -1,0 +1,259 @@
+/* Enhanced Theme Styles for AlgoViz */
+
+/* Global theme transitions */
+* {
+  transition: color 0.3s ease, background-color 0.3s ease, border-color 0.3s ease;
+}
+
+/* Light mode enhancements */
+body.algo-light {
+  background: linear-gradient(135deg, #f0f9ff 0%, #ffffff 50%, #f0fdfa 100%) !important;
+  color: #1f2937 !important;
+  transition: all 0.7s ease-in-out;
+}
+
+body.algo-dark {
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%) !important;
+  color: #ffffff !important;
+  transition: all 0.7s ease-in-out;
+}
+
+/* Enhanced glassmorphism for light mode */
+body.algo-light .glassmorphism {
+  background: rgba(255, 255, 255, 0.25) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.3) !important;
+  box-shadow: 0 8px 32px rgba(31, 38, 135, 0.15) !important;
+}
+
+body.algo-dark .glassmorphism {
+  background: rgba(255, 255, 255, 0.05) !important;
+  backdrop-filter: blur(10px) !important;
+  border: 1px solid rgba(255, 255, 255, 0.1) !important;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3) !important;
+}
+
+/* Smooth animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes spin-slow {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+.animate-fadeInUp {
+  animation: fadeInUp 0.8s ease-out forwards;
+}
+
+.animate-spin-slow {
+  animation: spin-slow 20s linear infinite;
+}
+
+/* Enhanced hover effects for light mode */
+body.algo-light .card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+}
+
+body.algo-dark .card-hover:hover {
+  transform: translateY(-5px);
+  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.3), 0 10px 10px -5px rgba(0, 0, 0, 0.2);
+}
+
+/* CodeForces-style scroll to top button (Left side rectangle - Full Height) */
+.cf-scroll-to-top {
+  position: fixed;
+  left: 0;
+  top: 0;
+  width: 40px;
+  height: 100vh;
+  z-index: 1000;
+  transition: all 0.3s ease;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.cf-scroll-to-top:hover {
+  width: 45px;
+  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+}
+
+/* Dark mode specific styles */
+body.algo-dark .cf-scroll-to-top {
+  background: rgba(30, 41, 59, 0.9);
+  border-right: 1px solid rgba(71, 85, 105, 0.6);
+  color: rgba(148, 163, 184, 1);
+}
+
+body.algo-dark .cf-scroll-to-top:hover {
+  background: rgba(51, 65, 85, 0.95);
+  color: rgba(34, 211, 238, 1);
+  border-right-color: rgba(34, 211, 238, 0.3);
+}
+
+/* Light mode specific styles */
+body.algo-light .cf-scroll-to-top {
+  background: rgba(255, 255, 255, 0.9);
+  border-right: 1px solid rgba(209, 213, 219, 1);
+  color: rgba(107, 114, 128, 1);
+}
+
+body.algo-light .cf-scroll-to-top:hover {
+  background: rgba(249, 250, 251, 0.95);
+  color: rgba(37, 99, 235, 1);
+  border-right-color: rgba(37, 99, 235, 0.3);
+}
+
+/* Arrow animation */
+.cf-scroll-arrow {
+  transition: transform 0.2s ease;
+}
+
+.cf-scroll-to-top:hover .cf-scroll-arrow {
+  transform: translateY(-4px);
+}
+
+/* Text fade effect */
+.cf-scroll-text {
+  transition: opacity 0.2s ease;
+  opacity: 0.7;
+}
+
+.cf-scroll-to-top:hover .cf-scroll-text {
+  opacity: 1;
+}
+
+/* Enhanced scroll to top button enhancement */
+.scroll-to-top-cf {
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+}
+
+.scroll-to-top-cf:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  border-radius: inherit;
+  background: linear-gradient(45deg, transparent 30%, rgba(255,255,255,0.1) 50%, transparent 70%);
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.scroll-to-top-cf:hover:before {
+  opacity: 1;
+  animation: shimmer 0.6s ease-in-out;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Enhanced theme transitions */
+.cf-tooltip {
+  transform: translateY(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.group:hover .cf-tooltip {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Scroll to top button enhancement */
+.scroll-to-top {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scroll-to-top:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Enhanced theme transitions */
+.cf-tooltip {
+  transform: translateY(10px);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.group:hover .cf-tooltip {
+  transform: translateY(0);
+  opacity: 1;
+}
+
+/* Scroll to top button enhancement */
+.scroll-to-top {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.scroll-to-top:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+/* Button enhancements */
+.btn-primary {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary:before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+  transition: left 0.6s;
+}
+
+.btn-primary:hover:before {
+  left: 100%;
+}
+
+/* Enhanced text gradient for light mode */
+body.algo-light .text-gradient {
+  background: linear-gradient(135deg, #0ea5e9, #06b6d4, #10b981);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+body.algo-dark .text-gradient {
+  background: linear-gradient(135deg, #22d3ee, #06b6d4, #10b981);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+/* Loading animations */
+.loading-dots {
+  display: inline-block;
+}
+
+.loading-dots:after {
+  content: '';
+  animation: dots 2s linear infinite;
+}
+
+@keyframes dots {
+  0%, 20% { content: ''; }
+  40% { content: '.'; }
+  60% { content: '..'; }
+  80%, 100% { content: '...'; }
+}

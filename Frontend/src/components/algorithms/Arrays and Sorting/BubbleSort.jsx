@@ -1,3 +1,5 @@
+// ...existing code...
+// Removed duplicate default export
 import React, { useState, useEffect, useRef } from "react";
 import {
   PanelGroup,
@@ -11,11 +13,11 @@ import {
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
-import Alert from "./Alert";
-import BasicCodeDisplay from "./BasicCodeDisplay";
-import { bubbleSort as bubbleSortCode } from "../algorithms/codeExamples";
+import Alert from "../../Alert.jsx";
+import BasicCodeDisplay from "../../BasicCodeDisplay.jsx";
+import { bubbleSort as bubbleSortCode } from "../../../algorithms/codeExamples.js";
 
-export default function BubbleSortVisualizer() {
+export default function BubbleSort() {
   const navigate = useNavigate();
   
   // Array state
