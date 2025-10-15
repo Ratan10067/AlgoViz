@@ -18,6 +18,7 @@ import NotFoundPage from "./components/PageNotFound";
 import SupportPage from "./components/SupportPage";
 import AboutPage from "./components/AboutPage";
 import UserProfilePage from "./components/UserProfilePage";
+import AlgorithmsPage from "./components/AlgorithmsPage";
 function App() {
   return (
     <>
@@ -40,6 +41,7 @@ function App() {
           <Route path="/support" element={<SupportPage />} />
           <Route path="/about" element={<AboutPage />} />
           <Route path="/user-profile" element={<UserProfilePage />} />
+          <Route path="/algorithms" element={<AlgorithmsPage />} />
         </Routes>
       </BrowserRouter>
     </>

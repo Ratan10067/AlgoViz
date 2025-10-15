@@ -12,12 +12,16 @@ import {
   Trophy,
   FileText,
   MessageSquare,
-  Bot, // Using a more specific icon for AI
+  Bot,
+  Github,
+  Linkedin,
+  Twitter,
+  Mail,
+  Instagram,
+  Globe,
 } from "lucide-react";
 import Alert from "./Alert";
 import { useNavigate } from "react-router-dom";
-
-// import anupPhoto from "../assets/subject.png";
 
 export default function AboutPage() {
   const [alertConfig, setAlertConfig] = useState({
@@ -38,18 +42,56 @@ export default function AboutPage() {
       role: "Frontend & Backend",
       bio: "The creative force behind the project, combining a passion for algorithm visualization with a keen eye for design and simulation to make complex topics intuitive and beautiful.",
       photoUrl: null,
+      socialLinks: [
+        {
+          platform: "github",
+          url: "https://github.com/ratan",
+          icon: <Github className="w-5 h-5" />,
+        },
+        {
+          platform: "linkedin",
+          url: "https://linkedin.com/in/ratan",
+          icon: <Linkedin className="w-5 h-5" />,
+        },
+        {
+          platform: "twitter",
+          url: "https://twitter.com/ratan",
+          icon: <Twitter className="w-5 h-5" />,
+        },
+        {
+          platform: "email",
+          url: "mailto:ratan@example.com",
+          icon: <Mail className="w-5 h-5" />,
+        },
+      ],
     },
     {
       name: "Anup",
       role: "Frontend",
       bio: "Anup architects the platform's robust and secure foundation. His expertise in modern web security and browser technologies ensures a reliable and safe learning environment.",
-      photoUrl: null, // Using the imported image variable
-    },
-    {
-      name: "AIs",
-      role: "Yahi to main hai",
-      bio: "The silent partners dedicated to crafting clear tutorials and providing instant insights, translating complex concepts into practical lessons for all learners.",
       photoUrl: null,
+      socialLinks: [
+        {
+          platform: "github",
+          url: "https://github.com/anup",
+          icon: <Github className="w-5 h-5" />,
+        },
+        {
+          platform: "linkedin",
+          url: "https://linkedin.com/in/anup",
+          icon: <Linkedin className="w-5 h-5" />,
+        },
+        {
+          platform: "instagram",
+          url: "https://instagram.com/anup",
+          icon: <Instagram className="w-5 h-5" />,
+        },
+        {
+          platform: "portfolio",
+          url: "https://anup.dev",
+          icon: <Globe className="w-5 h-5" />,
+        },
+      ],
     },
   ];
 
@@ -148,16 +190,93 @@ export default function AboutPage() {
         .step-circle {
             background: rgba(30, 41, 59, 0.5);
         }
+        .team-card {
+    position: relative;
+    overflow: hidden;
+    transition: all 0.3s ease;
+    max-width: 400px;
+    height: 400px; // Fixed height for consistent cards
+    margin: 0 auto;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  .team-content {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 2rem;
+    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    z-index: 1;
+  }
+
+  .team-image-container {
+    width: 160px;
+    height: 160px;
+    margin: 0 auto 1.5rem auto;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .team-image {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    border-radius: 50%;
+    border: 3px solid rgba(71, 85, 105, 0.3);
+    transition: transform 0.3s ease, border-color 0.3s ease;
+  }
+
+  .team-card:hover .team-image {
+    border-color: rgba(6, 182, 212, 0.5);
+    transform: scale(1.05);
+  }
+
+  .team-card:hover .team-content {
+    transform: translateY(-60px);
+  }
+
+  .social-links {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
+    backdrop-filter: blur(15px);
+    border-top: 1px solid rgba(71, 85, 105, 0.3);
+    transform: translateY(100%);
+    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+    padding: 1.5rem;
+    opacity: 0;
+  }
+        .team-card:hover .social-links {
+    transform: translateY(0);
+    opacity: 1;
+  }
+        .social-link {
+          transition: all 0.4s ease;
+          border: 1px solid rgba(71, 85, 105, 0.3);
+        }
+        .social-link:hover {
+          transform: translateY(-3px) scale(1.05);
+          background: rgba(15, 23, 42, 0.8);
+          border-color: rgba(6, 182, 212, 0.5);
+          box-shadow: 0 8px 25px rgba(6, 182, 212, 0.15);
+        }
       `}</style>
 
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Back Button */}
         <button
           onClick={() => {
-            console.log("Back button clicked"); // Check if this logs
-            console.log("Navigate function:", navigate); // Check if navigate exists
+            console.log("Back button clicked");
+            console.log("Navigate function:", navigate);
             navigate("/");
-            console.log("Navigate called"); // Check if this executes
+            console.log("Navigate called");
           }}
           className="mb-8 flex items-center text-slate-400 hover:text-cyan-400 transition-colors duration-300 group"
         >
@@ -187,33 +306,58 @@ export default function AboutPage() {
           <h2 className="text-4xl font-bold text-white mb-10 text-center">
             Meet the Team
           </h2>
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-8 max-w-6xl mx-auto px-4">
             {teamMembers.map((member, index) => (
               <div
                 key={index}
-                className="glassmorphism-card rounded-2xl p-6 text-center flex flex-col items-center transition-all duration-300 hover:border-cyan-400/60 hover:-translate-y-1"
+                className="team-card glassmorphism-card rounded-2xl p-6 text-center flex flex-col items-center"
               >
-                {member.photoUrl ? (
-                  <img
-                    src={member.photoUrl}
-                    alt={member.name}
-                    className="w-32 h-32 rounded-full mb-4 object-cover border-2 border-slate-700"
-                  />
-                ) : (
-                  <div className="w-32 h-32 rounded-full mb-4 bg-slate-800 border-2 border-slate-700 flex items-center justify-center">
-                    {/* Specific icon for AI placeholder */}
-                    {member.name === "AIs" ? (
-                      <Bot className="w-12 h-12 text-slate-500" />
+                <div className="team-content">
+                  <div className="team-image-container">
+                    {member.photoUrl ? (
+                      <img
+                        src={member.photoUrl}
+                        alt={member.name}
+                        className="team-image"
+                      />
                     ) : (
-                      <Users className="w-12 h-12 text-slate-500" />
+                      <div className="team-image flex items-center justify-center bg-slate-800 border-2 border-slate-700">
+                        {member.name === "AIs" ? (
+                          <Bot className="w-16 h-16 text-slate-500" />
+                        ) : (
+                          <Users className="w-16 h-16 text-slate-500" />
+                        )}
+                      </div>
                     )}
                   </div>
-                )}
-                <h3 className="text-xl font-semibold text-white mb-1">
-                  {member.name}
-                </h3>
-                <p className="text-cyan-400 mb-3">{member.role}</p>
-                <p className="text-slate-400 text-sm">{member.bio}</p>
+                  <h3 className="text-2xl font-semibold text-white mb-2">
+                    {member.name}
+                  </h3>
+                  <p className="text-cyan-400 mb-4">{member.role}</p>
+                  <p className="text-slate-400 text-sm text-center leading-relaxed">
+                    {member.bio}
+                  </p>
+                </div>
+
+                <div className="social-links">
+                  <div className="flex justify-center space-x-4">
+                    {member.socialLinks.map((link, linkIndex) => (
+                      <a
+                        key={linkIndex}
+                        href={link.url}
+                        target="_blank"
+                        rel="noopener noreferrer"
+                        className="social-link p-3 rounded-xl bg-slate-800/60 text-slate-300 hover:text-cyan-400"
+                        title={link.platform}
+                      >
+                        {link.icon}
+                      </a>
+                    ))}
+                  </div>
+                  <p className="text-slate-300 text-sm mt-3 font-medium text-center">
+                    Connect with {member.name}
+                  </p>
+                </div>
               </div>
             ))}
           </div>

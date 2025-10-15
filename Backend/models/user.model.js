@@ -15,10 +15,6 @@ const userSchema = new mongoose.Schema(
       type: String,
       required: true,
     },
-    remember: {
-      type: Boolean,
-      default: false,
-    },
     memberSince: {
       type: String,
       required: true,
@@ -26,7 +22,6 @@ const userSchema = new mongoose.Schema(
     avatar: {
       type: String,
     },
-    
   },
   { timestamps: true }
 );
