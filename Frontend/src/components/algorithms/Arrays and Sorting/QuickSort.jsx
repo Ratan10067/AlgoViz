@@ -1,45 +1,25 @@
+// ...existing code...
+// Removed duplicate default export
 import React, { useState, useEffect } from "react";
 import {
   PanelGroup,
   Panel,
   PanelResizeHandle,
 } from "react-resizable-panels";
-import CodeMirror from "@uiw/react-codemirror";
-import { javascript } from "@codemirror/lang-javascript";
-import { oneDark } from "@codemirror/theme-one-dark";
-import { EditorView } from "@codemirror/view";
 import {
   Play, Pause, SkipForward, RotateCcw, Settings, BarChart3, Code2,
   Activity, Target, Clock, Maximize2, ArrowLeft, AlertTriangle, Shuffle,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import Alert from "./Alert";
+import Alert from "../../Alert.jsx";
+import BasicCodeDisplay from "../../BasicCodeDisplay.jsx";
+import { quickSort as quickSortCode } from "../../../algorithms/codeExamples.js";
 
-const quickSortSourceCode = `function quickSort(arr, low, high) {
-  if (low < high) {
-    const pivotIndex = partition(arr, low, high);
-    quickSort(arr, low, pivotIndex - 1);
-    quickSort(arr, pivotIndex + 1, high);
-  }
-}
-
-function partition(arr, low, high) {
-  const pivot = arr[high];
-  let i = low - 1;
-  
-  for (let j = low; j < high; j++) {
-    if (arr[j] < pivot) {
-      i++;
-      [arr[i], arr[j]] = [arr[j], arr[i]];
-    }
-  }
-  
-  [arr[i + 1], arr[high]] = [arr[high], arr[i + 1]];
-  return i + 1;
-}`;
-
-export default function QuickSortVisualizer() {
+export default function QuickSort() {
   const navigate = useNavigate();
+
+  const [dataType, setDataType] = useState('number');
+  const [sortDirection, setSortDirection] = useState('ascending');
   
   // Array state
   const [arraySize, setArraySize] = useState(12);
@@ -58,11 +38,7 @@ export default function QuickSortVisualizer() {
   const [activeRightTab, setActiveRightTab] = useState("stats");
   const [arrayValidationError, setArrayValidationError] = useState("");
   const [isValidArray, setIsValidArray] = useState(false);
-  
-  // Features state
-  const [sortDirection, setSortDirection] = useState('ascending');
-  const [dataType, setDataType] = useState('number');
-  
+  const [currentHighlightedLine, setCurrentHighlightedLine] = useState(null);
   const [alertConfig, setAlertConfig] = useState({
     isOpen: false,
     message: "",
@@ -868,40 +844,12 @@ export default function QuickSortVisualizer() {
                       </div>
                       
                       <div className="flex-1 overflow-auto">
-                        <CodeMirror
-                          value={quickSortSourceCode}
-                          height="100%"
-                          extensions={[
-                            javascript({ jsx: true }),
-                            EditorView.lineWrapping,
-                            EditorView.theme({
-                              "&": {
-                                fontFamily: '"Fira Code", monospace',
-                                fontSize: "14px",
-                                backgroundColor: "transparent",
-                                height: "100%"
-                              },
-                              ".cm-content": {
-                                padding: "10px 0"
-                              },
-                              ".cm-line": {
-                                padding: "0 16px"
-                              },
-                              ".cm-activeLine": {
-                                backgroundColor: "rgba(99, 102, 241, 0.2)"
-                              },
-                              ".cm-activeLineGutter": {
-                                backgroundColor: "rgba(99, 102, 241, 0.3)"
-                              }
-                            })
-                          ]}
-                          theme={oneDark}
-                          editable={false}
-                          basicSetup={{
-                            lineNumbers: true,
-                            highlightActiveLineGutter: true,
-                            highlightActiveLine: true
-                          }}
+                        <BasicCodeDisplay
+                          cppCode={quickSortCode.cpp}
+                          pythonCode={quickSortCode.python}
+                          jsCode={quickSortCode.javascript}
+                          highlightedLine={currentHighlightedLine}
+                          className="h-full"
                         />
                       </div>
                     </div>

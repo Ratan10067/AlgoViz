@@ -15,23 +15,15 @@ import {
   ArrowLeft,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "../context/UserContext";
+
 const UserProfilePage = () => {
   const [activeTab, setActiveTab] = useState("profile");
   const [currentActivityIndex, setCurrentActivityIndex] = useState(0);
   const navigate = useNavigate();
-  // Sample user data
-  const userData = {
-    name: "Alex Johnson",
-    email: "alex.johnson@email.com",
-    joinDate: "January 2024",
-    avatar:
-      "https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face",
-    totalActivities: 45,
-    streak: 12,
-    favoriteAlgorithm: "Quick Sort",
-  };
-
-  // Sample past activities data
+  const { user, logout } = useAuth();
+  
+  // Sample activities data (kept as is)
   const pastActivities = [
     {
       id: 1,
@@ -96,6 +88,25 @@ const UserProfilePage = () => {
     { id: "accounts", icon: Settings, label: "Accounts" },
   ];
 
+  // Get user's join date in a readable format
+  const formatJoinDate = () => {
+    if (!user || !user.createdAt) {
+      return "Recent member";
+    }
+    
+    try {
+      const date = new Date(user.createdAt);
+      return date.toLocaleDateString('en-US', { year: 'numeric', month: 'long' });
+    } catch (error) {
+      return user.memberSince || "Recent member";
+    }
+  };
+
+  const handleLogout = () => {
+    logout();
+    navigate("/");
+  };
+
   const nextActivity = () => {
     setCurrentActivityIndex((prev) =>
       prev === pastActivities.length - 1 ? 0 : prev + 1
@@ -126,15 +137,13 @@ const UserProfilePage = () => {
   const renderProfileContent = () => (
     <div className="space-y-8">
       <div className="text-center">
-        <img
-          src={userData.avatar}
-          alt="Profile"
-          className="w-32 h-32 rounded-full mx-auto mb-6 border-4 border-blue-500"
-        />
-        <h2 className="text-3xl font-bold text-white mb-2">{userData.name}</h2>
-        <p className="text-gray-300 mb-4">{userData.email}</p>
+        <div className="w-32 h-32 rounded-full mx-auto mb-6 border-4 border-blue-500 bg-gray-700 flex items-center justify-center">
+          <User className="w-16 h-16 text-gray-400" />
+        </div>
+        <h2 className="text-3xl font-bold text-white mb-2">{user?.name || "User"}</h2>
+        <p className="text-gray-300 mb-4">{user?.email || "No email provided"}</p>
         <p className="text-sm text-gray-400">
-          Member since {userData.joinDate}
+          Member since {formatJoinDate()}
         </p>
       </div>
 
@@ -142,19 +151,19 @@ const UserProfilePage = () => {
         <div className="bg-gradient-to-br from-blue-600 to-blue-700 text-white p-6 rounded-xl border border-gray-700">
           <Trophy className="w-8 h-8 mb-3 text-blue-200" />
           <h3 className="text-lg font-semibold mb-1">Total Activities</h3>
-          <p className="text-3xl font-bold">{userData.totalActivities}</p>
+          <p className="text-3xl font-bold">0</p>
         </div>
 
         <div className="bg-gradient-to-br from-emerald-600 to-emerald-700 text-white p-6 rounded-xl border border-gray-700">
           <Activity className="w-8 h-8 mb-3 text-emerald-200" />
           <h3 className="text-lg font-semibold mb-1">Current Streak</h3>
-          <p className="text-3xl font-bold">{userData.streak} days</p>
+          <p className="text-3xl font-bold">0 days</p>
         </div>
 
         <div className="bg-gradient-to-br from-purple-600 to-purple-700 text-white p-6 rounded-xl border border-gray-700">
           <Code className="w-8 h-8 mb-3 text-purple-200" />
           <h3 className="text-lg font-semibold mb-1">Favorite Algorithm</h3>
-          <p className="text-lg font-semibold">{userData.favoriteAlgorithm}</p>
+          <p className="text-lg font-semibold">None yet</p>
         </div>
       </div>
 
@@ -167,7 +176,7 @@ const UserProfilePage = () => {
             </label>
             <input
               type="text"
-              value={userData.name}
+              defaultValue={user?.name || ""}
               className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -177,7 +186,7 @@ const UserProfilePage = () => {
             </label>
             <input
               type="email"
-              value={userData.email}
+              defaultValue={user?.email || ""}
               className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white placeholder-gray-400 focus:ring-2 focus:ring-blue-500 focus:border-transparent"
             />
           </div>
@@ -394,14 +403,12 @@ const UserProfilePage = () => {
         <div className="w-80 bg-gray-900 shadow-2xl h-screen sticky top-0 border-r border-gray-700">
           <div className="p-6 border-b border-gray-700">
             <div className="flex items-center space-x-3">
-              <img
-                src={userData.avatar}
-                alt="Profile"
-                className="w-12 h-12 rounded-full border-2 border-blue-500"
-              />
+              <div className="w-12 h-12 rounded-full border-2 border-blue-500 bg-gray-700 flex items-center justify-center">
+                <User className="w-6 h-6 text-gray-400" />
+              </div>
               <div>
-                <h3 className="font-bold text-white">{userData.name}</h3>
-                <p className="text-sm text-gray-400">{userData.email}</p>
+                <h3 className="font-bold text-white">{user?.name || "User"}</h3>
+                <p className="text-sm text-gray-400">{user?.email || "No email"}</p>
               </div>
             </div>
           </div>
@@ -427,7 +434,10 @@ const UserProfilePage = () => {
           </nav>
 
           <div className="absolute bottom-4 left-4 right-4">
-            <button className="w-full flex items-center space-x-3 px-4 py-3 text-red-400 hover:bg-red-900 hover:bg-opacity-20 rounded-lg transition-colors">
+            <button 
+              onClick={handleLogout}
+              className="w-full flex items-center space-x-3 px-4 py-3 text-red-400 hover:bg-red-900 hover:bg-opacity-20 rounded-lg transition-colors"
+            >
               <LogOut className="w-5 h-5" />
               <span className="font-medium">Logout</span>
             </button>

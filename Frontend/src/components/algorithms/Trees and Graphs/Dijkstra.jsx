@@ -1,18 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import cytoscape from "cytoscape";
-import coseBilkent from "cytoscape-cose-bilkent";
-import edgehandles from "cytoscape-edgehandles";
-
+import cytoscape from "../../../utils/cytoscapeSetup.js";
 import {
   PanelGroup,
   Panel,
   PanelResizeHandle,
 } from "react-resizable-panels";
-
-import CodeMirror from "@uiw/react-codemirror";
-import { javascript } from "@codemirror/lang-javascript";
-import { oneDark } from "@codemirror/theme-one-dark";
-import { EditorView } from "@codemirror/view";
 
 import {
   Play, Pause, SkipForward, RotateCcw, Settings, BarChart3, Code2,
@@ -20,29 +12,11 @@ import {
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
-import Alert from "./Alert";
+import Alert from "../../Alert.jsx";
+import BasicCodeDisplay from "../../BasicCodeDisplay.jsx";
+import { dijkstra as dijkstraCode } from "../../../algorithms/codeExamples.js";
 
-// Register Cytoscape extensions
-cytoscape.use(coseBilkent);
-cytoscape.use(edgehandles);
-
-const dfsSourceCode = `function dfs(graph, node, visited, discovery, finish, time) {
-  visited.add(node);                         // Line 2
-  discovery[node] = time.current++;          // Line 3
-  
-  for (const neighbor of graph[node]) {      // Line 5
-    if (!visited.has(neighbor)) {            // Line 6
-      // Tree edge - recursive call
-      dfs(graph, neighbor, visited, discovery, finish, time); // Line 8
-    } else if (!finish[neighbor]) {          // Line 9
-      // Back edge (cycle detected)
-    }
-  }
-  
-  finish[node] = time.current++;             // Line 13
-}`;
-
-export default function DFSRecursiveVisualizer() {
+export default function DijkstraVisualizer() {
   const cyRef = useRef(null);
   const cyInstance = useRef(null);
   const editorRef = useRef(null);
@@ -51,9 +25,9 @@ export default function DFSRecursiveVisualizer() {
   // Graph state
   const [numNodes, setNumNodes] = useState(8);
   const [edgeList, setEdgeList] = useState(
-    "0-1,0-2,1-3,1-4,2-4,2-5,3-6,4-6,4-7,5-7"
+    "0-1:4,0-2:8,1-3:3,1-4:2,2-4:5,2-5:9,3-6:1,4-6:7,4-7:6,5-7:3"
   );
-  const [graphType, setGraphType] = useState("undirected");
+  const [graphType, setGraphType] = useState("directed");
   const [startNode, setStartNode] = useState("0");
 
   // Animation state
@@ -100,7 +74,7 @@ export default function DFSRecursiveVisualizer() {
     });
   };
 
-  // Edge validation
+  // Enhanced edge validation with weights
   const validateEdges = (edgeString, nodeCount) => {
     try {
       if (!edgeString.trim()) {
@@ -112,12 +86,37 @@ export default function DFSRecursiveVisualizer() {
         .map(s => s.trim())
         .filter(Boolean)
         .map(pair => {
-          const [fromStr, toStr] = pair.split("-").map(s => s.trim());
-          const from = parseInt(fromStr, 10);
-          const to = parseInt(toStr, 10);
+          // Try the correct format a-b:w first
+          let from, to, weight;
+          
+          if (pair.includes(':')) {
+            // Format: a-b:w
+            const [nodes, weightStr] = pair.split(":").map(s => s.trim());
+            if (!nodes || !weightStr) {
+              throw new Error(`Missing weight in edge: "${pair}". Format = source-target:weight`);
+            }
+            const [fromStr, toStr] = nodes.split("-").map(s => s.trim());
+            from = parseInt(fromStr, 10);
+            to = parseInt(toStr, 10);
+            weight = parseInt(weightStr, 10);
+          } else if (pair.includes('-')) {
+            // Legacy format: a-b-w (for backward compatibility)
+            const parts = pair.split("-").map(s => s.trim());
+            if (parts.length !== 3) {
+              throw new Error(`Invalid edge format: "${pair}". Format should be source-target:weight`);
+            }
+            from = parseInt(parts[0], 10);
+            to = parseInt(parts[1], 10);
+            weight = parseInt(parts[2], 10);
+            
+            // Show warning for legacy format
+            console.warn(`Legacy edge format detected: "${pair}". Please use the format "source-target:weight" instead.`);
+          } else {
+            throw new Error(`Invalid edge format: "${pair}". Format should be source-target:weight`);
+          }
 
-          if (isNaN(from) || isNaN(to)) {
-            throw new Error(`Invalid edge format: "${pair}"`);
+          if (isNaN(from) || isNaN(to) || isNaN(weight)) {
+            throw new Error(`Invalid edge format: "${pair}". All values must be numbers.`);
           }
 
           if (from < 0 || to < 0 || from >= nodeCount || to >= nodeCount) {
@@ -126,12 +125,13 @@ export default function DFSRecursiveVisualizer() {
             );
           }
 
-          return { from, to };
+          return { from, to, weight };
         });
 
       setEdgeValidationError("");
       setIsValidGraph(true);
 
+      // Return edges based on graph type
       if (graphType === "undirected") {
         const seen = new Set();
         return edges.filter(e => {
@@ -150,7 +150,7 @@ export default function DFSRecursiveVisualizer() {
     }
   };
 
-  // Resize handling
+  // Enhanced resize effect
   useEffect(() => {
     const handleResize = () => {
       if (cyInstance.current) {
@@ -159,10 +159,13 @@ export default function DFSRecursiveVisualizer() {
       }
     };
 
+    // Debounced resize function
     const debouncedResize = setTimeout(handleResize, 150);
+    
     return () => clearTimeout(debouncedResize);
   }, [isResizing, activeRightTab]);
 
+  // Additional effect for window resize
   useEffect(() => {
     const handleWindowResize = () => {
       if (cyInstance.current) {
@@ -174,157 +177,125 @@ export default function DFSRecursiveVisualizer() {
     return () => window.removeEventListener('resize', handleWindowResize);
   }, []);
 
+  // ensure the graph updates immediately
   useEffect(() => {
     handleGenerateGraph();
+    // eslint-disable-next-line
   }, [graphType]);
 
-  // Recursive DFS step computation
-  const computeDFSRecursiveSteps = (nodesCount, edgesArr, start) => {
-    // Build adjacency list
+  // Dijkstra's algorithm step computation - fixed to handle undirected graphs
+  const computeDijkstraSteps = (nodesCount, edgesArr, start, graphType) => {
+    // Convert start to string for consistency
+    const startStr = String(start);
+    
+    // Build adjacency list with weights
     const adj = {};
     for (let i = 0; i < nodesCount; i++) adj[i] = [];
     
+    // Add both directions for undirected graphs
     edgesArr.forEach(e => {
-      adj[e.from].push(e.to);
+      adj[e.from].push({ node: e.to, weight: e.weight });
       if (graphType === "undirected") {
-        adj[e.to].push(e.from);
+        adj[e.to].push({ node: e.from, weight: e.weight });
       }
     });
 
-    const visited = new Set();
-    const discovery = {};
-    const finish = {};
-    const time = { current: 1 };
-    const frames = [];
-    const callStack = [];
-    const treeEdges = [];
-    const backEdges = [];
+    // Initialize data structures
+    const distances = Array(nodesCount).fill(Infinity);
+    distances[start] = 0;
 
-    // Recursive DFS function
-    const dfs = (node) => {
-      // Entering node
-      visited.add(node);
-      discovery[node] = time.current++;
-      callStack.push(node);
-      
+    const visited = new Set();
+    const pq = [{ id: startStr, dist: 0 }]; // Priority queue simulation
+    const frames = [];
+
+    // Initial state
+    frames.push({
+      visited: new Set(),
+      pq: [...pq],
+      current: null,
+      distances: [...distances],
+      lineNumber: 1,
+      action: "Initialize distances"
+    });
+
+    while (pq.length > 0) {
+      // Sort by distance to simulate min-heap
+      pq.sort((a, b) => a.dist - b.dist);
+      const { id: current, dist: currentDist } = pq.shift();
+
       frames.push({
         visited: new Set(visited),
-        callStack: [...callStack],
-        current: node,
-        discovery: { ...discovery },
-        finish: { ...finish },
-        treeEdges: [...treeEdges],
-        backEdges: [...backEdges],
-        lineNumber: 2,
-        action: `Entering node ${node} (discovery: ${discovery[node]})`
+        pq: [...pq],
+        current,
+        distances: [...distances],
+        lineNumber: 14,
+        action: `Dequeue node ${current} (dist: ${currentDist})`
       });
 
-      for (const neighbor of adj[node] || []) {
-        if (!visited.has(neighbor)) {
-          // Tree edge
-          treeEdges.push(`${node}-${neighbor}`);
-          
-          frames.push({
-            visited: new Set(visited),
-            callStack: [...callStack],
-            current: node,
-            discovery: { ...discovery },
-            finish: { ...finish },
-            treeEdges: [...treeEdges],
-            backEdges: [...backEdges],
-            lineNumber: 6,
-            action: `Found unvisited neighbor ${neighbor} (tree edge)`
-          });
+      // Skip if already visited
+      if (visited.has(current)) {
+        frames.push({
+          visited: new Set(visited),
+          pq: [...pq],
+          current,
+          distances: [...distances],
+          lineNumber: 16,
+          action: `Node ${current} already visited, skip`
+        });
+        continue;
+      }
 
-          // Recursive call
-          frames.push({
-            visited: new Set(visited),
-            callStack: [...callStack],
-            current: node,
-            discovery: { ...discovery },
-            finish: { ...finish },
-            treeEdges: [...treeEdges],
-            backEdges: [...backEdges],
-            lineNumber: 8,
-            action: `Recursing to neighbor ${neighbor}`
-          });
+      // Mark as visited
+      visited.add(current);
+      frames.push({
+        visited: new Set(visited),
+        pq: [...pq],
+        current,
+        distances: [...distances],
+        lineNumber: 18,
+        action: `Mark node ${current} as visited`
+      });
 
-          dfs(neighbor);
-        } else if (!finish[neighbor]) {
-          // Back edge (cycle)
-          backEdges.push(`${node}-${neighbor}`);
-          
+      // Process neighbors - convert to number for array access
+      const currentNum = parseInt(current);
+      for (const neighbor of adj[currentNum] || []) {
+        const { node: neighborNode, weight } = neighbor;
+        const neighborStr = String(neighborNode);
+        const newDist = distances[currentNum] + weight;
+
+        frames.push({
+          visited: new Set(visited),
+          pq: [...pq],
+          current,
+          distances: [...distances],
+          lineNumber: 23,
+          action: `Check neighbor ${neighborStr} (new dist: ${newDist}, current dist: ${distances[neighborNode]})`
+        });
+
+        if (newDist < distances[neighborNode]) {
+          distances[neighborNode] = newDist;
+          pq.push({ id: neighborStr, dist: newDist });
+
           frames.push({
             visited: new Set(visited),
-            callStack: [...callStack],
-            current: node,
-            discovery: { ...discovery },
-            finish: { ...finish },
-            treeEdges: [...treeEdges],
-            backEdges: [...backEdges],
-            lineNumber: 9,
-            action: `Found back edge to ${neighbor} (cycle detected)`
-          });
-        } else {
-          frames.push({
-            visited: new Set(visited),
-            callStack: [...callStack],
-            current: node,
-            discovery: { ...discovery },
-            finish: { ...finish },
-            treeEdges: [...treeEdges],
-            backEdges: [...backEdges],
-            lineNumber: 5,
-            action: `Checking neighbor ${neighbor} (already finished)`
+            pq: [...pq],
+            current,
+            distances: [...distances],
+            lineNumber: 26,
+            action: `Update node ${neighborStr} to distance ${newDist}`
           });
         }
       }
-
-      // Exiting node
-      finish[node] = time.current++;
-      callStack.pop();
-      
-      frames.push({
-        visited: new Set(visited),
-        callStack: [...callStack],
-        current: callStack.length ? callStack[callStack.length - 1] : null,
-        discovery: { ...discovery },
-        finish: { ...finish },
-        treeEdges: [...treeEdges],
-        backEdges: [...backEdges],
-        lineNumber: 13,
-        action: `Exiting node ${node} (finish: ${finish[node]})`
-      });
-    };
-
-    // Initial call
-    callStack.push(parseInt(start));
-    frames.push({
-      visited: new Set(),
-      callStack: [...callStack],
-      current: null,
-      discovery: {},
-      finish: {},
-      treeEdges: [],
-      backEdges: [],
-      lineNumber: 1,
-      action: `Starting DFS from node ${start}`
-    });
-
-    // Start DFS
-    dfs(parseInt(start));
+    }
 
     // Final state
     frames.push({
       visited: new Set(visited),
-      callStack: [],
+      pq: [],
       current: null,
-      discovery: { ...discovery },
-      finish: { ...finish },
-      treeEdges: [...treeEdges],
-      backEdges: [...backEdges],
-      lineNumber: 14,
-      action: "DFS completed"
+      distances: [...distances],
+      lineNumber: 32,
+      action: "Algorithm complete"
     });
 
     setSteps(frames);
@@ -343,10 +314,15 @@ export default function DFSRecursiveVisualizer() {
       container: cyRef.current,
       elements: {
         nodes: Array.from({ length: numNodes }, (_, i) => ({
-          data: { id: `${i}`, label: `${i}` },
+          data: { id: `${i}`, label: `${i}`, distance: "∞" },
         })),
         edges: edges.map((e, idx) => ({
-          data: { id: `e${idx}`, source: `${e.from}`, target: `${e.to}` },
+          data: {
+            id: `e${idx}`,
+            source: `${e.from}`,
+            target: `${e.to}`,
+            weight: e.weight
+          },
         })),
       },
       style: [
@@ -387,7 +363,7 @@ export default function DFSRecursiveVisualizer() {
           },
         },
         {
-          selector: "node.inStack",
+          selector: "node.queued",
           style: {
             "background-color": "#3b82f6",
             "border-color": "#60a5fa",
@@ -400,29 +376,30 @@ export default function DFSRecursiveVisualizer() {
             width: 3,
             "line-color": "#64748b",
             "curve-style": "bezier",
-            "target-arrow-shape": graphType === "directed" ? "triangle" : "triangle",
+            "target-arrow-shape": graphType === "undirected" ? "triangle" : "triangle",
             "target-arrow-color": "#64748b",
-            "arrow-scale": 1.5,
             "source-arrow-shape": graphType === "undirected" ? "triangle" : "none",
             "source-arrow-color": "#64748b",
+            "arrow-scale": 1.5,
+            "label": "data(weight)",
+            "text-background-color": "#1e293b",
+            "text-background-opacity": 0.8,
+            "text-background-padding": "4px",
+            "text-background-shape": "roundrectangle",
+            "text-border-width": 1,
+            "text-border-color": "#64748b",
+            "color": "#ffffff",
+            "font-size": "14px",
+            "font-weight": "bold",
           },
         },
         {
-          selector: "edge.treeEdge",
+          selector: "edge.highlighted",
           style: {
-            width: 4,
-            "line-color": "#10b981",
-            "target-arrow-color": "#10b981",
-            "box-shadow": "0 0 10px #10b981",
-          },
-        },
-        {
-          selector: "edge.backEdge",
-          style: {
-            "line-style": "dashed",
-            "line-dash-pattern": [5, 5],
+            width: 5,
             "line-color": "#f59e0b",
             "target-arrow-color": "#f59e0b",
+            "box-shadow": "0 0 10px #f59e0b",
           },
         },
       ],
@@ -438,10 +415,10 @@ export default function DFSRecursiveVisualizer() {
     });
 
     cyInstance.current = cy;
-    computeDFSRecursiveSteps(numNodes, edges, startNode);
+    computeDijkstraSteps(numNodes, edges, parseInt(startNode), graphType);
   };
 
-  // Validate edges
+  // Validate edges on change
   useEffect(() => {
     validateEdges(edgeList, numNodes);
   }, [edgeList, numNodes, graphType]);
@@ -453,30 +430,33 @@ export default function DFSRecursiveVisualizer() {
 
     const step = steps[currentStep];
     cy.batch(() => {
-      cy.nodes().removeClass("visited inStack current");
+      cy.nodes().removeClass("visited queued current");
       step.visited.forEach(id => cy.$(`#${id}`).addClass("visited"));
-      step.callStack.forEach(id => cy.$(`#${id}`).addClass("inStack"));
+
+      // Highlight nodes in priority queue
+      step.pq.forEach(item => cy.$(`#${item.id}`).addClass("queued"));
+
       if (step.current !== null) cy.$(`#${step.current}`).addClass("current");
 
-      // Highlight tree and back edges
-      cy.edges().removeClass("treeEdge backEdge");
-      step.treeEdges.forEach(edgeId => {
-        const [source, target] = edgeId.split("-");
-        cy.edges().filter(e => 
-          e.source().id() === source && e.target().id() === target ||
-          (graphType === "undirected" && e.source().id() === target && e.target().id() === source)
-        ).addClass("treeEdge");
+      // Update node labels with distances
+      cy.nodes().forEach(n => {
+        const nodeId = parseInt(n.id());
+        const distance = step.distances[nodeId];
+        const displayDist = distance === Infinity ? "∞" : distance;
+        n.data("label", `${n.id()} (${displayDist})`);
       });
-      
-      step.backEdges.forEach(edgeId => {
-        const [source, target] = edgeId.split("-");
-        cy.edges().filter(e => 
-          e.source().id() === source && e.target().id() === target ||
-          (graphType === "undirected" && e.source().id() === target && e.target().id() === source)
-        ).addClass("backEdge");
-      });
+
+      // Highlight edges from current node
+      cy.edges().removeClass("highlighted");
+      if (step.current !== null) {
+        // Convert current node to string for selector
+        const currentNode = String(step.current);
+        cy.$(`edge[source="${currentNode}"], edge[target="${currentNode}"]`)
+          .addClass("highlighted");
+      }
     });
 
+    // Update code highlighting
     setCurrentHighlightedLine(step.lineNumber);
   }, [currentStep, steps]);
 
@@ -515,7 +495,6 @@ export default function DFSRecursiveVisualizer() {
       green: "from-green-500/20 to-green-600/20 border-green-500/30",
       yellow: "from-yellow-500/20 to-yellow-600/20 border-yellow-500/30",
       red: "from-red-500/20 to-red-600/20 border-red-500/30",
-      purple: "from-purple-500/20 to-purple-600/20 border-purple-500/30",
     };
 
     return (
@@ -531,12 +510,6 @@ export default function DFSRecursiveVisualizer() {
         </div>
       </div>
     );
-  };
-
-  // Calculate progress value
-  const getProgressValue = () => {
-    if (!started || !steps.length) return "Nil";
-    return `${Math.round(((currentStep + 1) / steps.length) * 100)}%`;
   };
 
   return (
@@ -557,7 +530,7 @@ export default function DFSRecursiveVisualizer() {
               <Activity size={18} className="text-white" />
             </div>
             <h1 className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              DFS Recursive Visualizer
+              Dijkstra's Algorithm Visualizer
             </h1>
           </div>
 
@@ -576,6 +549,7 @@ export default function DFSRecursiveVisualizer() {
           direction="horizontal" 
           onLayout={(sizes) => {
             setIsResizing(false);
+            // Force canvas resize after layout stabilizes
             setTimeout(() => {
               if (cyInstance.current) {
                 cyInstance.current.resize();
@@ -647,17 +621,17 @@ export default function DFSRecursiveVisualizer() {
                 {/* Edges */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-200 mb-2">
-                    Edges (format: 0-1,1-2,2-3)
+                    Edges (format: 0-1:4,1-2:3)
                   </label>
                   <textarea
                     rows={3}
                     value={edgeList}
                     onChange={e => setEdgeList(e.target.value)}
                     className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white font-mono text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    placeholder="0-1,1-2,2-3..."
+                    placeholder="0-1:4,1-2:3,2-3:2..."
                   />
                   {edgeValidationError && (
-                    <div className="mt-2 flex items-center gap-2 p-2 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
+                    <div className="mt极狐 flex items-center gap-2 p-2 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
                       <AlertTriangle size={14} className="text-yellow-400 flex-shrink-0" />
                       <span className="text-xs text-yellow-300">{edgeValidationError}</span>
                     </div>
@@ -686,7 +660,7 @@ export default function DFSRecursiveVisualizer() {
                 <button
                   onClick={handleGenerateGraph}
                   disabled={!isValidGraph}
-                  className={`w-full py-3 rounded-xl font-semibold transition-all duration-200 shadow-lg transform ${isValidGraph
+                  className={`w-full py-3 rounded-xl font-semib极狐 transition-all duration-200 shadow-lg transform ${isValidGraph
                     ? "bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 hover:scale-105 text-white"
                     : "bg-gray-600 text-gray-400 cursor-not-allowed"
                     }`}
@@ -716,8 +690,7 @@ export default function DFSRecursiveVisualizer() {
                       onClick={() =>
                         setCurrentStep(
                           Math.min(currentStep + 1, steps.length - 1)
-                        )
-                      }
+                        )}
                       disabled={currentStep >= steps.length - 1}
                       className="flex items-center justify-center py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed rounded-xl font-medium transition-all duration-200 shadow-lg text-sm"
                     >
@@ -758,10 +731,10 @@ export default function DFSRecursiveVisualizer() {
                   </div>
                 </div>
 
-                {/* Recursive DFS Legend */}
+                {/* Color Legend */}
                 <div className="bg-gray-700/30 backdrop-blur-sm rounded-xl p-4 border border-gray-600/30 mt-4">
                   <h4 className="font-semibold text-gray-200 mb-3">
-                    DFS Color Legend
+                    Color Legend
                   </h4>
                   <div className="space-y-2">
                     {[
@@ -772,7 +745,7 @@ export default function DFSRecursiveVisualizer() {
                       },
                       {
                         color: "bg-blue-500",
-                        label: "Nodes in call stack",
+                        label: "Nodes in priority queue",
                         textColor: "text-blue-300",
                       },
                       {
@@ -784,16 +757,6 @@ export default function DFSRecursiveVisualizer() {
                         color: "bg-green-500",
                         label: "Visited nodes",
                         textColor: "text-green-300",
-                      },
-                      {
-                        color: "bg-green-500",
-                        label: "Tree edges (DFS path)",
-                        textColor: "text-green-300",
-                      },
-                      {
-                        color: "bg-yellow-500",
-                        label: "Back edges (non-tree)",
-                        textColor: "text-yellow-300",
                       },
                     ].map((item, idx) => (
                       <div key={idx} className="flex items-center gap-3">
@@ -817,7 +780,9 @@ export default function DFSRecursiveVisualizer() {
             onDragging={(isDragging) => {
               setIsResizing(isDragging);
               if (!isDragging && cyInstance.current) {
-                setTimeout(() => cyInstance.current.resize(), 50);
+                setTimeout(() => {
+                  cyInstance.current.resize();
+                }, 50);
               }
             }} 
           />
@@ -839,7 +804,9 @@ export default function DFSRecursiveVisualizer() {
             onDragging={(isDragging) => {
               setIsResizing(isDragging);
               if (!isDragging && cyInstance.current) {
-                setTimeout(() => cyInstance.current.resize(), 50);
+                setTimeout(() => {
+                  cyInstance.current.resize();
+                }, 50);
               }
             }} 
           />
@@ -887,9 +854,9 @@ export default function DFSRecursiveVisualizer() {
                       <StatCard
                         icon={Activity}
                         value={
-                          steps[currentStep] ? steps[currentStep].callStack.length : 0
+                          steps[currentStep] ? steps[currentStep].pq.length : 0
                         }
-                        label="Call Stack Size"
+                        label="In Queue"
                         color="blue"
                       />
                       <StatCard
@@ -900,8 +867,8 @@ export default function DFSRecursiveVisualizer() {
                       />
                       <StatCard
                         icon={Clock}
-                        value={getProgressValue()}
-                        label="Progress"
+                        value={steps.length}
+                        label="Total Steps"
                         color="red"
                       />
                     </div>
@@ -934,94 +901,66 @@ export default function DFSRecursiveVisualizer() {
                       </div>
                     </div>
 
-                    {/* Discovery/Finish Times */}
-                    <div className="bg-gray-700/30 backdrop-blur-sm rounded-xl p-4 border border-gray-600/30">
+                    {/* Distance Array */}
+                    <div className="bg-gray-800/30 backdrop-blur-sm rounded-xl p-4 border border-gray-600/30">
                       <h3 className="text-lg font-semibold text-gray-200 mb-3">
-                        Node Timing Information
+                        Distance Array
                       </h3>
                       <div className="grid grid-cols-4 gap-2">
                         {Array.from({ length: numNodes }, (_, i) => {
-                          const discovery = steps[currentStep]?.discovery[i] || "";
-                          const finish = steps[currentStep]?.finish[i] || "";
-                          
+                          const distance = steps[currentStep]?.distances[i] ?? "∞";
                           return (
                             <div
                               key={i}
-                              className={`flex flex-col items-center justify-center rounded-lg p-2 text-center ${
-                                steps[currentStep]?.current == i 
-                                  ? "bg-gradient-to-br from-red-500/20 to-red-600/20 border border-red-500/30"
-                                  : steps[currentStep]?.callStack.includes(i)
-                                  ? "bg-gradient-to-br from-blue-500/20 to-blue-600/20 border border-blue-500/30"
-                                  : steps[currentStep]?.visited.has(i)
-                                  ? "bg-gradient-to-br from-green-500/20 to-green-600/20 border border-green-500/30"
-                                  : "bg-gray-600/50"
-                              }`}
+                              className="flex justify-between bg-gray-600/50 rounded-lg px-2 py-1"
                             >
-                              <div className="text-gray-300 text-sm font-semibold">Node {i}</div>
-                              <div className="flex gap-1 text-xs">
-                                {discovery && (
-                                  <div className="text-green-400">D: {discovery}</div>
-                                )}
-                                {finish && (
-                                  <div className="text-purple-400">F: {finish}</div>
-                                )}
-                              </div>
+                              <span className="text-gray-300 font-mono text-sm">{i}:</span>
+                              <span className="text-yellow-400 font-mono font-bold text-sm">
+                                {distance === Infinity ? "∞" : distance}
+                              </span>
                             </div>
                           );
                         })}
                       </div>
                     </div>
 
-                    {/* Call Stack Visualization */}
+                    {/* Current State */}
                     {steps[currentStep] && (
-                      <div className="bg-gray-700/30 backdrop-blur-sm rounded-xl p-4 border border-gray-600/30">
-                        <h3 className="text-lg font-semibold text-gray-200 mb-3">
-                          Call Stack Visualization
-                        </h3>
-                        <div className="flex flex-col">
-                          <div className="text-sm text-gray-400 mb-2">
-                            Current stack depth: {steps[currentStep].callStack.length}
+                      <div className="space-y-3">
+                        <div className="bg-green-500/20 border border-green-500/30 rounded-xl p-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-3 h-3 bg-green-500 rounded-full"></div>
+                            <span className="text-sm font-semibold text-green-400">
+                              Visited Nodes
+                            </span>
                           </div>
-                          
-                          <div className="flex flex-col-reverse space-y-reverse space-y-1 max-h-60 overflow-y-auto p-2 bg-gray-800/50 rounded-lg">
-                            {steps[currentStep].callStack.map((node, index) => (
-                              <div 
-                                key={index} 
-                                className={`p-3 rounded-lg ${
-                                  index === steps[currentStep].callStack.length - 1 
-                                    ? "bg-gradient-to-r from-red-600/30 to-red-700/30 border border-red-500/30" 
-                                    : "bg-gradient-to-r from-blue-600/20 to-blue-700/20 border border-blue-500/20"
-                                }`}
-                              >
-                                <div className="flex justify-between items-center">
-                                  <div className="flex items-center gap-2">
-                                    <div className={`w-3 h-3 rounded-full ${
-                                      index === steps[currentStep].callStack.length - 1 
-                                        ? "bg-red-500" 
-                                        : "bg-blue-500"
-                                    }`}></div>
-                                    <span className="font-mono font-bold">Node {node}</span>
-                                  </div>
-                                  <div className="text-xs text-gray-400">
-                                    Depth: {steps[currentStep].callStack.length - index}
-                                  </div>
-                                </div>
-                                
-                                {steps[currentStep].discovery[node] && (
-                                  <div className="mt-2 text-xs flex justify-between">
-                                    <span className="text-green-400">D: {steps[currentStep].discovery[node]}</span>
-                                    <span className="text-purple-400">F: {steps[currentStep].finish[node] || "?"}</span>
-                                  </div>
-                                )}
-                              </div>
-                            ))}
-                            
-                            {steps[currentStep].callStack.length === 0 && (
-                              <div className="text-center py-4 text-gray-500">
-                                Call stack is empty
-                              </div>
-                            )}
+                          <span className="font-mono text-green-300 text-sm">
+                            {[...steps[currentStep].visited].join(", ") || "None"}
+                          </span>
+                        </div>
+
+                        <div className="bg-blue-500/20 border border-blue-500/30 rounded-xl p-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
+                            <span className="text-sm font-semibold text-blue-400">
+                              Priority Queue
+                            </span>
                           </div>
+                          <span className="font-mono text-blue-300 text-sm">
+                            {steps[currentStep].pq.map(item => `${item.id}(${item.dist})`).join(", ") || "Empty"}
+                          </span>
+                        </div>
+
+                        <div className="bg-red-500/20 border border-red-500/30 rounded-xl p-3">
+                          <div className="flex items-center gap-2 mb-2">
+                            <div className="w-3 h-3 bg-red-500 rounded-full"></div>
+                            <span className="text-sm font-semibold text-red-400">
+                              Current Node
+                            </span>
+                          </div>
+                          <span className="font-mono text-red-300 text-sm">
+                            {steps[currentStep].current !== null ? steps[currentStep].current : "None"}
+                          </span>
                         </div>
                       </div>
                     )}
@@ -1034,62 +973,35 @@ export default function DFSRecursiveVisualizer() {
                       <div className="flex items-center gap-2 p-3 border-b border-gray-600/30">
                         <Code2 size={18} className="text-blue-400" />
                         <h3 className="text-lg font-semibold text-gray-200">
-                          Recursive DFS Implementation
+                          Dijkstra's Implementation
                         </h3>
                       </div>
                       <div className="relative">
-                        <CodeMirror
-                          value={dfsSourceCode}
-                          extensions={[
-                            javascript(),
-                            EditorView.theme({
-                              "&": { fontSize: "14px" },
-                              ".cm-content": { padding: "16px", minHeight: "300px" },
-                              ".cm-focused": { outline: "none" },
-                              ".cm-line": { padding: "2px 0" },
-                              [`&.cm-editor.cm-focused .cm-line:nth-child(${currentHighlightedLine})`]: {
-                                backgroundColor: "rgba(245, 158, 11, 0.2)",
-                                borderLeft: "4px solid #f59e0b",
-                                paddingLeft: "12px",
-                                animation: "pulse 2s infinite",
-                              },
-                            }),
-                          ]}
-                          theme={oneDark}
-                          editable={false}
-                          basicSetup={{
-                            lineNumbers: true,
-                            foldGutter: false,
-                            dropCursor: false,
-                            allowMultipleSelections: false,
-                          }}
+                        <BasicCodeDisplay
+                          cppCode={dijkstraCode.cpp}
+                          pythonCode={dijkstraCode.python}
+                          jsCode={dijkstraCode.javascript}
+                          highlightedLine={currentHighlightedLine}
+                          className="min-h-[300px]"
                         />
                       </div>
                     </div>
 
                     <div className="bg-gradient-to-r from-blue-500/10 to-purple-500/10 border border-blue-500/20 rounded-xl p-4">
                       <h4 className="font-semibold text-gray-200 mb-3">
-                        Recursive DFS Properties
+                        Algorithm Complexity
                       </h4>
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-300">Time Complexity:</span>
-                          <span className="font-mono text-green-400">O(V + E)</span>
+                          <span className="font-mono text-green-400">O(V + E log V)</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-300">Space Complexity:</span>
                           <span className="font-mono text-blue-400">O(V)</span>
                         </div>
                         <div className="text-xs text-gray-400 mt-2">
-                          V = vertices, E = edges. Space complexity comes from the call stack depth.
-                        </div>
-                        <div className="mt-3 text-gray-300">
-                          <span className="font-semibold text-purple-300">Tree Edges:</span> 
-                          <span> Edges that are part of the DFS tree</span>
-                        </div>
-                        <div className="text-gray-300">
-                          <span className="font-semibold text-yellow-300">Back Edges:</span> 
-                          <span> Edges to ancestors in the DFS tree (indicate cycles)</span>
+                          V = number of vertices, E = number of edges
                         </div>
                       </div>
                     </div>
@@ -1108,14 +1020,6 @@ export default function DFSRecursiveVisualizer() {
         onClose={() => setAlertConfig(prev => ({ ...prev, isOpen: false }))}
         customButtons={alertConfig.customButtons}
       />
-      
-      <style jsx>{`
-        @keyframes pulse {
-          0% { background-color: rgba(245, 158, 11, 0.2); }
-          50% { background-color: rgba(245, 158, 11, 0.1); }
-          100% { background-color: rgba(245, 158, 11, 0.2); }
-        }
-      `}</style>
     </div>
   );
 }

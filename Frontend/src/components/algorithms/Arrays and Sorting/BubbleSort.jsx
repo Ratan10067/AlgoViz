@@ -1,10 +1,7 @@
+// ...existing code...
+// Removed duplicate default export
 import React, { useState, useEffect, useRef } from "react";
 import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
-
-import CodeMirror from "@uiw/react-codemirror";
-import { javascript } from "@codemirror/lang-javascript";
-import { oneDark } from "@codemirror/theme-one-dark";
-import { EditorView } from "@codemirror/view";
 
 import {
   Play,
@@ -24,34 +21,11 @@ import {
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
-import Alert from "./Alert";
+import Alert from "../../Alert.jsx";
+import BasicCodeDisplay from "../../BasicCodeDisplay.jsx";
+import { bubbleSort as bubbleSortCode } from "../../../algorithms/codeExamples.js";
 
-const bubbleSortSourceCode = `function bubbleSort(arr) {
-  const n = arr.length;
-  let comparisons = 0;
-  let swaps = 0;
-
-  for (let i = 0; i < n - 1; i++) {           // Line 6
-    let swapped = false;                      // Line 7
-    
-    for (let j = 0; j < n - i - 1; j++) {    // Line 9
-      comparisons++;                          // Line 10
-      
-      if (arr[j] > arr[j + 1]) {             // Line 12
-        // Swap elements
-        [arr[j], arr[j + 1]] = [arr[j + 1], arr[j]]; // Line 14
-        swapped = true;                       // Line 15
-        swaps++;                              // Line 16
-      }
-    }
-    
-    if (!swapped) break;                      // Line 20
-  }
-  
-  return { sortedArray: arr, comparisons, swaps }; // Line 23
-}`;
-
-export default function BubbleSortVisualizer() {
+export default function BubbleSort() {
   const navigate = useNavigate();
 
   // Array state
@@ -959,40 +933,12 @@ export default function BubbleSortVisualizer() {
                       </div>
 
                       <div className="flex-1 overflow-auto">
-                        <CodeMirror
-                          value={bubbleSortSourceCode}
-                          height="100%"
-                          extensions={[
-                            javascript({ jsx: true }),
-                            EditorView.lineWrapping,
-                            EditorView.theme({
-                              "&": {
-                                fontFamily: '"Fira Code", monospace',
-                                fontSize: "14px",
-                                backgroundColor: "transparent",
-                                height: "100%",
-                              },
-                              ".cm-content": {
-                                padding: "10px 0",
-                              },
-                              ".cm-line": {
-                                padding: "0 16px",
-                              },
-                              ".cm-activeLine": {
-                                backgroundColor: "rgba(99, 102, 241, 0.2)",
-                              },
-                              ".cm-activeLineGutter": {
-                                backgroundColor: "rgba(99, 102, 241, 0.3)",
-                              },
-                            }),
-                          ]}
-                          theme={oneDark}
-                          editable={false}
-                          basicSetup={{
-                            lineNumbers: true,
-                            highlightActiveLineGutter: true,
-                            highlightActiveLine: true,
-                          }}
+                        <BasicCodeDisplay
+                          cppCode={bubbleSortCode.cpp}
+                          pythonCode={bubbleSortCode.python}
+                          jsCode={bubbleSortCode.javascript}
+                          highlightedLine={currentHighlightedLine}
+                          className="h-full"
                         />
                       </div>
                     </div>

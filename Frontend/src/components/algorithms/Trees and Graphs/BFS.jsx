@@ -1,18 +1,10 @@
 import React, { useState, useEffect, useRef } from "react";
-import cytoscape from "cytoscape";
-import coseBilkent from "cytoscape-cose-bilkent";
-import edgehandles from "cytoscape-edgehandles";
-
+import cytoscape from "../../../utils/cytoscapeSetup.js";
 import {
   PanelGroup,
   Panel,
   PanelResizeHandle,
 } from "react-resizable-panels";
-
-import CodeMirror from "@uiw/react-codemirror";
-import { javascript } from "@codemirror/lang-javascript";
-import { oneDark } from "@codemirror/theme-one-dark";
-import { EditorView, Decoration } from "@codemirror/view";
 
 import {
   Play, Pause, SkipForward, RotateCcw, Settings, BarChart3, Code2,
@@ -20,47 +12,15 @@ import {
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
-import Alert from "./Alert";
+import Alert from "../../Alert.jsx";
+import BasicCodeDisplay from "../../BasicCodeDisplay.jsx";
+import { bfs as bfsCode } from "../../../algorithms/codeExamples.js";
 
-// Register Cytoscape extensions
-cytoscape.use(coseBilkent);
-cytoscape.use(edgehandles);
+// Remove the Cytoscape extensions registration lines
+// cytoscape.use(coseBilkent);
+// cytoscape.use(edgehandles);
 
-const dijkstraSourceCode = `function dijkstra(graph, start) {
-  const distances = {};
-  const visited = new Set();
-  const pq = new PriorityQueue();
-  
-  // Initialize distances
-  for (const node in graph) {
-    distances[node] = node === start ? 0 : Infinity;
-  }
-  
-  pq.enqueue(start, 0); // Line 11
-  
-  while (!pq.isEmpty()) {
-    const current = pq.dequeue().element; // Line 14
-    
-    if (visited.has(current)) continue; // Line 16
-    
-    visited.add(current); // Line 18
-    
-    for (const neighbor of graph[current]) {
-      const { node: neighborNode, weight } = neighbor; // Line 21
-      
-      const distanceToNeighbor = distances[current] + weight; // Line 23
-      
-      if (distanceToNeighbor < distances[neighborNode]) { // Line 25
-        distances[neighborNode] = distanceToNeighbor; // Line 26
-        pq.enqueue(neighborNode, distanceToNeighbor); // Line 27
-      }
-    }
-  }
-  
-  return distances; // Line 32
-}`;
-
-export default function DijkstraVisualizer() {
+export default function EnhancedBFSVisualizer() {
   const cyRef = useRef(null);
   const cyInstance = useRef(null);
   const editorRef = useRef(null);
@@ -69,7 +29,7 @@ export default function DijkstraVisualizer() {
   // Graph state
   const [numNodes, setNumNodes] = useState(8);
   const [edgeList, setEdgeList] = useState(
-    "0-1:4,0-2:1,1-3:1,1-4:3,2-4:2,2-5:5,3-6:2,4-6:4,4-7:1,5-7:3"
+    "0-1,0-2,1-3,1-4,2-4,2-5,3-6,4-6,4-7,5-7"
   );
   const [graphType, setGraphType] = useState("undirected");
   const [startNode, setStartNode] = useState("0");
@@ -120,7 +80,7 @@ export default function DijkstraVisualizer() {
     });
   };
 
-  // Enhanced edge validation with weights
+  // Enhanced edge validation
   const validateEdges = (edgeString, nodeCount) => {
     try {
       if (!edgeString.trim()) {
@@ -132,17 +92,11 @@ export default function DijkstraVisualizer() {
         .map(s => s.trim())
         .filter(Boolean)
         .map(pair => {
-          // Split by ':' to separate nodes and weight
-          const [nodes, weightStr] = pair.split(":").map(s => s.trim());
-          if (!nodes || !weightStr) {
-            throw new Error(`Missing weight in edge: "${pair}". Format = source-target:weight`);
-          }
-          const [fromStr, toStr] = nodes.split("-").map(s => s.trim());
+          const [fromStr, toStr] = pair.split("-").map(s => s.trim());
           const from = parseInt(fromStr, 10);
           const to = parseInt(toStr, 10);
-          const weight = parseInt(weightStr, 10);
 
-          if (isNaN(from) || isNaN(to) || isNaN(weight)) {
+          if (isNaN(from) || isNaN(to)) {
             throw new Error(`Invalid edge format: "${pair}"`);
           }
 
@@ -152,7 +106,7 @@ export default function DijkstraVisualizer() {
             );
           }
 
-          return { from, to, weight };
+          return { from, to };
         });
 
       setEdgeValidationError("");
@@ -207,98 +161,74 @@ export default function DijkstraVisualizer() {
   // ensure the graph updates immediately
   useEffect(() => {
     handleGenerateGraph();
-    // eslint-disable-next-line
   }, [graphType]);
 
-  // Dijkstra's algorithm step computation
-  const computeDijkstraSteps = (nodesCount, edgesArr, start) => {
-    // Build adjacency list with weights
+  // Fixed BFS step computation
+  const computeBFSSteps = (nodesCount, edgesArr, start, graphType) => {
     const adj = {};
     for (let i = 0; i < nodesCount; i++) adj[i] = [];
-    edgesArr.forEach(e => adj[e.from].push({ node: e.to, weight: e.weight }));
-
-    // Initialize data structures
-    const distances = Array(nodesCount).fill(Infinity);
-    distances[start] = 0;
+    
+    // Build adjacency list for undirected graphs
+    edgesArr.forEach(e => {
+      adj[e.from].push(e.to);
+      if (graphType === "undirected") {
+        adj[e.to].push(e.from);
+      }
+    });
 
     const visited = new Set();
-    const pq = [{ id: start, dist: 0 }]; // Priority queue simulation
+    const queue = [parseInt(start)];
+    const distances = { [start]: 0 };
     const frames = [];
 
     // Initial state
     frames.push({
       visited: new Set(),
-      pq: [...pq],
+      queue: [...queue],
       current: null,
-      distances: [...distances],
+      distances: { ...distances },
       lineNumber: 1,
-      action: "Initialize distances"
+      action: "Initialize"
     });
 
-    while (pq.length > 0) {
-      // Sort by distance to simulate min-heap
-      pq.sort((a, b) => a.dist - b.dist);
-      const { id: current, dist: currentDist } = pq.shift();
-
+    while (queue.length > 0) {
+      // Dequeue step
+      const current = queue.shift();
       frames.push({
         visited: new Set(visited),
-        pq: [...pq],
+        queue: [...queue],
         current,
-        distances: [...distances],
-        lineNumber: 14,
-        action: `Dequeue node ${current} (dist: ${currentDist})`
+        distances: { ...distances },
+        lineNumber: 6,
+        action: `Dequeue node ${current}`
       });
 
-      // Skip if already visited
-      if (visited.has(current)) {
+      if (!visited.has(current)) {
+        // Mark as visited
+        visited.add(current);
         frames.push({
           visited: new Set(visited),
-          pq: [...pq],
+          queue: [...queue],
           current,
-          distances: [...distances],
-          lineNumber: 16,
-          action: `Node ${current} already visited, skip`
-        });
-        continue;
-      }
-
-      // Mark as visited
-      visited.add(current);
-      frames.push({
-        visited: new Set(visited),
-        pq: [...pq],
-        current,
-        distances: [...distances],
-        lineNumber: 18,
-        action: `Mark node ${current} as visited`
-      });
-
-      // Process neighbors
-      for (const neighbor of adj[current] || []) {
-        const { node: neighborNode, weight } = neighbor;
-        const newDist = distances[current] + weight;
-
-        frames.push({
-          visited: new Set(visited),
-          pq: [...pq],
-          current,
-          distances: [...distances],
-          lineNumber: 23,
-          action: `Check neighbor ${neighborNode} (new dist: ${newDist}, current dist: ${distances[neighborNode]})`
+          distances: { ...distances },
+          lineNumber: 9,
+          action: `Mark node ${current} as visited`
         });
 
-        if (newDist < distances[neighborNode]) {
-          distances[neighborNode] = newDist;
-          pq.push({ id: neighborNode, dist: newDist });
-
-          frames.push({
-            visited: new Set(visited),
-            pq: [...pq],
-            current,
-            distances: [...distances],
-            lineNumber: 26,
-            action: `Update node ${neighborNode} to distance ${newDist}`
-          });
+        // Process neighbors
+        for (const neighbor of adj[current] || []) {
+          if (!visited.has(neighbor) && !queue.includes(neighbor)) {
+            queue.push(neighbor);
+            distances[neighbor] = distances[current] + 1;
+            frames.push({
+              visited: new Set(visited),
+              queue: [...queue],
+              current,
+              distances: { ...distances },
+              lineNumber: 14,
+              action: `Add neighbor ${neighbor} to queue`
+            });
+          }
         }
       }
     }
@@ -306,10 +236,10 @@ export default function DijkstraVisualizer() {
     // Final state
     frames.push({
       visited: new Set(visited),
-      pq: [],
+      queue: [],
       current: null,
-      distances: [...distances],
-      lineNumber: 32,
+      distances: { ...distances },
+      lineNumber: 21,
       action: "Algorithm complete"
     });
 
@@ -332,12 +262,7 @@ export default function DijkstraVisualizer() {
           data: { id: `${i}`, label: `${i}`, distance: "∞" },
         })),
         edges: edges.map((e, idx) => ({
-          data: {
-            id: `e${idx}`,
-            source: `${e.from}`,
-            target: `${e.to}`,
-            weight: e.weight
-          },
+          data: { id: `e${idx}`, source: `${e.from}`, target: `${e.to}` },
         })),
       },
       style: [
@@ -391,21 +316,12 @@ export default function DijkstraVisualizer() {
             width: 3,
             "line-color": "#64748b",
             "curve-style": "bezier",
-            "target-arrow-shape": graphType === "undirected" ? "triangle" : "triangle",
+            "target-arrow-shape": graphType === "directed" ? "triangle" : "triangle",
             "target-arrow-color": "#64748b",
+            "arrow-scale": 1.5,
+            // Add this line for double-headed arrows on undirected edges
             "source-arrow-shape": graphType === "undirected" ? "triangle" : "none",
             "source-arrow-color": "#64748b",
-            "arrow-scale": 1.5,
-            "label": "data(weight)",
-            "text-background-color": "#1e293b",
-            "text-background-opacity": 0.8,
-            "text-background-padding": "4px",
-            "text-background-shape": "roundrectangle",
-            "text-border-width": 1,
-            "text-border-color": "#64748b",
-            "color": "#ffffff",
-            "font-size": "14px",
-            "font-weight": "bold",
           },
         },
         {
@@ -430,7 +346,7 @@ export default function DijkstraVisualizer() {
     });
 
     cyInstance.current = cy;
-    computeDijkstraSteps(numNodes, edges, parseInt(startNode));
+    computeBFSSteps(numNodes, edges, startNode, graphType);
   };
 
   // Validate edges on change
@@ -447,21 +363,14 @@ export default function DijkstraVisualizer() {
     cy.batch(() => {
       cy.nodes().removeClass("visited queued current");
       step.visited.forEach(id => cy.$(`#${id}`).addClass("visited"));
-
-      // Highlight nodes in priority queue
-      step.pq.forEach(item => cy.$(`#${item.id}`).addClass("queued"));
-
+      step.queue.forEach(id => cy.$(`#${id}`).addClass("queued"));
       if (step.current !== null) cy.$(`#${step.current}`).addClass("current");
 
-      // Update node labels with distances
       cy.nodes().forEach(n => {
-        const nodeId = parseInt(n.id());
-        const distance = step.distances[nodeId];
-        const displayDist = distance === Infinity ? "∞" : distance;
-        n.data("label", `${n.id()} (${displayDist})`);
+        const distance = step.distances[n.id()] ?? "∞";
+        n.data("label", `${n.id()} (${distance})`);
       });
 
-      // Highlight edges from current node
       cy.edges().removeClass("highlighted");
       if (step.current !== null) {
         cy.$(`edge[source="${step.current}"], edge[target="${step.current}"]`)
@@ -549,7 +458,7 @@ export default function DijkstraVisualizer() {
               <Activity size={18} className="text-white" />
             </div>
             <h1 className="text-xl font-bold bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
-              Dijkstra's Algorithm Visualizer
+              BFS Algorithm Visualizer
             </h1>
           </div>
 
@@ -640,14 +549,14 @@ export default function DijkstraVisualizer() {
                 {/* Edges */}
                 <div>
                   <label className="block text-sm font-semibold text-gray-200 mb-2">
-                    Edges (format: 0-1:4,1-2:3)
+                    Edges (format: 0-1,1-2,2-3)
                   </label>
                   <textarea
                     rows={3}
                     value={edgeList}
                     onChange={e => setEdgeList(e.target.value)}
                     className="w-full px-3 py-2 bg-gray-700/50 border border-gray-600/50 rounded-xl text-white font-mono text-sm resize-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    placeholder="0-1:4,1-2:3,2-3:2..."
+                    placeholder="0-1,1-2,2-3..."
                   />
                   {edgeValidationError && (
                     <div className="mt-2 flex items-center gap-2 p-2 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
@@ -709,7 +618,8 @@ export default function DijkstraVisualizer() {
                       onClick={() =>
                         setCurrentStep(
                           Math.min(currentStep + 1, steps.length - 1)
-                        )}
+                        )
+                      }
                       disabled={currentStep >= steps.length - 1}
                       className="flex items-center justify-center py-2 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 disabled:from-gray-600 disabled:to-gray-700 disabled:cursor-not-allowed rounded-xl font-medium transition-all duration-200 shadow-lg text-sm"
                     >
@@ -750,7 +660,7 @@ export default function DijkstraVisualizer() {
                   </div>
                 </div>
 
-                {/* Color Legend */}
+                {/* Color Legend - moved from right to left panel */}
                 <div className="bg-gray-700/30 backdrop-blur-sm rounded-xl p-4 border border-gray-600/30 mt-4">
                   <h4 className="font-semibold text-gray-200 mb-3">
                     Color Legend
@@ -764,7 +674,7 @@ export default function DijkstraVisualizer() {
                       },
                       {
                         color: "bg-blue-500",
-                        label: "Nodes in priority queue",
+                        label: "Nodes in queue",
                         textColor: "text-blue-300",
                       },
                       {
@@ -873,7 +783,7 @@ export default function DijkstraVisualizer() {
                       <StatCard
                         icon={Activity}
                         value={
-                          steps[currentStep] ? steps[currentStep].pq.length : 0
+                          steps[currentStep] ? steps[currentStep].queue.length : 0
                         }
                         label="In Queue"
                         color="blue"
@@ -935,7 +845,7 @@ export default function DijkstraVisualizer() {
                             >
                               <span className="text-gray-300 font-mono text-sm">{i}:</span>
                               <span className="text-yellow-400 font-mono font-bold text-sm">
-                                {distance === Infinity ? "∞" : distance}
+                                {distance}
                               </span>
                             </div>
                           );
@@ -962,11 +872,11 @@ export default function DijkstraVisualizer() {
                           <div className="flex items-center gap-2 mb-2">
                             <div className="w-3 h-3 bg-blue-500 rounded-full"></div>
                             <span className="text-sm font-semibold text-blue-400">
-                              Priority Queue
+                              Queue
                             </span>
                           </div>
                           <span className="font-mono text-blue-300 text-sm">
-                            {steps[currentStep].pq.map(item => `${item.id}(${item.dist})`).join(", ") || "Empty"}
+                            {steps[currentStep].queue.join(", ") || "Empty"}
                           </span>
                         </div>
 
@@ -992,47 +902,16 @@ export default function DijkstraVisualizer() {
                       <div className="flex items-center gap-2 p-3 border-b border-gray-600/30">
                         <Code2 size={18} className="text-blue-400" />
                         <h3 className="text-lg font-semibold text-gray-200">
-                          Dijkstra's Implementation
+                          BFS Implementation
                         </h3>
                       </div>
                       <div className="relative">
-                        <CodeMirror
-                          value={dijkstraSourceCode}
-                          extensions={[
-                            javascript(),
-                            EditorView.theme({
-                              "&": {
-                                fontSize: "14px",
-                              },
-                              ".cm-content": {
-                                padding: "16px",
-                                minHeight: "300px",
-                              },
-                              ".cm-focused": {
-                                outline: "none",
-                              },
-                              ".cm-line": {
-                                padding: "2px 0",
-                              },
-                              [`&.cm-editor.cm-focused .cm-line:nth-child(${currentHighlightedLine})`]: {
-                                backgroundColor: "rgba(245, 158, 11, 0.2)",
-                                borderLeft: "4px solid #f59e0b",
-                                paddingLeft: "12px",
-                                animation: "pulse 2s infinite",
-                              },
-                            }),
-                          ]}
-                          theme={oneDark}
-                          editable={false}
-                          basicSetup={{
-                            lineNumbers: true,
-                            foldGutter: false,
-                            dropCursor: false,
-                            allowMultipleSelections: false,
-                          }}
-                          onCreateEditor={(view) => {
-                            editorRef.current = view;
-                          }}
+                        <BasicCodeDisplay
+                          cppCode={bfsCode.cpp}
+                          pythonCode={bfsCode.python}
+                          jsCode={bfsCode.javascript}
+                          highlightedLine={currentHighlightedLine}
+                          className="min-h-[300px]"
                         />
                       </div>
                     </div>
@@ -1044,7 +923,7 @@ export default function DijkstraVisualizer() {
                       <div className="space-y-2 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-300">Time Complexity:</span>
-                          <span className="font-mono text-green-400">O(V + E log V)</span>
+                          <span className="font-mono text-green-400">O(V + E)</span>
                         </div>
                         <div className="flex justify-between">
                           <span className="text-gray-300">Space Complexity:</span>

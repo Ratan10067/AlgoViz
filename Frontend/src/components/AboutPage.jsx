@@ -23,6 +23,8 @@ import {
 import Alert from "./Alert";
 import { useNavigate } from "react-router-dom";
 
+// import anupPhoto from "../assets/subject.png"; 
+
 export default function AboutPage() {
   const [alertConfig, setAlertConfig] = useState({
     isOpen: false,
@@ -35,6 +37,16 @@ export default function AboutPage() {
   useEffect(() => {
     window.scrollTo(0, 0);
   }, []);
+
+  const handleBackClick = () => {
+    try {
+      navigate("/");
+    } catch (error) {
+      console.error("Navigation error:", error);
+      // Fallback to window.location if navigate fails
+      window.location.href = "/";
+    }
+  };
 
   const teamMembers = [
     {
@@ -69,29 +81,13 @@ export default function AboutPage() {
       name: "Anup",
       role: "Frontend",
       bio: "Anup architects the platform's robust and secure foundation. His expertise in modern web security and browser technologies ensures a reliable and safe learning environment.",
-      photoUrl: null,
-      socialLinks: [
-        {
-          platform: "github",
-          url: "https://github.com/anup",
-          icon: <Github className="w-5 h-5" />,
-        },
-        {
-          platform: "linkedin",
-          url: "https://linkedin.com/in/anup",
-          icon: <Linkedin className="w-5 h-5" />,
-        },
-        {
-          platform: "instagram",
-          url: "https://instagram.com/anup",
-          icon: <Instagram className="w-5 h-5" />,
-        },
-        {
-          platform: "portfolio",
-          url: "https://anup.dev",
-          icon: <Globe className="w-5 h-5" />,
-        },
-      ],
+      photoUrl: null, // Using the imported image variable
+    },
+    {
+      name: "AIs",
+      role: "Yahi to main hai",
+      bio: "The silent partners dedicated to crafting clear tutorials and providing instant insights, translating complex concepts into practical lessons for all learners.",
+      photoUrl: null, 
     },
   ];
 
@@ -190,111 +186,32 @@ export default function AboutPage() {
         .step-circle {
             background: rgba(30, 41, 59, 0.5);
         }
-        .team-card {
-    position: relative;
-    overflow: hidden;
-    transition: all 0.3s ease;
-    max-width: 400px;
-    height: 400px; // Fixed height for consistent cards
-    margin: 0 auto;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-  }
-
-  .team-content {
-    width: 100%;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    padding: 2rem;
-    transition: transform 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    z-index: 1;
-  }
-
-  .team-image-container {
-    width: 160px;
-    height: 160px;
-    margin: 0 auto 1.5rem auto;
-    position: relative;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-  }
-
-  .team-image {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-    border-radius: 50%;
-    border: 3px solid rgba(71, 85, 105, 0.3);
-    transition: transform 0.3s ease, border-color 0.3s ease;
-  }
-
-  .team-card:hover .team-image {
-    border-color: rgba(6, 182, 212, 0.5);
-    transform: scale(1.05);
-  }
-
-  .team-card:hover .team-content {
-    transform: translateY(-60px);
-  }
-
-  .social-links {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: linear-gradient(135deg, rgba(15, 23, 42, 0.95), rgba(30, 41, 59, 0.95));
-    backdrop-filter: blur(15px);
-    border-top: 1px solid rgba(71, 85, 105, 0.3);
-    transform: translateY(100%);
-    transition: all 0.4s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-    padding: 1.5rem;
-    opacity: 0;
-  }
-        .team-card:hover .social-links {
-    transform: translateY(0);
-    opacity: 1;
-  }
-        .social-link {
-          transition: all 0.4s ease;
-          border: 1px solid rgba(71, 85, 105, 0.3);
-        }
-        .social-link:hover {
-          transform: translateY(-3px) scale(1.05);
-          background: rgba(15, 23, 42, 0.8);
-          border-color: rgba(6, 182, 212, 0.5);
-          box-shadow: 0 8px 25px rgba(6, 182, 212, 0.15);
-        }
       `}</style>
 
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Back Button */}
-        <button
-          onClick={() => {
-            console.log("Back button clicked");
-            console.log("Navigate function:", navigate);
+        <button onClick={() => {
+            console.log("Back button clicked"); // Check if this logs
+            console.log("Navigate function:", navigate); // Check if navigate exists
             navigate("/");
-            console.log("Navigate called");
-          }}
-          className="mb-8 flex items-center text-slate-400 hover:text-cyan-400 transition-colors duration-300 group"
+            console.log("Navigate called"); // Check if this executes
+          }} className="mb-8 flex items-center text-slate-400 hover:text-cyan-400 transition-colors duration-300 group"
         >
           <ArrowLeft className="w-5 h-5 mr-2 transition-transform duration-300 group-hover:-translate-x-1" />
-          <span>Back</span>
+          <span >Back</span>
         </button>
 
         {/* Hero Section */}
-        <div className="text-center mb-20 relative">
-          <div className="absolute -top-20 -left-20 w-72 h-72 bg-cyan-500/10 rounded-full filter blur-3xl opacity-50 animate-pulse"></div>
-          <div className="absolute -bottom-20 -right-20 w-72 h-72 bg-violet-500/10 rounded-full filter blur-3xl opacity-50 animate-pulse delay-2000"></div>
-          <h1 className="text-4xl md:text-6xl font-bold mb-6">
+        <div className="text-center mt-20 mb-20 relative">
+          <div className="absolute -top-20 -left-20 w-72 h-72 bg-cyan-500/10 rounded-full filter blur-3xl opacity-50 animate-pulse decorative-blob"></div>
+          <div className="absolute -bottom-20 -right-20 w-72 h-72 bg-violet-500/10 rounded-full filter blur-3xl opacity-50 animate-pulse delay-2000 decorative-blob"></div>
+          <h1 className="text-4xl md:text-6xl font-bold mb-6 relative z-1">
             Master Data Structures & Algorithms
             <span className="block text-3xl md:text-4xl bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent mt-2 font-normal">
               Through Interactive Visualization
             </span>
           </h1>
-          <p className="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-xl text-slate-300 max-w-3xl mx-auto leading-relaxed relative z-1 mt-10">
             We transform complex algorithms into intuitive visual experiences,
             making DSA learning engaging, effective, and accessible for
             everyone.
@@ -302,7 +219,7 @@ export default function AboutPage() {
         </div>
 
         {/* Meet the Team Section */}
-        <div className="mb-20">
+        <div className="mb-20 relative z-1">
           <h2 className="text-4xl font-bold text-white mb-10 text-center">
             Meet the Team
           </h2>
@@ -364,7 +281,7 @@ export default function AboutPage() {
         </div>
 
         {/* What We Do Section */}
-        <div className="mb-20">
+        <div className="mb-20 relative z-1">
           <h2 className="text-4xl font-bold text-white mb-10 text-center">
             What We Do
           </h2>
@@ -395,7 +312,7 @@ export default function AboutPage() {
         </div>
 
         {/* Stats Section */}
-        <div className="mb-20">
+        <div className="mb-20 relative z-1">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6">
             {stats.map((stat, index) => (
               <div
@@ -412,7 +329,7 @@ export default function AboutPage() {
         </div>
 
         {/* Benefits Section */}
-        <div className="mb-20">
+        <div className="mb-20 relative z-1">
           <h2 className="text-4xl font-bold text-white mb-10 text-center">
             Why Choose Our Platform?
           </h2>
@@ -437,7 +354,7 @@ export default function AboutPage() {
         </div>
 
         {/* Learning Path Section */}
-        <div className="mb-20">
+        <div className="mb-20 relative z-1">
           <h2 className="text-4xl font-bold text-white mb-10 text-center">
             Your Learning Journey
           </h2>
@@ -484,7 +401,7 @@ export default function AboutPage() {
         </div>
 
         {/* Featured Content */}
-        <div className="mb-20">
+        <div className="mb-20 relative z-1">
           <h2 className="text-4xl font-bold text-white mb-10 text-center">
             What You'll Find Here
           </h2>
@@ -541,7 +458,7 @@ export default function AboutPage() {
         </div>
 
         {/* Call to Action */}
-        <div className="text-center glassmorphism-card rounded-2xl p-10">
+        <div className="text-center glassmorphism-card rounded-2xl p-10 relative z-1">
           <h2 className="text-3xl font-bold text-white mb-4">
             Ready to Master DSA?
           </h2>

@@ -1,0 +1,45 @@
+# === Node.js (frontend and/or backend) ===
+**/node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+.pnpm-debug.log
+
+# === Build output ===
+build/
+dist/
+.cache/
+.next/
+out/
+
+# === React (Vite / CRA / Next.js) ===
+*.env.local
+*.env.development.local
+*.env.test.local
+*.env.production.local
+
+# === General .env files ===
+.env
+**/.env
+
+# === Logs ===
+logs/
+*.log
+log.txt
+
+# === OS-specific ===
+.DS_Store
+Thumbs.db
+ehthumbs.db
+Icon?
+
+# === IDEs and editors ===
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# === Docker ===
+*.pid
+docker-compose.override.yml
