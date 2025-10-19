@@ -23,7 +23,7 @@ import {
 import Alert from "./Alert";
 import { useNavigate } from "react-router-dom";
 
-// import anupPhoto from "../assets/subject.png"; 
+// import anupPhoto from "../assets/subject.png";
 
 export default function AboutPage() {
   const [alertConfig, setAlertConfig] = useState({
@@ -57,12 +57,12 @@ export default function AboutPage() {
       socialLinks: [
         {
           platform: "github",
-          url: "https://github.com/ratan",
+          url: "https://github.com/Ratan10067",
           icon: <Github className="w-5 h-5" />,
         },
         {
           platform: "linkedin",
-          url: "https://linkedin.com/in/ratan",
+          url: "https://www.linkedin.com/in/ratan-kumar-24961b285/",
           icon: <Linkedin className="w-5 h-5" />,
         },
         {
@@ -82,12 +82,6 @@ export default function AboutPage() {
       role: "Frontend",
       bio: "Anup architects the platform's robust and secure foundation. His expertise in modern web security and browser technologies ensures a reliable and safe learning environment.",
       photoUrl: null, // Using the imported image variable
-    },
-    {
-      name: "AIs",
-      role: "Yahi to main hai",
-      bio: "The silent partners dedicated to crafting clear tutorials and providing instant insights, translating complex concepts into practical lessons for all learners.",
-      photoUrl: null, 
     },
   ];
 
@@ -190,15 +184,17 @@ export default function AboutPage() {
 
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Back Button */}
-        <button onClick={() => {
+        <button
+          onClick={() => {
             console.log("Back button clicked"); // Check if this logs
             console.log("Navigate function:", navigate); // Check if navigate exists
             navigate("/");
             console.log("Navigate called"); // Check if this executes
-          }} className="mb-8 flex items-center text-slate-400 hover:text-cyan-400 transition-colors duration-300 group"
+          }}
+          className="mb-8 flex items-center text-slate-400 hover:text-cyan-400 transition-colors duration-300 group"
         >
           <ArrowLeft className="w-5 h-5 mr-2 transition-transform duration-300 group-hover:-translate-x-1" />
-          <span >Back</span>
+          <span>Back</span>
         </button>
 
         {/* Hero Section */}
@@ -258,7 +254,7 @@ export default function AboutPage() {
 
                 <div className="social-links">
                   <div className="flex justify-center space-x-4">
-                    {member.socialLinks.map((link, linkIndex) => (
+                    {member.socialLinks?.map((link, linkIndex) => (
                       <a
                         key={linkIndex}
                         href={link.url}
