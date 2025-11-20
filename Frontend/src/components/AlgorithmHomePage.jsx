@@ -73,6 +73,20 @@ const AlgorithmHomePage = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
+  // Prevent body scroll when modal is open
+  useEffect(() => {
+    if (isModalOpen || showComingSoon) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = 'unset';
+    }
+
+    // Cleanup on unmount
+    return () => {
+      document.body.style.overflow = 'unset';
+    };
+  }, [isModalOpen, showComingSoon]);
+
   // Particle background: use canvas for better performance
   useEffect(() => {
     if (window.innerWidth < 768) return;
@@ -88,6 +102,7 @@ const AlgorithmHomePage = () => {
     const ctx = canvas.getContext('2d');
     let particles = [];
     const particleCount = 15;
+    const leftSafeZone = 80; // pixels from left edge to keep particle-free
 
     const resizeCanvas = () => {
       canvas.width = window.innerWidth;
@@ -99,7 +114,8 @@ const AlgorithmHomePage = () => {
 
     class Particle {
       constructor() {
-        this.x = Math.random() * canvas.width;
+        // ensure particle won't spawn in the left-safe zone
+        this.x = Math.random() * (canvas.width - leftSafeZone) + leftSafeZone;
         this.y = Math.random() * canvas.height;
         this.size = Math.random() * 3 + 2;
         this.speedX = Math.random() * 1 - 0.5;
@@ -110,6 +126,9 @@ const AlgorithmHomePage = () => {
       update() {
         this.x += this.speedX;
         this.y += this.speedY;
+
+        // keep particles out of left-safe zone while moving
+        if (this.x < leftSafeZone) this.x = leftSafeZone;
 
         if (this.x > canvas.width || this.x < 0) this.speedX *= -1;
         if (this.y > canvas.height || this.y < 0) this.speedY *= -1;
@@ -277,7 +296,7 @@ const AlgorithmHomePage = () => {
 
   const startLearning = () => {
     if (!selectedAlgorithm) return;
-    
+
     // Graph algorithms
     if (selectedAlgorithm.id === "bfs") {
       navigate("/bfs-visualizer");
@@ -367,15 +386,28 @@ const AlgorithmHomePage = () => {
   };
 
   const getDifficultyColor = (difficulty) => {
-    switch (difficulty) {
-      case "Easy":
-        return "text-emerald-300 bg-emerald-500/20 border-emerald-400/40";
-      case "Medium":
-        return "text-amber-300 bg-amber-500/20 border-amber-400/40";
-      case "Hard":
-        return "text-rose-300 bg-rose-500/20 border-rose-400/40";
-      default:
-        return "text-slate-300 bg-slate-500/20 border-slate-400/40";
+    if (theme === 'dark') {
+      switch (difficulty) {
+        case "Easy":
+          return "text-emerald-300 bg-emerald-500/20 border-emerald-400/40";
+        case "Medium":
+          return "text-amber-300 bg-amber-500/20 border-amber-400/40";
+        case "Hard":
+          return "text-rose-300 bg-rose-500/20 border-rose-400/40";
+        default:
+          return "text-slate-300 bg-slate-500/20 border-slate-400/40";
+      }
+    } else {
+      switch (difficulty) {
+        case "Easy":
+          return "text-emerald-700 bg-emerald-100 border-emerald-300";
+        case "Medium":
+          return "text-amber-700 bg-amber-100 border-amber-300";
+        case "Hard":
+          return "text-rose-700 bg-rose-100 border-rose-300";
+        default:
+          return "text-slate-700 bg-slate-100 border-slate-300";
+      }
     }
   };
 
@@ -406,12 +438,12 @@ const AlgorithmHomePage = () => {
   }, [isModalOpen]);
 
   return (
-    <div className={`min-h-screen relative overflow-hidden transition-colors duration-700 ${theme === 'dark' ? 'bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 text-white' : 'bg-gradient-to-br from-blue-50 via-white to-cyan-50 text-gray-900'}`}>
+    <div className={`min-h-screen relative overflow-hidden transition-colors duration-700 ${theme === 'dark' ? 'bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 text-white' : 'bg-gradient-to-br from-gray-50 via-blue-50 to-indigo-50 text-gray-900'}`}>
       <style jsx>{`
         @keyframes fadeInUp {
           from {
             opacity: 0;
-            transform: translateY(20px);
+            transform: translateY(30px);
           }
           to {
             opacity: 1;
@@ -419,143 +451,298 @@ const AlgorithmHomePage = () => {
           }
         }
         .animate-fadeInUp {
-          animation: fadeInUp 0.6s ease-out forwards;
+          animation: fadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
         }
         .glassmorphism {
-          background: rgba(15, 23, 42, 0.3);
-          backdrop-filter: blur(16px);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          transition: background 0.7s, color 0.7s;
+          background: ${theme === 'dark' ? 'rgba(15, 23, 42, 0.4)' : 'rgba(255, 255, 255, 0.7)'};
+          backdrop-filter: blur(20px);
+          border: 1px solid ${theme === 'dark' ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.05)'};
+          transition: all 0.3s ease;
         }
         .liquid-bg {
-          background: linear-gradient(270deg, #0c4a6e, #164e63, #1e3a8a, #374151);
+          background: ${theme === 'dark'
+          ? 'linear-gradient(135deg, #0f172a 0%, #1e293b 25%, #0f172a 50%, #1e3a8a 75%, #0f172a 100%)'
+          : 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 25%, #3b82f6 50%, #06b6d4 75%, #3b82f6 100%)'};
           background-size: 400% 400%;
-          animation: liquid-move 15s ease infinite;
+          animation: liquid-move 20s ease infinite;
         }
         @keyframes liquid-move {
-          0% { background-position: 0% 50%; }
+          0%, 100% { background-position: 0% 50%; }
           50% { background-position: 100% 50%; }
-          100% { background-position: 0% 50%; }
         }
-        @keyframes spin-slow {
-          0% { transform: rotate(0deg); }
-          100% { transform: rotate(360deg); }
+        @keyframes float {
+          0%, 100% { transform: translateY(0px); }
+          50% { transform: translateY(-20px); }
         }
-        .animate-spin-slow {
-          animation: spin-slow 20s linear infinite;
+        .animate-float {
+          animation: float 6s ease-in-out infinite;
         }
-        body.algo-light {
-          background: #f3f4f6 !important;
-          color: #222 !important;
-          transition: background 0.7s, color 0.7s;
+        @keyframes tilt {
+          0%, 100% { transform: rotate(-2deg); }
+          50% { transform: rotate(2deg); }
         }
-        body.algo-dark {
-          background: #0f172a !important;
-          color: #fff !important;
-          transition: background 0.7s, color 0.7s;
+        .animate-tilt {
+          animation: tilt 4s ease-in-out infinite;
+        }
+
+        .card-hover {
+          transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .card-hover:hover {
+          transform: translateY(-12px) scale(1.02);
         }
       `}</style>
 
-      {/* Hero Section */}
-      <header className="relative overflow-hidden liquid-bg">
-        <div className="container mx-auto px-6 py-24 text-center relative z-10">
+      {/* Hero Section - Redesigned */}
+      <header className={`relative overflow-hidden liquid-bg min-h-[90vh] flex items-center ${theme === 'dark' ? '' : 'bg-gradient-to-br from-blue-600 via-cyan-500 to-purple-600'}`}>
+        {/* Decorative Elements */}
+        <div className="absolute inset-0 overflow-hidden pointer-events-none">
+          <div className={`absolute top-20 left-10 w-72 h-72 rounded-full blur-3xl animate-float ${theme === 'dark' ? 'bg-cyan-500/10' : 'bg-white/5'}`}></div>
+          <div className={`absolute bottom-20 right-10 w-96 h-96 rounded-full blur-3xl animate-float ${theme === 'dark' ? 'bg-purple-500/10' : 'bg-white/20'}`} style={{ animationDelay: '2s' }}></div>
+          <div className={`absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] rounded-full blur-3xl animate-pulse ${theme === 'dark' ? 'bg-blue-500/5' : 'bg-white/10'}`}></div>
+        </div>
+
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 pt-32 pb-16 relative z-10">
           <div ref={el => sectionRefs.current[0] = el} className="opacity-0">
-            <div className="flex justify-center mb-8">
-              <div className="relative">
-                <div className="w-24 h-24 bg-gradient-to-r from-cyan-600 to-teal-600 rounded-2xl flex items-center justify-center">
-                  <Sparkles className="w-12 h-12 text-white animate-pulse" />
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              {/* Left Content */}
+              <div className="text-center lg:text-left space-y-8">
+                {/* Badge */}
+                <div className={`inline-flex items-center gap-2 px-4 py-2 rounded-full border ${theme === 'dark' ? 'glassmorphism border-cyan-500/30' : 'bg-white/20 backdrop-blur-md border-white/40'}`}>
+                  <Sparkles className={`w-4 h-4 animate-pulse ${theme === 'dark' ? 'text-cyan-400' : 'text-yellow-300'}`} />
+                  <span className={`text-sm font-semibold ${theme === 'dark' ? 'bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent' : 'text-white'}`}>
+                    Next-Gen Learning Platform
+                  </span>
+                  <Star className={`w-4 h-4 animate-pulse ${theme === 'dark' ? 'text-yellow-400' : 'text-yellow-200'}`} />
                 </div>
-                <div className="absolute -top-2 -right-2">
-                  <Star className="w-6 h-6 text-yellow-400 animate-pulse" />
+
+                {/* Main Heading */}
+                <div className="space-y-4">
+                  <h1 className="text-5xl sm:text-6xl lg:text-7xl xl:text-8xl font-black leading-tight">
+                    <span className={theme === 'dark' ? 'text-white' : 'text-white drop-shadow-lg'}>
+                      Master
+                    </span>
+                    <br />
+                    <span className={theme === 'dark' ? 'bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent' : 'text-yellow-300 drop-shadow-lg'}>
+                      Algorithms
+                    </span>
+                    <br />
+                    <span className={theme === 'dark' ? 'text-white' : 'text-white drop-shadow-lg'}>
+                      Visually
+                    </span>
+                  </h1>
+                  <p className={`text-lg sm:text-xl lg:text-2xl leading-relaxed max-w-2xl ${theme === 'dark' ? 'text-slate-300' : 'text-white/95 drop-shadow-md'}`}>
+                    Transform complex algorithms into <span className={`font-bold ${theme === 'dark' ? 'text-cyan-400' : 'text-yellow-200'}`}>interactive visualizations</span>.
+                    Learn through stunning animations and real-time execution.
+                  </p>
+                </div>
+
+                {/* CTA Buttons */}
+                <div className="flex flex-col sm:flex-row gap-4 justify-center lg:justify-start">
+                  <button
+                    onClick={scrollToTopics}
+                    className={`group relative px-8 py-4 font-bold text-lg rounded-2xl shadow-2xl transition-all duration-300 hover:scale-105 active:scale-95 overflow-hidden cursor-pointer ${theme === 'dark'
+                      ? 'bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 text-white hover:shadow-cyan-500/50'
+                      : 'bg-white text-blue-600 hover:shadow-white/50'
+                      }`}
+                    aria-label="Start Your Journey"
+                  >
+                    <div className={`absolute inset-0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-700 ${theme === 'dark' ? 'bg-gradient-to-r from-white/0 via-white/20 to-white/0' : 'bg-gradient-to-r from-blue-500/0 via-blue-500/20 to-blue-500/0'
+                      }`}></div>
+                    <div className="relative flex items-center justify-center gap-3">
+                      <Rocket className="w-6 h-6 group-hover:animate-bounce" />
+                      <span>Explore Algorithms</span>
+                      <ChevronRight className="w-5 h-5 group-hover:translate-x-1 transition-transform" />
+                    </div>
+                  </button>
+                  <button
+                    onClick={handleViewDocs}
+                    className={`group px-8 py-4 rounded-2xl font-semibold text-lg transition-all duration-300 hover:scale-105 active:scale-95 border backdrop-blur-md cursor-pointer ${theme === 'dark'
+                      ? 'glassmorphism border-white/20 hover:border-cyan-400/50 text-white'
+                      : 'bg-white/20 border-white/40 hover:border-white/60 text-white'
+                      }`}
+                    aria-label="View Documentation"
+                  >
+                    <span className="flex items-center gap-2">
+                      <Code className={`w-5 h-5 transition-colors ${theme === 'dark' ? 'group-hover:text-cyan-400' : 'group-hover:text-yellow-200'}`} />
+                      Documentation
+                    </span>
+                  </button>
+                </div>
+
+                {/* Stats */}
+                <div className="flex flex-wrap gap-8 justify-center lg:justify-start pt-8">
+                  <div className="text-center lg:text-left">
+                    <div className={`text-3xl font-black ${theme === 'dark' ? 'bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent' : 'text-white drop-shadow-lg'}`}>35+</div>
+                    <div className={`text-sm font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-white/90'}`}>Algorithms</div>
+                  </div>
+                  <div className="text-center lg:text-left">
+                    <div className={`text-3xl font-black ${theme === 'dark' ? 'bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent' : 'text-white drop-shadow-lg'}`}>6</div>
+                    <div className={`text-sm font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-white/90'}`}>Categories</div>
+                  </div>
+                  <div className="text-center lg:text-left">
+                    <div className={`text-3xl font-black ${theme === 'dark' ? 'bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent' : 'text-white drop-shadow-lg'}`}>100%</div>
+                    <div className={`text-sm font-medium ${theme === 'dark' ? 'text-slate-400' : 'text-white/90'}`}>Interactive</div>
+                  </div>
                 </div>
               </div>
-            </div>
-            <h1 className={`text-6xl md:text-8xl font-black mb-6 leading-tight text-white`}>
-              Algorithm
-              <span className="bg-gradient-to-r from-cyan-400 via-teal-400 to-blue-400 bg-clip-text text-transparent block">
-                Visualizer
-              </span>
-            </h1>
-            <p className={`text-xl mb-12 max-w-4xl mx-auto leading-relaxed`}>
-              <span className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-200'}`}>
-                Experience the future of algorithm learning through stunning visualizations,
-                interactive simulations, and real-time complexity analysis.
-              </span>
-              <span className={`font-semibold text-cyan-400`}> Transform your understanding</span>
-              <span className={`${theme === 'dark' ? 'text-slate-300' : 'text-gray-200'}`}> of computer science fundamentals.</span>
-            </p>
-            <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
-              <button
-                onClick={scrollToTopics}
-                className={`group px-10 py-4 ${theme === 'dark' ? 'bg-gradient-to-r from-cyan-600 via-teal-600 to-blue-600 text-white' : 'bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 text-white hover:from-cyan-600 hover:via-blue-600 hover:to-indigo-600'} rounded-2xl transition-all duration-500 shadow-2xl transform hover:scale-110 active:scale-95 relative overflow-hidden`}
-                aria-label="Start Your Journey"
-              >
-                <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
-                <div className="relative flex items-center space-x-3">
-                  <Play className="w-6 h-6 group-hover:animate-pulse" />
-                  <span className="font-bold text-lg">Start Your Journey</span>
-                  <Flame className="w-5 h-5 text-orange-300 group-hover:animate-bounce" />
+
+              {/* Right Visual */}
+              <div className="hidden lg:flex justify-center items-center">
+                <div className="relative w-full max-w-lg">
+                  {/* Central Card */}
+                  <div className={`relative rounded-3xl p-8 shadow-2xl animate-float border-2 backdrop-blur-md ${theme === 'dark'
+                    ? 'glassmorphism border-cyan-500/30'
+                    : 'bg-white/10 border-white/30'
+                    }`}>
+                    <div className="space-y-6">
+                      {/* Code Block Simulation */}
+                      <div className="space-y-3">
+                        <div className="flex items-center gap-2">
+                          <div className="w-3 h-3 rounded-full bg-red-500"></div>
+                          <div className="w-3 h-3 rounded-full bg-yellow-500"></div>
+                          <div className="w-3 h-3 rounded-full bg-green-500"></div>
+                        </div>
+                        <div className="space-y-2 font-mono text-sm">
+                          <div className={`${theme === 'dark' ? 'text-cyan-400' : 'text-blue-700'}`}>function <span className={theme === 'dark' ? 'text-purple-400' : 'text-purple-700'}>quickSort</span>(arr) {'{'}</div>
+                          <div className={`pl-4 ${theme === 'dark' ? 'text-slate-300' : 'text-gray-800'}`}>if (arr.length {'<='} 1) return arr;</div>
+                          <div className={`pl-4 ${theme === 'dark' ? 'text-emerald-400' : 'text-emerald-700'}`}>const pivot = arr[0];</div>
+                          <div className={`pl-4 ${theme === 'dark' ? 'text-slate-300' : 'text-gray-800'}`}>...</div>
+                          <div className={`${theme === 'dark' ? 'text-cyan-400' : 'text-blue-700'}`}>{'}'}</div>
+                        </div>
+                      </div>
+
+                      {/* Visualization Bars */}
+                      <div className="flex items-end justify-between gap-2 h-32">
+                        {[60, 80, 40, 100, 30, 70, 50, 90].map((height, i) => (
+                          <div
+                            key={i}
+                            className={`flex-1 rounded-t-lg transition-all duration-300 hover:scale-110 ${theme === 'dark'
+                              ? 'bg-gradient-to-t from-cyan-500 to-purple-500'
+                              : 'bg-gradient-to-t from-blue-500 to-purple-500'
+                              }`}
+                            style={{ height: `${height}%` }}
+                          ></div>
+                        ))}
+                      </div>
+
+                      {/* Complexity Badge */}
+                      <div className="flex items-center justify-between">
+                        <span className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-700'}`}>Time Complexity:</span>
+                        <span className={`px-3 py-1 rounded-full text-sm font-mono ${theme === 'dark'
+                          ? 'bg-gradient-to-r from-emerald-500/20 to-teal-500/20 border border-emerald-500/30 text-emerald-400'
+                          : 'bg-emerald-100 border border-emerald-300 text-emerald-700'
+                          }`}>
+                          O(n log n)
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Floating Icons */}
+                  <div className={`absolute -top-8 -left-8 w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg animate-float ${theme === 'dark' ? 'bg-gradient-to-br from-cyan-500 to-blue-500' : 'bg-gradient-to-br from-blue-400 to-cyan-400'
+                    }`} style={{ animationDelay: '0.5s' }}>
+                    <GitBranch className="w-8 h-8 text-white" />
+                  </div>
+                  <div className={`absolute -bottom-8 -right-8 w-16 h-16 rounded-2xl flex items-center justify-center shadow-lg animate-float ${theme === 'dark' ? 'bg-gradient-to-br from-purple-500 to-pink-500' : 'bg-gradient-to-br from-purple-400 to-pink-400'
+                    }`} style={{ animationDelay: '1s' }}>
+                    <Layers className="w-8 h-8 text-white" />
+                  </div>
+                  <div className={`absolute top-1/2 -right-12 w-12 h-12 rounded-xl flex items-center justify-center shadow-lg animate-float ${theme === 'dark' ? 'bg-gradient-to-br from-emerald-500 to-teal-500' : 'bg-gradient-to-br from-emerald-400 to-teal-400'
+                    }`} style={{ animationDelay: '1.5s' }}>
+                    <Zap className="w-6 h-6 text-white" />
+                  </div>
                 </div>
-              </button>
-              <button
-                className={`group px-8 py-4 glassmorphism rounded-2xl border transition-all duration-300 transform hover:scale-105 active:scale-95 ${theme === 'dark' ? 'border-white/20 text-white hover:bg-white/10' : 'border-gray-300 bg-white/50 text-gray-900 hover:bg-white/80 shadow-lg'}`}
-                onClick={handleViewDocs}
-                aria-label="View Documentation"
-              >
-                <span className="font-semibold group-hover:text-cyan-400 transition-colors duration-300">
-                  View Documentation
-                </span>
-              </button>
+              </div>
             </div>
           </div>
         </div>
       </header>
 
-      {/* Topics Section */}
-      <section ref={topicsRef} className="py-24 relative">
-        <div className="container mx-auto px-6">
-          <div ref={el => sectionRefs.current[1] = el} className="opacity-0 text-center mb-20">
-            <h2 className={`text-5xl md:text-6xl font-black mb-6 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-              Explore Algorithm
-              <span className="bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent"> Topics</span>
+      {/* Topics Section - Redesigned */}
+      <section ref={topicsRef} className="py-20 lg:py-32 relative">
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8">
+          {/* Section Header */}
+          <div ref={el => sectionRefs.current[1] = el} className="opacity-0 text-center mb-16 lg:mb-24">
+            <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glassmorphism border border-cyan-500/30 mb-6">
+              <Layers className="w-4 h-4 text-cyan-400" />
+              <span className="text-sm font-semibold bg-gradient-to-r from-cyan-400 to-blue-400 bg-clip-text text-transparent">
+                6 Categories • 35+ Algorithms
+              </span>
+            </div>
+            <h2 className={`text-4xl sm:text-5xl lg:text-6xl font-black mb-6 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+              Choose Your
+              <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent"> Learning Path</span>
             </h2>
-            <p className={`text-xl max-w-3xl mx-auto leading-relaxed ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>
-              Dive deep into specialized algorithm categories, each crafted with immersive visualizations
-              and interactive learning experiences
+            <p className={`text-lg lg:text-xl max-w-3xl mx-auto leading-relaxed ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>
+              Master algorithms through interactive visualizations. Each category offers hands-on learning with real-time execution.
             </p>
           </div>
-          <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
+
+          {/* Topics Grid - Bento Box Style */}
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 lg:gap-8">
             {topics.map((topic, index) => (
               <div
                 key={topic.id}
-                className="group relative overflow-hidden rounded-3xl glassmorphism cursor-pointer border border-white/10 transition-all duration-300 ease-in-out hover:transform hover:-translate-y-2 hover:shadow-2xl hover:shadow-cyan-500/20"
+                className={`group relative overflow-hidden rounded-3xl glassmorphism border transition-all duration-500 card-hover cursor-pointer ${theme === 'dark' ? 'border-white/10 hover:border-cyan-400/30' : 'border-gray-200 hover:border-blue-400/50'
+                  }`}
                 onClick={() => openModal(topic)}
                 role="button"
                 tabIndex={0}
                 aria-label={`Open ${topic.title} modal`}
                 onKeyDown={e => { if (e.key === "Enter") openModal(topic); }}
               >
-                <div className={`absolute inset-0 bg-gradient-to-br ${gradientClassMap[topic.id]} opacity-0 group-hover:opacity-10 transition-all duration-700`}></div>
-                <div className="relative p-8">
-                  <div className={`inline-flex p-4 rounded-2xl bg-gradient-to-r ${gradientClassMap[topic.id]} mb-6 group-hover:scale-110 transition-transform duration-500 shadow-lg`}>
-                    {topic.icon}
+                {/* Gradient Background Overlay */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${gradientClassMap[topic.id]} opacity-0 group-hover:opacity-20 transition-all duration-500`}></div>
+
+                {/* Decorative Corner Elements */}
+                <div className={`absolute top-0 right-0 w-32 h-32 bg-gradient-to-br ${gradientClassMap[topic.id]} opacity-10 blur-2xl group-hover:opacity-20 transition-opacity duration-500`}></div>
+
+                <div className="relative p-6 lg:p-8 h-full flex flex-col">
+                  {/* Icon with Badge */}
+                  <div className="flex items-start justify-between mb-6">
+                    <div className={`relative p-4 rounded-2xl bg-gradient-to-br ${gradientClassMap[topic.id]} shadow-lg group-hover:scale-110 group-hover:rotate-3 transition-all duration-500`}>
+                      {topic.icon}
+                      {/* Glow Effect */}
+                      <div className={`absolute inset-0 rounded-2xl bg-gradient-to-br ${gradientClassMap[topic.id]} opacity-0 group-hover:opacity-50 blur-xl transition-opacity duration-500`}></div>
+                    </div>
+                    <div className={`px-3 py-1 rounded-full text-xs font-bold ${theme === 'dark' ? 'bg-cyan-500/10 text-cyan-400' : 'bg-blue-100 text-blue-600'}`}>
+                      {topic.algorithms.length} algos
+                    </div>
                   </div>
-                  <h3 className={`text-2xl font-bold mb-4 group-hover:${accentClassMap[topic.accent]?.split(" ")[0]} transition-colors duration-500 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                    {topic.title}
-                  </h3>
-                  <p className={`mb-8 leading-relaxed group-hover:transition-colors duration-300 ${theme === 'dark' ? 'text-slate-400 group-hover:text-slate-300' : 'text-gray-600 group-hover:text-gray-700'}`}>
-                    {topic.description}
-                  </p>
-                  <div className={`w-full px-6 py-4 glassmorphism rounded-2xl border transition-all duration-500 flex items-center justify-center space-x-3 ${theme === 'dark' ? 'border-white/10' : 'border-gray-200'}`}>
-                    <span className={`font-semibold group-hover:${accentClassMap[topic.accent]?.split(" ")[0]} transition-colors duration-300 ${theme === 'dark' ? 'text-white' : 'text-gray-800'}`}>
-                      Explore Algorithms
-                    </span>
-                    <ChevronRight className={`w-5 h-5 group-hover:translate-x-2 group-hover:${accentClassMap[topic.accent]?.split(" ")[0]} transition-all duration-300`} />
+
+                  {/* Content */}
+                  <div className="flex-1 space-y-4">
+                    <h3 className={`text-2xl lg:text-3xl font-bold transition-colors duration-300 ${theme === 'dark' ? 'text-white group-hover:text-cyan-400' : 'text-gray-900 group-hover:text-blue-600'
+                      }`}>
+                      {topic.title}
+                    </h3>
+                    <p className={`text-sm lg:text-base leading-relaxed ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'
+                      }`}>
+                      {topic.description}
+                    </p>
+                  </div>
+
+                  {/* CTA Button */}
+                  <div className="mt-6 pt-4 border-t border-white/5">
+                    <div className="flex items-center justify-between group-hover:justify-center transition-all duration-300">
+                      <span className={`font-semibold transition-colors duration-300 ${theme === 'dark' ? 'text-slate-300 group-hover:text-cyan-400' : 'text-gray-700 group-hover:text-blue-600'
+                        }`}>
+                        Explore Now
+                      </span>
+                      <ChevronRight className={`w-5 h-5 transition-all duration-300 group-hover:translate-x-2 ${theme === 'dark' ? 'text-slate-400 group-hover:text-cyan-400' : 'text-gray-500 group-hover:text-blue-600'
+                        }`} />
+                    </div>
                   </div>
                 </div>
-                {/* Floating Elements */}
-                <div className="absolute top-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-700">
-                  <div className={`w-3 h-3 rounded-full animate-pulse ${accentClassMap[topic.accent]?.split(" ")[1]}`}></div>
+
+                {/* Hover Border Effect */}
+                <div className={`absolute inset-0 rounded-3xl opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none`}
+                  style={{
+                    background: `linear-gradient(45deg, transparent 30%, ${theme === 'dark' ? 'rgba(6, 182, 212, 0.1)' : 'rgba(59, 130, 246, 0.1)'} 50%, transparent 70%)`,
+                    backgroundSize: '200% 200%',
+                    animation: 'gradient-shift 3s ease infinite'
+                  }}>
                 </div>
               </div>
             ))}
@@ -563,181 +750,279 @@ const AlgorithmHomePage = () => {
         </div>
       </section>
 
-      {/* Why Choose Section */}
-      <section className="py-20 relative">
-        <div className="container mx-auto px-6">
-          <div ref={el => sectionRefs.current[2] = el} className="opacity-0 max-w-6xl mx-auto">
-            <div className="text-center mb-16">
-              <h2 className={`text-4xl md:text-5xl font-black mb-6 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                Why Choose
-                <span className="bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent"> AlgoViz?</span>
+      {/* Why Choose Section - Redesigned */}
+      <section className="py-20 lg:py-32 relative overflow-hidden">
+        {/* Background Decoration */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute top-1/4 left-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl"></div>
+          <div className="absolute bottom-1/4 right-0 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl"></div>
+        </div>
+
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          <div ref={el => sectionRefs.current[2] = el} className="opacity-0 max-w-7xl mx-auto">
+            {/* Section Header */}
+            <div className="text-center mb-16 lg:mb-20">
+              <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full glassmorphism border border-purple-500/30 mb-6">
+                <Sparkles className="w-4 h-4 text-purple-400" />
+                <span className="text-sm font-semibold bg-gradient-to-r from-purple-400 to-pink-400 bg-clip-text text-transparent">
+                  Why Developers Love Us
+                </span>
+              </div>
+              <h2 className={`text-4xl sm:text-5xl lg:text-6xl font-black mb-6 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                Built for
+                <span className="bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent"> Modern Learning</span>
               </h2>
-              <p className={`text-lg max-w-2xl mx-auto ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>
-                Experience the next generation of algorithm education with cutting-edge features
+              <p className={`text-lg lg:text-xl max-w-3xl mx-auto leading-relaxed ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>
+                Experience algorithm education reimagined with cutting-edge visualizations and interactive features
               </p>
             </div>
-            <div className="grid md:grid-cols-3 gap-8">
-              <div className={`group p-8 rounded-3xl border relative overflow-hidden transition-all duration-300 ${theme === 'dark' ? 'glassmorphism border-cyan-500/20 hover:border-cyan-400/40' : 'bg-white border-cyan-200 hover:border-cyan-300 shadow-lg hover:shadow-xl'}`}
-                style={theme === 'dark' ? {
-                  background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.5), rgba(6, 78, 59, 0.2))'
-                } : {
-                  background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(240, 249, 255, 0.8))'
-                }}
-              >
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-30 group-hover:opacity-70 transition-opacity duration-500"></div>
-                <div className="w-16 h-16 bg-gradient-to-r from-cyan-600 to-teal-600 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                  <Play className="w-8 h-8 text-white" />
+
+            {/* Features Grid */}
+            <div className="grid md:grid-cols-3 gap-6 lg:gap-8">
+              {/* Feature 1 */}
+              <div className={`group relative p-8 lg:p-10 rounded-3xl border overflow-hidden card-hover ${theme === 'dark' ? 'glassmorphism border-cyan-500/20 hover:border-cyan-400/40' : 'bg-white border-gray-200 hover:border-blue-400/50 shadow-lg'
+                }`}>
+                {/* Animated Border Top */}
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                {/* Background Glow */}
+                <div className="absolute inset-0 bg-gradient-to-br from-cyan-500/5 to-blue-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                <div className="relative z-10 space-y-6">
+                  {/* Icon */}
+                  <div className="inline-flex">
+                    <div className="w-16 h-16 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                      <Play className="w-8 h-8 text-white" />
+                    </div>
+                  </div>
+
+                  {/* Content */}
+                  <div className="space-y-3">
+                    <h3 className={`text-2xl lg:text-3xl font-bold transition-colors duration-300 ${theme === 'dark' ? 'text-white group-hover:text-cyan-400' : 'text-gray-900 group-hover:text-blue-600'
+                      }`}>
+                      Interactive Visualizations
+                    </h3>
+                    <p className={`text-base leading-relaxed ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>
+                      Watch algorithms come alive with stunning real-time animations, step-by-step execution, and interactive controls.
+                    </p>
+                  </div>
+
+                  {/* Features List */}
+                  <ul className="space-y-2 pt-4">
+                    {['Real-time execution', 'Step-by-step mode', 'Custom input data'].map((feature, i) => (
+                      <li key={i} className={`flex items-center gap-2 text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>
+                        <div className="w-1.5 h-1.5 rounded-full bg-cyan-400"></div>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <h3 className={`text-2xl font-bold mb-4 text-center group-hover:text-cyan-400 transition-colors duration-300 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                  Interactive Visualizations
-                </h3>
-                <p className={`text-center leading-relaxed group-hover:transition-colors duration-300 ${theme === 'dark' ? 'text-slate-400 group-hover:text-slate-300' : 'text-gray-600 group-hover:text-gray-700'}`}>
-                  Immerse yourself in algorithm execution with stunning real-time animations,
-                  interactive controls, and dynamic data flow visualization.
-                </p>
               </div>
-              <div className={`group p-8 rounded-3xl border relative overflow-hidden transition-all duration-300 ${theme === 'dark' ? 'glassmorphism border-emerald-500/20 hover:border-emerald-400/40' : 'bg-white border-emerald-200 hover:border-emerald-300 shadow-lg hover:shadow-xl'}`}
-                style={theme === 'dark' ? {
-                  background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.5), rgba(6, 78, 59, 0.2))'
-                } : {
-                  background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(236, 253, 245, 0.8))'
-                }}
-              >
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent opacity-30 group-hover:opacity-70 transition-opacity duration-500"></div>
-                <div className="w-16 h-16 bg-gradient-to-r from-emerald-600 to-green-600 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                  <TrendingUp className="w-8 h-8 text-white" />
+
+              {/* Feature 2 */}
+              <div className={`group relative p-8 lg:p-10 rounded-3xl border overflow-hidden card-hover ${theme === 'dark' ? 'glassmorphism border-emerald-500/20 hover:border-emerald-400/40' : 'bg-white border-gray-200 hover:border-emerald-400/50 shadow-lg'
+                }`}>
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-emerald-500/5 to-teal-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                <div className="relative z-10 space-y-6">
+                  <div className="inline-flex">
+                    <div className="w-16 h-16 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-2xl flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                      <TrendingUp className="w-8 h-8 text-white" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h3 className={`text-2xl lg:text-3xl font-bold transition-colors duration-300 ${theme === 'dark' ? 'text-white group-hover:text-emerald-400' : 'text-gray-900 group-hover:text-emerald-600'
+                      }`}>
+                      Performance
+                      <br />
+                      Analytics
+                    </h3>
+                    <p className={`text-base leading-relaxed ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>
+                      Deep dive into complexity analysis with live performance metrics, comparison charts, and optimization insights.
+                    </p>
+                  </div>
+
+                  <ul className="space-y-2 pt-4">
+                    {['Time complexity graphs', 'Space usage tracking', 'Algorithm comparison'].map((feature, i) => (
+                      <li key={i} className={`flex items-center gap-2 text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>
+                        <div className="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <h3 className={`text-2xl font-bold mb-4 text-center group-hover:text-emerald-400 transition-colors duration-300 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                  Advanced Analytics
-                </h3>
-                <p className={`text-center leading-relaxed group-hover:transition-colors duration-300 ${theme === 'dark' ? 'text-slate-400 group-hover:text-slate-300' : 'text-gray-600 group-hover:text-gray-700'}`}>
-                  Deep dive into complexity analysis with interactive graphs, performance metrics,
-                  and comparative studies across different algorithms.
-                </p>
               </div>
-              <div className={`group p-8 rounded-3xl border relative overflow-hidden transition-all duration-300 ${theme === 'dark' ? 'glassmorphism border-indigo-500/20 hover:border-indigo-400/40' : 'bg-white border-indigo-200 hover:border-indigo-300 shadow-lg hover:shadow-xl'}`}
-                style={theme === 'dark' ? {
-                  background: 'linear-gradient(145deg, rgba(15, 23, 42, 0.5), rgba(49, 46, 129, 0.2))'
-                } : {
-                  background: 'linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(238, 242, 255, 0.8))'
-                }}
-              >
-                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-indigo-400 to-transparent opacity-30 group-hover:opacity-70 transition-opacity duration-500"></div>
-                <div className="w-16 h-16 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
-                  <Code className="w-8 h-8 text-white" />
+
+              {/* Feature 3 */}
+              <div className={`group relative p-8 lg:p-10 rounded-3xl border overflow-hidden card-hover ${theme === 'dark' ? 'glassmorphism border-purple-500/20 hover:border-purple-400/40' : 'bg-white border-gray-200 hover:border-purple-400/50 shadow-lg'
+                }`}>
+                <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-purple-400 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+                <div className="absolute inset-0 bg-gradient-to-br from-purple-500/5 to-pink-500/5 opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
+
+                <div className="relative z-10 space-y-6">
+                  <div className="inline-flex">
+                    <div className="w-16 h-16 bg-gradient-to-br from-purple-500 to-pink-600 rounded-2xl flex items-center justify-center shadow-xl group-hover:scale-110 group-hover:rotate-6 transition-all duration-500">
+                      <Code className="w-8 h-8 text-white" />
+                    </div>
+                  </div>
+
+                  <div className="space-y-3">
+                    <h3 className={`text-2xl lg:text-3xl font-bold transition-colors duration-300 ${theme === 'dark' ? 'text-white group-hover:text-purple-400' : 'text-gray-900 group-hover:text-purple-600'
+                      }`}>
+                      Multi-Language
+                      <br />
+                      Code
+                    </h3>
+                    <p className={`text-base leading-relaxed ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>
+                      View implementations in Python, JavaScript, C++, Java, and more with syntax highlighting and explanations.
+                    </p>
+                  </div>
+
+                  <ul className="space-y-2 pt-4">
+                    {['5+ languages supported', 'Syntax highlighting', 'Copy-paste ready'].map((feature, i) => (
+                      <li key={i} className={`flex items-center gap-2 text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>
+                        <div className="w-1.5 h-1.5 rounded-full bg-purple-400"></div>
+                        {feature}
+                      </li>
+                    ))}
+                  </ul>
                 </div>
-                <h3 className={`text-2xl font-bold mb-4 text-center group-hover:text-indigo-400 transition-colors duration-300 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
-                  Multi-Language Support
-                </h3>
-                <p className={`text-center leading-relaxed group-hover:transition-colors duration-300 ${theme === 'dark' ? 'text-slate-400 group-hover:text-slate-300' : 'text-gray-600 group-hover:text-gray-700'}`}>
-                  Access comprehensive code implementations across Python, JavaScript, Java, C++,
-                  and more with intelligent syntax highlighting.
-                </p>
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      {/* Enhanced Modal */}
+      {/* Enhanced Modal - Redesigned */}
       {isModalOpen && modalTopic && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-lg" onClick={closeModal} aria-modal="true" role="dialog">
+        <div className={`fixed inset-0 z-50 flex items-center justify-center p-4 backdrop-blur-xl ${theme === 'dark' ? 'bg-black/80' : 'bg-gray-900/60'}`} onClick={closeModal} aria-modal="true" role="dialog">
           <div
-            className={`relative w-full max-w-5xl h-[85vh] flex flex-col glassmorphism rounded-3xl border overflow-hidden shadow-2xl ${theme === 'dark' ? 'border-cyan-500/30' : 'border-gray-300'}`}
+            className={`relative w-full max-w-6xl h-[90vh] flex flex-col rounded-3xl border overflow-hidden shadow-2xl ${theme === 'dark' ? 'glassmorphism border-cyan-500/20' : 'bg-white border-gray-200 shadow-blue-500/10'}`}
             onClick={e => e.stopPropagation()}
           >
-            {/* Header section - Fixed height */}
-            <div className={`p-6 ${gradientClassMap[modalTopic.id]} relative overflow-hidden`}>
-              <div className="relative flex flex-col md:flex-row md:items-center justify-between gap-4">
-                <div className="flex items-center space-x-4">
-                  <div className={`p-3 rounded-xl bg-gradient-to-r ${gradientClassMap[modalTopic.id]} shadow-lg`}>
+            {/* Header section */}
+            <div className={`relative p-6 lg:p-8 bg-gradient-to-r ${gradientClassMap[modalTopic.id]}`}>
+              {/* Decorative elements */}
+              <div className="absolute inset-0 bg-black/20"></div>
+              <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl"></div>
+
+              <div className="relative flex items-start justify-between gap-4">
+                <div className="flex items-start gap-4 flex-1">
+                  <div className={`p-4 rounded-2xl bg-white/10 backdrop-blur-sm shadow-xl`}>
                     {modalTopic.icon}
                   </div>
-                  <div>
-                    <h2 className={`text-2xl md:text-3xl font-black ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>
+                  <div className="flex-1">
+                    <h2 className="text-3xl lg:text-4xl font-black text-white mb-2">
                       {modalTopic.title}
                     </h2>
-                    <p className={`text-sm md:text-base mt-1 ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`}>
+                    <p className="text-base lg:text-lg text-white/80 max-w-2xl">
                       {modalTopic.description}
                     </p>
+                    <div className="flex items-center gap-2 mt-4">
+                      <div className="px-3 py-1 rounded-full bg-white/20 backdrop-blur-sm text-white text-sm font-semibold">
+                        {modalTopic.algorithms.length} Algorithms
+                      </div>
+                    </div>
                   </div>
                 </div>
                 <button
                   onClick={closeModal}
-                  className={`p-2 rounded-xl glassmorphism hover:text-red-400 transition-all duration-300 border absolute top-2 right-2 md:static ${theme === 'dark' ? 'text-white hover:bg-white/10 border-white/10' : 'text-gray-600 hover:bg-gray-100 border-gray-200'}`}
+                  className="p-2 rounded-xl bg-white/10 hover:bg-white/20 text-white hover:text-red-300 transition-all duration-300 backdrop-blur-sm cursor-pointer"
                   aria-label="Close"
                 >
-                  <X className="w-5 h-5" />
+                  <X className="w-6 h-6" />
                 </button>
               </div>
             </div>
 
-            {/* Algorithm list - Scrollable content with fixed height */}
-            <div className={`flex-1 overflow-y-auto p-6 ${theme === 'dark' ? 'bg-gradient-to-b from-slate-900/50 to-slate-950/50' : 'bg-gradient-to-b from-gray-50/50 to-white/50'}`}>
-              <div className="grid gap-4">
+            {/* Algorithm Grid - Scrollable */}
+            <div className={`flex-1 overflow-y-auto p-6 lg:p-8 ${theme === 'dark' ? 'bg-slate-900/50' : 'bg-gradient-to-br from-gray-50 to-gray-100'}`}>
+              <div className="grid md:grid-cols-2 gap-4">
                 {modalTopic.algorithms.map((algorithm, index) => (
                   <div
                     key={index}
                     onClick={() => selectAlgorithm(algorithm)}
-                    className={`p-5 rounded-xl border transition-all duration-300 group cursor-pointer relative overflow-hidden ${selectedAlgorithm?.id === algorithm.id
-                        ? `bg-gradient-to-r ${gradientClassMap[modalTopic.id]}/20 border-${modalTopic.accent}/50 shadow-lg`
-                        : theme === 'dark' ? "glassmorphism border-white/10 hover:border-white/20 hover:bg-white/5" : "bg-white/50 border-gray-200 hover:border-gray-300 hover:bg-white/80"
+                    className={`group relative p-6 rounded-2xl border transition-all duration-300 cursor-pointer ${selectedAlgorithm?.id === algorithm.id
+                      ? theme === 'dark'
+                        ? `bg-gradient-to-br ${gradientClassMap[modalTopic.id]}/20 border-cyan-400/50 shadow-xl scale-[1.02]`
+                        : `bg-gradient-to-br from-blue-50 to-cyan-50 border-blue-400 shadow-xl shadow-blue-200/50 scale-[1.02]`
+                      : theme === 'dark'
+                        ? "glassmorphism border-white/10 hover:border-cyan-400/30 hover:scale-[1.02]"
+                        : "bg-white border-gray-200 hover:border-blue-400/50 hover:shadow-lg hover:shadow-blue-100/50 hover:scale-[1.02]"
                       }`}
                     tabIndex={0}
                     role="button"
                     aria-label={`Select ${algorithm.name}`}
                     onKeyDown={e => { if (e.key === "Enter") selectAlgorithm(algorithm); }}
                   >
-                    <div className="relative flex items-center justify-between">
-                      <div className="flex-1">
-                        <h3 className={`text-lg font-bold transition-colors duration-300 ${selectedAlgorithm?.id === algorithm.id
-                            ? accentClassMap[modalTopic.accent]?.split(" ")[0]
-                            : theme === 'dark' ? "text-white" : "text-gray-900"
-                          }`}>
-                          {algorithm.name}
-                        </h3>
-                        <div className="flex items-center space-x-3 mt-2">
-                          <span className={`text-xs px-2 py-1 rounded-full border ${getDifficultyColor(algorithm.difficulty)
-                            }`}>
-                            {algorithm.difficulty}
-                          </span>
-                          <div className={`flex items-center space-x-1 text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}>
-                            <Clock className="w-3 h-3" />
-                            <span>{algorithm.time}</span>
-                          </div>
+                    {/* Selection Indicator */}
+                    {selectedAlgorithm?.id === algorithm.id && (
+                      <div className="absolute top-3 right-3">
+                        <div className="w-6 h-6 bg-gradient-to-r from-cyan-500 to-blue-500 rounded-full flex items-center justify-center shadow-lg">
+                          <div className="w-2 h-2 bg-white rounded-full"></div>
                         </div>
                       </div>
-                      <ChevronRight
-                        className={`w-5 h-5 transition-all duration-300 ${selectedAlgorithm?.id === algorithm.id
-                            ? accentClassMap[modalTopic.accent]?.split(" ")[0] + " rotate-90"
-                            : theme === 'dark' ? "text-slate-500 group-hover:text-slate-300" : "text-gray-400 group-hover:text-gray-600"
-                          }`}
-                      />
+                    )}
+
+                    <div className="space-y-3">
+                      <h3 className={`text-xl font-bold transition-colors duration-300 pr-8 ${selectedAlgorithm?.id === algorithm.id
+                        ? theme === 'dark' ? 'text-cyan-400' : 'text-blue-600'
+                        : theme === 'dark' ? "text-white" : "text-gray-900"
+                        }`}>
+                        {algorithm.name}
+                      </h3>
+
+                      <div className="flex items-center gap-3">
+                        <span className={`text-xs px-3 py-1.5 rounded-full border font-semibold ${getDifficultyColor(algorithm.difficulty)}`}>
+                          {algorithm.difficulty}
+                        </span>
+                        <div className={`flex items-center gap-1.5 text-sm font-mono ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>
+                          <Clock className="w-4 h-4" />
+                          <span>{algorithm.time}</span>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Hover Arrow */}
+                    <div className="absolute bottom-4 right-4 opacity-0 group-hover:opacity-100 transition-opacity duration-300">
+                      <ChevronRight className={`w-5 h-5 ${theme === 'dark' ? 'text-cyan-400' : 'text-blue-500'}`} />
                     </div>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Fixed button section - Always visible */}
-            <div className={`flex justify-center p-4 border-t transition-colors duration-300 ${theme === 'dark' ? 'bg-slate-900 border-cyan-500/30' : 'bg-gray-50 border-gray-200'}`}>
-              <button
-                onClick={startLearning}
-                disabled={!selectedAlgorithm}
-                className={`w-fit px-4 py-3 rounded-xl font-bold text-lg transition-all duration-500 ${selectedAlgorithm
-                    ? "bg-gradient-to-r from-cyan-600 to-teal-600 text-white shadow-lg hover:opacity-90"
-                    : theme === 'dark' ? "bg-slate-800 text-slate-500 cursor-not-allowed" : "bg-gray-200 text-gray-400 cursor-not-allowed"
-                  }`}
-                aria-label="Start Visualizing"
-              >
-                <div className="flex items-center justify-center space-x-2">
-                  <Rocket className="w-5 h-5" />
-                  <span>Start Visualizing</span>
-                  {selectedAlgorithm && (
-                    <Zap className="w-4 h-4 text-yellow-300 animate-pulse" />
+            {/* Footer CTA */}
+            <div className={`p-6 border-t backdrop-blur-sm ${theme === 'dark' ? 'bg-slate-900/80 border-white/10' : 'bg-white border-gray-200 shadow-inner'}`}>
+              <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                <div className={`text-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>
+                  {selectedAlgorithm ? (
+                    <span className="flex items-center gap-2">
+                      <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse"></div>
+                      Selected: <span className={`font-semibold ${theme === 'dark' ? 'text-cyan-400' : 'text-blue-600'}`}>{selectedAlgorithm.name}</span>
+                    </span>
+                  ) : (
+                    "Select an algorithm to begin visualization"
                   )}
                 </div>
-              </button>
+                <button
+                  onClick={startLearning}
+                  disabled={!selectedAlgorithm}
+                  className={`px-8 py-4 rounded-2xl font-bold text-lg transition-all duration-300 ${selectedAlgorithm ? 'cursor-pointer' : 'cursor-not-allowed'} ${selectedAlgorithm
+                    ? "bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 text-white shadow-xl hover:shadow-2xl hover:scale-105 active:scale-95"
+                    : theme === 'dark' ? "bg-slate-800 text-slate-600 cursor-not-allowed" : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    }`}
+                  aria-label="Start Visualizing"
+                >
+                  <div className="flex items-center gap-3">
+                    <Rocket className="w-5 h-5" />
+                    <span>Start Visualizing</span>
+                    {selectedAlgorithm && <Zap className="w-5 h-5 text-yellow-300 animate-pulse" />}
+                  </div>
+                </button>
+              </div>
             </div>
 
             {/* Coming Soon Modal */}
@@ -748,7 +1033,7 @@ const AlgorithmHomePage = () => {
                   onClick={e => e.stopPropagation()}
                 >
                   <button
-                    className={`absolute top-2 right-2 hover:text-red-400 transition-colors ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}
+                    className={`absolute top-2 right-2 hover:text-red-400 transition-colors cursor-pointer ${theme === 'dark' ? 'text-slate-400' : 'text-gray-500'}`}
                     onClick={() => setShowComingSoon(false)}
                     aria-label="Close"
                   >
@@ -770,112 +1055,179 @@ const AlgorithmHomePage = () => {
         </div>
       )}
 
-      {/* Footer */}
-      <footer className={`relative border-t mt-32 py-16 glassmorphism ${theme === 'dark' ? 'border-cyan-500/10' : 'border-gray-200'}`}>
-        <div className="container mx-auto px-6">
-          <div className="flex flex-col md:flex-row justify-between items-center">
-            <div className="mb-8 md:mb-0">
-              <div className="flex items-center space-x-3 mb-4">
-                <div className="p-2 bg-gradient-to-r from-cyan-600 to-teal-600 rounded-xl">
-                  <Code className="w-6 h-6 text-white" />
+      {/* Footer - Redesigned */}
+      <footer className={`relative border-t mt-32 py-20 overflow-hidden ${theme === 'dark' ? 'border-white/10 bg-slate-950/50' : 'border-gray-200 bg-white/50'}`}>
+        {/* Background Decoration */}
+        <div className="absolute inset-0 pointer-events-none">
+          <div className="absolute bottom-0 left-0 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl"></div>
+          <div className="absolute top-0 right-0 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl"></div>
+        </div>
+
+        <div className="container mx-auto px-4 sm:px-6 lg:px-8 relative z-10">
+          {/* Main Footer Content */}
+          <div className="grid md:grid-cols-2 lg:grid-cols-12 gap-12 lg:gap-8 mb-16">
+            {/* Brand Section */}
+            <div className="lg:col-span-5 space-y-6">
+              <div className="flex items-center gap-3">
+                <div className="p-3 bg-gradient-to-br from-cyan-500 to-blue-600 rounded-2xl shadow-lg">
+                  <Code className="w-7 h-7 text-white" />
                 </div>
-                <span className="text-2xl font-bold bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
+                <span className="text-3xl font-black bg-gradient-to-r from-cyan-400 via-blue-500 to-purple-500 bg-clip-text text-transparent">
                   AlgoViz
                 </span>
               </div>
-              <p className={`max-w-sm ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>
-                Visualizing algorithms for better understanding and learning experiences.
+              <p className={`text-base leading-relaxed max-w-md ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>
+                Master algorithms through stunning visualizations and interactive learning.
+                Transform your understanding of computer science fundamentals.
               </p>
-              <div className="flex space-x-4 mt-6">
-                <a href="#" className="p-3 glassmorphism rounded-xl hover:bg-cyan-600/20 transition-colors duration-300" aria-label="GitHub">
-                  <Github className={`w-5 h-5 ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`} />
+
+              {/* Social Links */}
+              <div className="flex gap-3">
+                <a href="#" className={`p-3 rounded-xl border transition-all duration-300 hover:scale-110 hover:border-cyan-400/50 cursor-pointer ${theme === 'dark' ? 'border-white/10 hover:bg-cyan-500/10' : 'border-gray-200 hover:bg-blue-50'}`} aria-label="GitHub">
+                  <Github className={`w-5 h-5 ${theme === 'dark' ? 'text-slate-300 hover:text-cyan-400' : 'text-gray-600 hover:text-blue-600'} transition-colors`} />
                 </a>
-                <a href="#" className="p-3 glassmorphism rounded-xl hover:bg-cyan-600/20 transition-colors duration-300" aria-label="Twitter">
-                  <Twitter className={`w-5 h-5 ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`} />
+                <a href="#" className={`p-3 rounded-xl border transition-all duration-300 hover:scale-110 hover:border-cyan-400/50 cursor-pointer ${theme === 'dark' ? 'border-white/10 hover:bg-cyan-500/10' : 'border-gray-200 hover:bg-blue-50'}`} aria-label="Twitter">
+                  <Twitter className={`w-5 h-5 ${theme === 'dark' ? 'text-slate-300 hover:text-cyan-400' : 'text-gray-600 hover:text-blue-600'} transition-colors`} />
                 </a>
-                <a href="#" className="p-3 glassmorphism rounded-xl hover:bg-cyan-600/20 transition-colors duration-300" aria-label="Mail">
-                  <Mail className={`w-5 h-5 ${theme === 'dark' ? 'text-slate-300' : 'text-gray-600'}`} />
+                <a href="#" className={`p-3 rounded-xl border transition-all duration-300 hover:scale-110 hover:border-cyan-400/50 cursor-pointer ${theme === 'dark' ? 'border-white/10 hover:bg-cyan-500/10' : 'border-gray-200 hover:bg-blue-50'}`} aria-label="Mail">
+                  <Mail className={`w-5 h-5 ${theme === 'dark' ? 'text-slate-300 hover:text-cyan-400' : 'text-gray-600 hover:text-blue-600'} transition-colors`} />
                 </a>
               </div>
             </div>
-            <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
+
+            {/* Links Sections */}
+            <div className="lg:col-span-7 grid grid-cols-2 sm:grid-cols-3 gap-8">
+              {/* Resources */}
               <div>
-                <h4 className={`text-lg font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Resources</h4>
+                <h4 className={`text-sm font-bold uppercase tracking-wider mb-4 ${theme === 'dark' ? 'text-cyan-400' : 'text-blue-600'}`}>Resources</h4>
                 <ul className="space-y-3">
-                  <li><a href="#" className={`hover:text-cyan-400 transition-colors ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>Documentation</a></li>
-                  <li><a href="#" className={`hover:text-cyan-400 transition-colors ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>Tutorials</a></li>
-                  <li><a href="/blogs" className={`hover:text-cyan-400 transition-colors ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>Blog</a></li>
-                  <li><a href="/support" className={`hover:text-cyan-400 transition-colors ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>Support</a></li>
+                  {[
+                    { label: 'Documentation', href: '#' },
+                    { label: 'Tutorials', href: '#' },
+                    { label: 'Blog', href: '/blogs' },
+                    { label: 'Support', href: '/support' },
+                  ].map((link, i) => (
+                    <li key={i}>
+                      <a href={link.href} className={`text-sm transition-colors duration-200 cursor-pointer ${theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}>
+                        {link.label}
+                      </a>
+                    </li>
+                  ))}
                 </ul>
               </div>
+
+              {/* Company */}
               <div>
-                <h4 className={`text-lg font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Company</h4>
+                <h4 className={`text-sm font-bold uppercase tracking-wider mb-4 ${theme === 'dark' ? 'text-cyan-400' : 'text-blue-600'}`}>Company</h4>
                 <ul className="space-y-3">
-                  <li><a href="/about" className={`hover:text-cyan-400 transition-colors ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>About</a></li>
-                  <li><a href="#" className={`hover:text-cyan-400 transition-colors ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>Careers</a></li>
-                  <li><a href="/contact" className={`hover:text-cyan-400 transition-colors ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>Contact</a></li>
-                  <li><a href="#" className={`hover:text-cyan-400 transition-colors ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>Partners</a></li>
+                  {[
+                    { label: 'About', href: '/about' },
+                    { label: 'Careers', href: '#' },
+                    { label: 'Contact', href: '/contact' },
+                    { label: 'Partners', href: '#' },
+                  ].map((link, i) => (
+                    <li key={i}>
+                      <a href={link.href} className={`text-sm transition-colors duration-200 cursor-pointer ${theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}>
+                        {link.label}
+                      </a>
+                    </li>
+                  ))}
                 </ul>
               </div>
+
+              {/* Legal */}
               <div>
-                <h4 className={`text-lg font-bold mb-4 ${theme === 'dark' ? 'text-white' : 'text-gray-900'}`}>Legal</h4>
+                <h4 className={`text-sm font-bold uppercase tracking-wider mb-4 ${theme === 'dark' ? 'text-cyan-400' : 'text-blue-600'}`}>Legal</h4>
                 <ul className="space-y-3">
-                  <li><a href="#" className={`hover:text-cyan-400 transition-colors ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>Privacy Policy</a></li>
-                  <li><a href="#" className={`hover:text-cyan-400 transition-colors ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>Terms of Service</a></li>
-                  <li><a href="#" className={`hover:text-cyan-400 transition-colors ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>Cookie Policy</a></li>
-                  <li><a href="#" className={`hover:text-cyan-400 transition-colors ${theme === 'dark' ? 'text-slate-400' : 'text-gray-600'}`}>Licensing</a></li>
+                  {[
+                    { label: 'Privacy', href: '#' },
+                    { label: 'Terms', href: '#' },
+                    { label: 'Cookies', href: '#' },
+                    { label: 'Licensing', href: '#' },
+                  ].map((link, i) => (
+                    <li key={i}>
+                      <a href={link.href} className={`text-sm transition-colors duration-200 cursor-pointer ${theme === 'dark' ? 'text-slate-400 hover:text-white' : 'text-gray-600 hover:text-gray-900'}`}>
+                        {link.label}
+                      </a>
+                    </li>
+                  ))}
                 </ul>
               </div>
             </div>
           </div>
-          <div className={`border-t mt-16 pt-8 text-center ${theme === 'dark' ? 'border-cyan-500' : 'border-gray-400'}`}>
-            <p className={`flex items-center justify-center ${theme === 'dark' ? 'text-slate-500' : 'text-gray-500'}`}>
-              <span>Made with</span>
-              <Heart className="w-5 h-5 text-rose-500 mx-2 animate-pulse" />
-              <span>for the developer community</span>
-            </p>
+
+          {/* Bottom Bar */}
+          <div className={`pt-8 border-t ${theme === 'dark' ? 'border-white/10' : 'border-gray-200'}`}>
+            <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+              <p className={`text-sm ${theme === 'dark' ? 'text-slate-500' : 'text-gray-500'}`}>
+                © 2025 AlgoViz. All rights reserved.
+              </p>
+              <p className={`flex items-center gap-2 text-sm ${theme === 'dark' ? 'text-slate-500' : 'text-gray-500'}`}>
+                <span>Made with</span>
+                <Heart className="w-4 h-4 text-rose-500 animate-pulse" />
+                <span>for developers worldwide</span>
+              </p>
+            </div>
           </div>
         </div>
       </footer>
 
-      {/* CodeForces-style Scroll to Top - Left Side Full Height Rectangle */}
-      {showScrollShade && (
-        <div
-          className="cf-scroll-to-top"
-          style={{ position: 'fixed', left: 0, top: 0, height: '100vh', width: '40px', zIndex: 40 }}
-          onMouseEnter={() => setScrollHover(true)}
-          onMouseLeave={() => setScrollHover(false)}
-        >
-          <div style={{ width: '100%', height: '100%', background: scrollHover ? (theme === 'dark' ? 'rgba(30,41,59,0.15)' : 'rgba(59,130,246,0.08)') : (theme === 'dark' ? 'rgba(30,41,59,0.08)' : 'rgba(59,130,246,0.04)'), transition: 'background 0.2s', position: 'absolute', left: 0, top: 0 }} />
-          {scrollHover && (
+      {/* Scroll to Top - Hover-Only Button with Full Left Side Trigger */}
+      {showScrollToTop && (
+        <>
+          {/* Invisible hover trigger area spanning full left side */}
+          <div
+            className="fixed left-0 top-0 h-screen w-20 z-40"
+            onMouseEnter={() => setScrollHover(true)}
+            onMouseLeave={() => setScrollHover(false)}
+            style={{ pointerEvents: 'auto' }}
+          />
+
+          {/* Button positioned at left-center */}
+          <div className="fixed left-4 top-1/2 -translate-y-1/2 z-41">
             <button
-              onClick={scrollToTop}
-              style={{ position: 'relative', zIndex: 1 }}
-              className={`w-full h-full flex flex-col items-center justify-center group transition-all duration-200 ${theme === 'dark' ? 'hover:bg-slate-700/20 text-slate-400 hover:text-cyan-400' : 'hover:bg-gray-100/20 text-gray-500 hover:text-blue-600'}`}
+              onClick={() => {
+                scrollToTop();
+                setScrollHover(false);
+              }}
+              onMouseEnter={() => setScrollHover(true)}
+              onMouseLeave={() => setScrollHover(false)}
+              className={`flex flex-col items-center justify-center gap-2 p-4 rounded-2xl
+                transition-all duration-300 cursor-pointer
+                ${scrollHover
+                  ? 'opacity-100 scale-100'
+                  : 'opacity-0 scale-75'
+                }
+                ${theme === 'dark'
+                  ? 'bg-gradient-to-br from-cyan-500 to-blue-600 text-white shadow-xl shadow-cyan-500/30 hover:shadow-2xl hover:shadow-cyan-500/40'
+                  : 'bg-gradient-to-br from-blue-500 to-purple-600 text-white shadow-xl shadow-blue-500/30 hover:shadow-2xl hover:shadow-blue-500/40'
+                }
+                hover:scale-110 active:scale-95`}
               aria-label="Scroll to top"
-              title="Scroll to top"
+              style={{ pointerEvents: scrollHover ? 'auto' : 'none' }}
             >
-              {/* Up arrow icon */}
-              <svg 
-                className="cf-scroll-arrow w-5 h-5 transition-transform duration-200 group-hover:-translate-y-1" 
-                fill="none" 
-                stroke="currentColor" 
-                viewBox="0 0 24 24"
-              >
-                <path 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round" 
-                  strokeWidth={2} 
-                  d="M5 10l7-7m0 0l7 7m-7-7v18" 
-                />
-              </svg>
-              {/* Small "top" text */}
-              <span className="cf-scroll-text text-xs font-medium mt-1 opacity-70 group-hover:opacity-100 transition-opacity duration-200">
-                TOP
+              {/* Arrow Icon */}
+              <ArrowUp className="w-6 h-6 animate-bounce" />
+
+              {/* Text */}
+              <span className="text-xs font-bold uppercase tracking-wider">
+                Top
               </span>
+
+              {/* Decorative glow */}
+              <div className={`absolute inset-0 rounded-2xl blur-xl opacity-50 -z-10 ${theme === 'dark' ? 'bg-cyan-400' : 'bg-blue-400'
+                }`} />
             </button>
-          )}
-        </div>
+
+            {/* Subtle indicator dot when not hovering */}
+            <div
+              className={`absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 w-3 h-3 rounded-full transition-all duration-300 pointer-events-none ${scrollHover
+                ? 'opacity-0 scale-0'
+                : 'opacity-40 scale-100 animate-pulse'
+                } ${theme === 'dark' ? 'bg-cyan-400' : 'bg-blue-500'}`}
+            />
+          </div>
+        </>
       )}
     </div>
   );

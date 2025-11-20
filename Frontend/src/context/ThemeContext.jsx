@@ -11,7 +11,7 @@ export const useTheme = () => {
 };
 
 export const ThemeProvider = ({ children }) => {
-  const [theme, setTheme] = useState('dark');
+  const [theme, setTheme] = useState('light');
 
   // Load theme from localStorage on mount
   useEffect(() => {
@@ -26,7 +26,7 @@ export const ThemeProvider = ({ children }) => {
     localStorage.setItem('theme', theme);
     document.body.classList.remove('algo-light', 'algo-dark');
     document.body.classList.add(theme === 'light' ? 'algo-light' : 'algo-dark');
-    
+
     // Apply global background styles
     if (theme === 'light') {
       document.body.style.background = 'linear-gradient(135deg, #f0f9ff 0%, #ffffff 50%, #f0fdfa 100%)';
@@ -35,7 +35,7 @@ export const ThemeProvider = ({ children }) => {
       document.body.style.background = 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)';
       document.body.style.minHeight = '100vh';
     }
-    
+
     return () => {
       document.body.classList.remove('algo-light', 'algo-dark');
     };

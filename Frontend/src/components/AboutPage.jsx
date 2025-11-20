@@ -57,10 +57,10 @@ export default function AboutPage() {
       photoUrl: null, // Using the imported image variable
     },
     {
-      name: "3rd Person",
-      role: "Waiting",
+      name: "Waiting",
+      role: "Not Yet Decided",
       bio: "The silent partners dedicated to crafting clear tutorials and providing instant insights, translating complex concepts into practical lessons for all learners.",
-      photoUrl: null, 
+      photoUrl: null,
     },
   ];
 
@@ -136,7 +136,7 @@ export default function AboutPage() {
     { number: "100+", label: "Tutorial Articles" },
     { number: "25+", label: "Cheat Sheets" },
   ];
-  
+
   const closeAlert = () => {
     setAlertConfig({ ...alertConfig, isOpen: false });
   };
@@ -164,7 +164,7 @@ export default function AboutPage() {
         }
       `}</style>
 
-      <div className="max-w-6xl mx-auto px-4 py-8">
+      <div className="max-w-6xl mx-auto px-4 pt-28 pb-8">
         {/* Back Button - Added z-index to ensure it's above decorative elements */}
         <div className="relative z-10">
           <ResponsiveButton

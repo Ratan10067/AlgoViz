@@ -1,4 +1,3 @@
-// ...existing code...
 // Removed duplicate default export
 import React, { useState, useEffect, useRef } from "react";
 import {
