@@ -191,7 +191,7 @@ export default function AboutPage() {
       <div className="max-w-6xl mx-auto px-4 py-8">
         {/* Back Button - Added z-index to ensure it's above decorative elements */}
         <div className="relative z-10">
-          <ResponsiveButton
+          {/* <ResponsiveButton
             onClick={handleBackClick}
             className="mb-8 hover:cursor-pointer"
             variant="ghost"
@@ -200,7 +200,7 @@ export default function AboutPage() {
             iconPosition="left"
           >
             Back to Home
-          </ResponsiveButton>
+          </ResponsiveButton> */}
         </div>
 
         {/* Hero Section */}
