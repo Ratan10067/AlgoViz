@@ -163,7 +163,7 @@ export default function SupportPage() {
 
   return (
     <div className="min-h-screen bg-gray-900 text-white">
-      <div className="max-w-7xl mx-auto px-4 py-8">
+      <div className="max-w-7xl mx-auto px-4 pt-28 pb-8">
         {/* Back Button */}
         <button
           onClick={handleBack}
@@ -190,21 +190,19 @@ export default function SupportPage() {
             <div className="flex space-x-1 mb-6 bg-gray-800 p-1 rounded-lg">
               <button
                 onClick={() => setActiveTab("feedback")}
-                className={`flex-1 py-2 px-4 rounded-md font-semibold transition-colors duration-200 ${
-                  activeTab === "feedback"
+                className={`flex-1 py-2 px-4 rounded-md font-semibold transition-colors duration-200 ${activeTab === "feedback"
                     ? "bg-white text-gray-900"
                     : "text-gray-400 hover:text-white"
-                }`}
+                  }`}
               >
                 Share Feedback
               </button>
               <button
                 onClick={() => setActiveTab("support")}
-                className={`flex-1 py-2 px-4 rounded-md font-semibold transition-colors duration-200 ${
-                  activeTab === "support"
+                className={`flex-1 py-2 px-4 rounded-md font-semibold transition-colors duration-200 ${activeTab === "support"
                     ? "bg-white text-gray-900"
                     : "text-gray-400 hover:text-white"
-                }`}
+                  }`}
               >
                 Get Support
               </button>
@@ -226,11 +224,10 @@ export default function SupportPage() {
                         className="transition-colors duration-200"
                       >
                         <Star
-                          className={`w-8 h-8 ${
-                            star <= formData.rating
+                          className={`w-8 h-8 ${star <= formData.rating
                               ? "text-yellow-400 fill-current"
                               : "text-gray-600 hover:text-yellow-400"
-                          }`}
+                            }`}
                         />
                       </button>
                     ))}

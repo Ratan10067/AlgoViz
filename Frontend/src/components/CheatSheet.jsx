@@ -185,7 +185,7 @@ const CheatSheet = () => {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800 p-6">
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-gray-800 px-6 pb-6 pt-28">
       <div className="max-w-7xl mx-auto">
         {/* Header */}
         <div className="text-center mb-8">
@@ -217,11 +217,10 @@ const CheatSheet = () => {
                 <button
                   key={category.id}
                   onClick={() => setSelectedCategory(category.id)}
-                  className={`flex items-center gap-2 px-4 py-3 rounded-lg transition-all ${
-                    selectedCategory === category.id
+                  className={`flex items-center gap-2 px-4 py-3 rounded-lg transition-all ${selectedCategory === category.id
                       ? "bg-blue-600 text-white shadow-md"
                       : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-                  }`}
+                    }`}
                 >
                   {category.icon}
                   {category.name}

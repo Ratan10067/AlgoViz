@@ -23,7 +23,7 @@ import {
   Flame,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
-import { useTheme } from "../context/ThemeContext";
+import Navbar from "./Navbar";
 
 // Accent color mapping for Tailwind
 const accentClassMap = {
@@ -46,7 +46,6 @@ const gradientClassMap = {
 };
 
 const AlgorithmHomePage = () => {
-  const { theme, toggleTheme } = useTheme();
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [modalTopic, setModalTopic] = useState(null);
   const [selectedAlgorithm, setSelectedAlgorithm] = useState(null);
@@ -54,8 +53,6 @@ const AlgorithmHomePage = () => {
   const [showScrollToTop, setShowScrollToTop] = useState(false);
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [showComingSoon, setShowComingSoon] = useState(false);
-  const [scrollHover, setScrollHover] = useState(false);
-  const [showScrollShade, setShowScrollShade] = useState(false);
   const topicsRef = useRef(null);
   const sectionRefs = useRef([]);
   const navigate = useNavigate();
@@ -88,7 +85,6 @@ const AlgorithmHomePage = () => {
       const scrollTop =
         window.pageYOffset || document.documentElement.scrollTop;
       setShowScrollToTop(scrollTop > 500);
-      setShowScrollShade(scrollTop > 500);
     };
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
@@ -239,13 +235,13 @@ const AlgorithmHomePage = () => {
           id: "avl-tree",
         },
         {
-          name: "Depth First Search (DFS)",
+          name: "Depth First Search",
           difficulty: "Medium",
-          time: "O(V*E)",
+          time: "O(V + E)",
           id: "dfs",
         },
         {
-          name: "Breadth First Search (BFS)",
+          name: "Breadth First Search",
           difficulty: "Medium",
           time: "O(V + E)",
           id: "bfs",
@@ -322,13 +318,13 @@ const AlgorithmHomePage = () => {
           name: "Linear Search",
           difficulty: "Easy",
           time: "O(n)",
-          id: "linear-search",
+          id: "linear-search-2",
         },
         {
           name: "Binary Search",
           difficulty: "Easy",
           time: "O(log n)",
-          id: "binary-search",
+          id: "binary-search-2",
         },
         {
           name: "Interpolation Search",
@@ -482,91 +478,19 @@ const AlgorithmHomePage = () => {
 
   const startLearning = () => {
     if (!selectedAlgorithm) return;
-
-    // Graph algorithms
     if (selectedAlgorithm.id === "bfs") {
       navigate("/bfs-visualizer");
     } else if (selectedAlgorithm.id === "dfs") {
       navigate("/dfs-visualizer");
     } else if (selectedAlgorithm.id === "dijkstra") {
       navigate("/dijkstra-visualizer");
-    }
-    // Sorting algorithms
-    else if (selectedAlgorithm.id === "bubble-sort") {
+    } else if (selectedAlgorithm.id === "bubble-sort") {
       navigate("/bubble-sort");
     } else if (selectedAlgorithm.id === "quick-sort") {
       navigate("/quick-sort");
     } else if (selectedAlgorithm.id === "merge-sort") {
       navigate("/merge-sort");
-    } else if (selectedAlgorithm.id === "heap-sort") {
-      navigate("/heap-sort");
-    }
-    // Search algorithms
-    else if (selectedAlgorithm.id === "binary-search") {
-      navigate("/binary-search");
-    } else if (selectedAlgorithm.id === "linear-search") {
-      navigate("/linear-search");
-    } else if (selectedAlgorithm.id === "exponential-search") {
-      navigate("/exponential-search");
-    } else if (selectedAlgorithm.id === "interpolation-search") {
-      navigate("/interpolation-search");
-    } else if (selectedAlgorithm.id === "jump-search") {
-      navigate("/jump-search");
-    } else if (selectedAlgorithm.id === "ternary-search") {
-      navigate("/ternary-search");
-    }
-    // Tree algorithms
-    else if (selectedAlgorithm.id === "tree-traversal") {
-      navigate("/tree-traversal");
-    } else if (selectedAlgorithm.id === "bst") {
-      navigate("/bst");
-    } else if (selectedAlgorithm.id === "avl-tree") {
-      navigate("/avl-tree");
-    }
-    // Dynamic Programming
-    else if (selectedAlgorithm.id === "fibonacci") {
-      navigate("/fibonacci");
-    } else if (selectedAlgorithm.id === "knapsack") {
-      navigate("/knapsack");
-    } else if (selectedAlgorithm.id === "lcs") {
-      navigate("/lcs");
-    } else if (selectedAlgorithm.id === "edit-distance") {
-      navigate("/edit-distance");
-    } else if (selectedAlgorithm.id === "coin-change") {
-      navigate("/coin-change");
-    } else if (selectedAlgorithm.id === "mcm") {
-      navigate("/matrix-chain-multiplication");
-    }
-    // Greedy Algorithms
-    else if (selectedAlgorithm.id === "activity-selection") {
-      navigate("/activity-selection");
-    } else if (selectedAlgorithm.id === "huffman-coding") {
-      navigate("/huffman-coding");
-    } else if (selectedAlgorithm.id === "fractional-knapsack") {
-      navigate("/fractional-knapsack");
-    } else if (selectedAlgorithm.id === "job-scheduling") {
-      navigate("/job-scheduling");
-    } else if (selectedAlgorithm.id === "mst") {
-      navigate("/minimum-spanning-tree");
-    } else if (selectedAlgorithm.id === "coin-change-greedy") {
-      navigate("/coin-change-greedy");
-    }
-    // Backtracking
-    else if (selectedAlgorithm.id === "n-queens") {
-      navigate("/n-queens");
-    } else if (selectedAlgorithm.id === "sudoku-solver") {
-      navigate("/sudoku-solver");
-    } else if (selectedAlgorithm.id === "maze-solver") {
-      navigate("/maze-solver");
-    } else if (selectedAlgorithm.id === "subset-sum") {
-      navigate("/subset-sum");
-    } else if (selectedAlgorithm.id === "graph-coloring") {
-      navigate("/graph-coloring");
-    } else if (selectedAlgorithm.id === "hamiltonian-path") {
-      navigate("/hamiltonian-path");
-    }
-    // All other algorithms show coming soon
-    else {
+    } else {
       setShowComingSoon(true);
     }
   };
@@ -611,13 +535,7 @@ const AlgorithmHomePage = () => {
   }, [isModalOpen]);
 
   return (
-    <div
-      className={`min-h-screen relative overflow-hidden transition-colors duration-700 ${
-        theme === "dark"
-          ? "bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 text-white"
-          : "bg-gradient-to-br from-blue-50 via-white to-cyan-50 text-gray-900"
-      }`}
-    >
+    <div className="min-h-screen bg-gradient-to-br from-gray-900 via-slate-900 to-gray-900 text-white relative overflow-hidden">
       <style jsx>{`
         @keyframes fadeInUp {
           from {
@@ -636,18 +554,6 @@ const AlgorithmHomePage = () => {
           background: rgba(15, 23, 42, 0.3);
           backdrop-filter: blur(16px);
           border: 1px solid rgba(255, 255, 255, 0.1);
-          transition: background 0.7s, color 0.7s;
-        }
-        .liquid-bg {
-          background: linear-gradient(
-            270deg,
-            #0c4a6e,
-            #164e63,
-            #1e3a8a,
-            #374151
-          );
-          background-size: 400% 400%;
-          animation: liquid-move 15s ease infinite;
         }
         @keyframes liquid-move {
           0% {
@@ -660,6 +566,17 @@ const AlgorithmHomePage = () => {
             background-position: 0% 50%;
           }
         }
+        .liquid-bg {
+          background: linear-gradient(
+            270deg,
+            #0c4a6e,
+            #164e63,
+            #1e3a8a,
+            #374151
+          );
+          background-size: 400% 400%;
+          animation: liquid-move 15s ease infinite;
+        }
         @keyframes spin-slow {
           0% {
             transform: rotate(0deg);
@@ -671,17 +588,10 @@ const AlgorithmHomePage = () => {
         .animate-spin-slow {
           animation: spin-slow 20s linear infinite;
         }
-        body.algo-light {
-          background: #f3f4f6 !important;
-          color: #222 !important;
-          transition: background 0.7s, color 0.7s;
-        }
-        body.algo-dark {
-          background: #0f172a !important;
-          color: #fff !important;
-          transition: background 0.7s, color 0.7s;
-        }
       `}</style>
+
+      {/* Navigation Bar */}
+      <Navbar />
 
       {/* Hero Section */}
       <header className="relative overflow-hidden liquid-bg">
@@ -700,45 +610,26 @@ const AlgorithmHomePage = () => {
                 </div>
               </div>
             </div>
-            <h1
-              className={`text-6xl md:text-8xl font-black mb-6 leading-tight text-white`}
-            >
+            <h1 className="text-6xl md:text-8xl font-black text-white mb-6 leading-tight">
               Algorithm
               <span className="bg-gradient-to-r from-cyan-400 via-teal-400 to-blue-400 bg-clip-text text-transparent block">
                 Visualizer
               </span>
             </h1>
-            <p className={`text-xl mb-12 max-w-4xl mx-auto leading-relaxed`}>
-              <span
-                className={`${
-                  theme === "dark" ? "text-slate-300" : "text-gray-200"
-                }`}
-              >
-                Experience the future of algorithm learning through stunning
-                visualizations, interactive simulations, and real-time
-                complexity analysis.
-              </span>
-              <span className={`font-semibold text-cyan-400`}>
+            <p className="text-xl text-slate-300 mb-12 max-w-4xl mx-auto leading-relaxed">
+              Experience the future of algorithm learning through stunning
+              visualizations, interactive simulations, and real-time complexity
+              analysis.
+              <span className="text-cyan-400 font-semibold">
                 {" "}
                 Transform your understanding
-              </span>
-              <span
-                className={`${
-                  theme === "dark" ? "text-slate-300" : "text-gray-200"
-                }`}
-              >
-                {" "}
-                of computer science fundamentals.
-              </span>
+              </span>{" "}
+              of computer science fundamentals.
             </p>
             <div className="flex flex-col sm:flex-row gap-6 justify-center items-center">
               <button
                 onClick={scrollToTopics}
-                className={`group px-10 py-4 ${
-                  theme === "dark"
-                    ? "bg-gradient-to-r from-cyan-600 via-teal-600 to-blue-600 text-white"
-                    : "bg-gradient-to-r from-cyan-500 via-blue-500 to-indigo-500 text-white hover:from-cyan-600 hover:via-blue-600 hover:to-indigo-600"
-                } rounded-2xl transition-all duration-500 shadow-2xl transform hover:scale-110 active:scale-95 relative overflow-hidden`}
+                className="group px-10 py-4 bg-gradient-to-r from-cyan-600 via-teal-600 to-blue-600 text-white rounded-2xl hover:from-cyan-700 hover:via-teal-700 hover:to-blue-700 transition-all duration-500 shadow-2xl transform hover:scale-110 active:scale-95 relative overflow-hidden"
                 aria-label="Start Your Journey"
               >
                 <div className="absolute inset-0 bg-gradient-to-r from-white/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-500"></div>
@@ -749,11 +640,7 @@ const AlgorithmHomePage = () => {
                 </div>
               </button>
               <button
-                className={`group px-8 py-4 glassmorphism rounded-2xl border transition-all duration-300 transform hover:scale-105 active:scale-95 ${
-                  theme === "dark"
-                    ? "border-white/20 text-white hover:bg-white/10"
-                    : "border-gray-300 bg-white/50 text-gray-900 hover:bg-white/80 shadow-lg"
-                }`}
+                className="group px-8 py-4 glassmorphism text-white rounded-2xl hover:bg-white/10 transition-all duration-300 transform hover:scale-105 active:scale-95 border border-white/20"
                 onClick={handleViewDocs}
                 aria-label="View Documentation"
               >
@@ -773,22 +660,14 @@ const AlgorithmHomePage = () => {
             ref={(el) => (sectionRefs.current[1] = el)}
             className="opacity-0 text-center mb-20"
           >
-            <h2
-              className={`text-5xl md:text-6xl font-black mb-6 ${
-                theme === "dark" ? "text-white" : "text-gray-900"
-              }`}
-            >
+            <h2 className="text-5xl md:text-6xl font-black text-white mb-6">
               Explore Algorithm
               <span className="bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
                 {" "}
                 Topics
               </span>
             </h2>
-            <p
-              className={`text-xl max-w-3xl mx-auto leading-relaxed ${
-                theme === "dark" ? "text-slate-400" : "text-gray-600"
-              }`}
-            >
+            <p className="text-xl text-slate-400 max-w-3xl mx-auto leading-relaxed">
               Dive deep into specialized algorithm categories, each crafted with
               immersive visualizations and interactive learning experiences
             </p>
@@ -820,34 +699,22 @@ const AlgorithmHomePage = () => {
                     {topic.icon}
                   </div>
                   <h3
-                    className={`text-2xl font-bold mb-4 group-hover:${
+                    className={`text-2xl font-bold text-white mb-4 group-hover:${
                       accentClassMap[topic.accent]?.split(" ")[0]
-                    } transition-colors duration-500 ${
-                      theme === "dark" ? "text-white" : "text-gray-900"
-                    }`}
+                    } transition-colors duration-500`}
                   >
                     {topic.title}
                   </h3>
-                  <p
-                    className={`mb-8 leading-relaxed group-hover:transition-colors duration-300 ${
-                      theme === "dark"
-                        ? "text-slate-400 group-hover:text-slate-300"
-                        : "text-gray-600 group-hover:text-gray-700"
-                    }`}
-                  >
+                  <p className="text-slate-400 mb-8 leading-relaxed group-hover:text-slate-300 transition-colors duration-300">
                     {topic.description}
                   </p>
                   <div
-                    className={`w-full px-6 py-4 glassmorphism rounded-2xl border transition-all duration-500 flex items-center justify-center space-x-3 ${
-                      theme === "dark" ? "border-white/10" : "border-gray-200"
-                    }`}
+                    className={`w-full px-6 py-4 glassmorphism rounded-2xl border border-white/10 transition-all duration-500 flex items-center justify-center space-x-3`}
                   >
                     <span
                       className={`font-semibold group-hover:${
                         accentClassMap[topic.accent]?.split(" ")[0]
-                      } transition-colors duration-300 ${
-                        theme === "dark" ? "text-white" : "text-gray-800"
-                      }`}
+                      } transition-colors duration-300`}
                     >
                       Explore Algorithms
                     </span>
@@ -880,145 +747,74 @@ const AlgorithmHomePage = () => {
             className="opacity-0 max-w-6xl mx-auto"
           >
             <div className="text-center mb-16">
-              <h2
-                className={`text-4xl md:text-5xl font-black mb-6 ${
-                  theme === "dark" ? "text-white" : "text-gray-900"
-                }`}
-              >
+              <h2 className="text-4xl md:text-5xl font-black text-white mb-6">
                 Why Choose
                 <span className="bg-gradient-to-r from-cyan-400 to-teal-400 bg-clip-text text-transparent">
                   {" "}
                   AlgoViz?
                 </span>
               </h2>
-              <p
-                className={`text-lg max-w-2xl mx-auto ${
-                  theme === "dark" ? "text-slate-400" : "text-gray-600"
-                }`}
-              >
+              <p className="text-slate-400 text-lg max-w-2xl mx-auto">
                 Experience the next generation of algorithm education with
                 cutting-edge features
               </p>
             </div>
             <div className="grid md:grid-cols-3 gap-8">
               <div
-                className={`group p-8 rounded-3xl border relative overflow-hidden transition-all duration-300 ${
-                  theme === "dark"
-                    ? "glassmorphism border-cyan-500/20 hover:border-cyan-400/40"
-                    : "bg-white border-cyan-200 hover:border-cyan-300 shadow-lg hover:shadow-xl"
-                }`}
-                style={
-                  theme === "dark"
-                    ? {
-                        background:
-                          "linear-gradient(145deg, rgba(15, 23, 42, 0.5), rgba(6, 78, 59, 0.2))",
-                      }
-                    : {
-                        background:
-                          "linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(240, 249, 255, 0.8))",
-                      }
-                }
+                className="group p-8 rounded-3xl glassmorphism border border-cyan-500/20 hover:border-cyan-400/40 relative overflow-hidden"
+                style={{
+                  background:
+                    "linear-gradient(145deg, rgba(15, 23, 42, 0.5), rgba(6, 78, 59, 0.2))",
+                }}
               >
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-cyan-400 to-transparent opacity-30 group-hover:opacity-70 transition-opacity duration-500"></div>
                 <div className="w-16 h-16 bg-gradient-to-r from-cyan-600 to-teal-600 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
                   <Play className="w-8 h-8 text-white" />
                 </div>
-                <h3
-                  className={`text-2xl font-bold mb-4 text-center group-hover:text-cyan-400 transition-colors duration-300 ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-                >
+                <h3 className="text-2xl font-bold text-white mb-4 text-center group-hover:text-cyan-400 transition-colors duration-300">
                   Interactive Visualizations
                 </h3>
-                <p
-                  className={`text-center leading-relaxed group-hover:transition-colors duration-300 ${
-                    theme === "dark"
-                      ? "text-slate-400 group-hover:text-slate-300"
-                      : "text-gray-600 group-hover:text-gray-700"
-                  }`}
-                >
+                <p className="text-slate-400 text-center leading-relaxed group-hover:text-slate-300 transition-colors duration-300">
                   Immerse yourself in algorithm execution with stunning
                   real-time animations, interactive controls, and dynamic data
                   flow visualization.
                 </p>
               </div>
               <div
-                className={`group p-8 rounded-3xl border relative overflow-hidden transition-all duration-300 ${
-                  theme === "dark"
-                    ? "glassmorphism border-emerald-500/20 hover:border-emerald-400/40"
-                    : "bg-white border-emerald-200 hover:border-emerald-300 shadow-lg hover:shadow-xl"
-                }`}
-                style={
-                  theme === "dark"
-                    ? {
-                        background:
-                          "linear-gradient(145deg, rgba(15, 23, 42, 0.5), rgba(6, 78, 59, 0.2))",
-                      }
-                    : {
-                        background:
-                          "linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(236, 253, 245, 0.8))",
-                      }
-                }
+                className="group p-8 rounded-3xl glassmorphism border border-emerald-500/20 hover:border-emerald-400/40 relative overflow-hidden"
+                style={{
+                  background:
+                    "linear-gradient(145deg, rgba(15, 23, 42, 0.5), rgba(6, 78, 59, 0.2))",
+                }}
               >
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-emerald-400 to-transparent opacity-30 group-hover:opacity-70 transition-opacity duration-500"></div>
                 <div className="w-16 h-16 bg-gradient-to-r from-emerald-600 to-green-600 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
                   <TrendingUp className="w-8 h-8 text-white" />
                 </div>
-                <h3
-                  className={`text-2xl font-bold mb-4 text-center group-hover:text-emerald-400 transition-colors duration-300 ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-                >
+                <h3 className="text-2xl font-bold text-white mb-4 text-center group-hover:text-emerald-400 transition-colors duration-300">
                   Advanced Analytics
                 </h3>
-                <p
-                  className={`text-center leading-relaxed group-hover:transition-colors duration-300 ${
-                    theme === "dark"
-                      ? "text-slate-400 group-hover:text-slate-300"
-                      : "text-gray-600 group-hover:text-gray-700"
-                  }`}
-                >
+                <p className="text-slate-400 text-center leading-relaxed group-hover:text-slate-300 transition-colors duration-300">
                   Deep dive into complexity analysis with interactive graphs,
                   performance metrics, and comparative studies across different
                   algorithms.
                 </p>
               </div>
               <div
-                className={`group p-8 rounded-3xl border relative overflow-hidden transition-all duration-300 ${
-                  theme === "dark"
-                    ? "glassmorphism border-indigo-500/20 hover:border-indigo-400/40"
-                    : "bg-white border-indigo-200 hover:border-indigo-300 shadow-lg hover:shadow-xl"
-                }`}
-                style={
-                  theme === "dark"
-                    ? {
-                        background:
-                          "linear-gradient(145deg, rgba(15, 23, 42, 0.5), rgba(49, 46, 129, 0.2))",
-                      }
-                    : {
-                        background:
-                          "linear-gradient(145deg, rgba(255, 255, 255, 0.9), rgba(238, 242, 255, 0.8))",
-                      }
-                }
+                className="group p-8 rounded-3xl glassmorphism border border-indigo-500/20 hover:border-indigo-400/40 relative overflow-hidden"
+                style={{
+                  background:
+                    "linear-gradient(145deg, rgba(15, 23, 42, 0.5), rgba(49, 46, 129, 0.2))",
+                }}
               >
                 <div className="absolute top-0 left-0 right-0 h-1 bg-gradient-to-r from-transparent via-indigo-400 to-transparent opacity-30 group-hover:opacity-70 transition-opacity duration-500"></div>
                 <div className="w-16 h-16 bg-gradient-to-r from-indigo-600 to-purple-600 rounded-2xl flex items-center justify-center mb-6 mx-auto group-hover:scale-110 transition-transform duration-300 shadow-lg">
                   <Code className="w-8 h-8 text-white" />
                 </div>
-                <h3
-                  className={`text-2xl font-bold mb-4 text-center group-hover:text-indigo-400 transition-colors duration-300 ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-                >
+                <h3 className="text-2xl font-bold text-white mb-4 text-center group-hover:text-indigo-400 transition-colors duration-300">
                   Multi-Language Support
                 </h3>
-                <p
-                  className={`text-center leading-relaxed group-hover:transition-colors duration-300 ${
-                    theme === "dark"
-                      ? "text-slate-400 group-hover:text-slate-300"
-                      : "text-gray-600 group-hover:text-gray-700"
-                  }`}
-                >
+                <p className="text-slate-400 text-center leading-relaxed group-hover:text-slate-300 transition-colors duration-300">
                   Access comprehensive code implementations across Python,
                   JavaScript, Java, C++, and more with intelligent syntax
                   highlighting.
@@ -1038,9 +834,7 @@ const AlgorithmHomePage = () => {
           role="dialog"
         >
           <div
-            className={`relative w-full max-w-5xl h-[85vh] flex flex-col glassmorphism rounded-3xl border overflow-hidden shadow-2xl ${
-              theme === "dark" ? "border-cyan-500/30" : "border-gray-300"
-            }`}
+            className="relative w-full max-w-5xl h-[85vh] flex flex-col glassmorphism rounded-3xl border border-cyan-500/30 overflow-hidden shadow-2xl"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Header section - Fixed height */}
@@ -1059,29 +853,17 @@ const AlgorithmHomePage = () => {
                     {modalTopic.icon}
                   </div>
                   <div>
-                    <h2
-                      className={`text-2xl md:text-3xl font-black ${
-                        theme === "dark" ? "text-white" : "text-gray-900"
-                      }`}
-                    >
+                    <h2 className="text-2xl md:text-3xl font-black text-white">
                       {modalTopic.title}
                     </h2>
-                    <p
-                      className={`text-sm md:text-base mt-1 ${
-                        theme === "dark" ? "text-slate-300" : "text-gray-600"
-                      }`}
-                    >
+                    <p className="text-slate-300 text-sm md:text-base mt-1">
                       {modalTopic.description}
                     </p>
                   </div>
                 </div>
                 <button
                   onClick={closeModal}
-                  className={`p-2 rounded-xl glassmorphism hover:text-red-400 transition-all duration-300 border absolute top-2 right-2 md:static ${
-                    theme === "dark"
-                      ? "text-white hover:bg-white/10 border-white/10"
-                      : "text-gray-600 hover:bg-gray-100 border-gray-200"
-                  }`}
+                  className="p-2 rounded-xl glassmorphism text-white hover:bg-white/10 hover:text-red-400 transition-all duration-300 border border-white/10 absolute top-2 right-2 md:static"
                   aria-label="Close"
                 >
                   <X className="w-5 h-5" />
@@ -1090,13 +872,7 @@ const AlgorithmHomePage = () => {
             </div>
 
             {/* Algorithm list - Scrollable content with fixed height */}
-            <div
-              className={`flex-1 overflow-y-auto p-6 ${
-                theme === "dark"
-                  ? "bg-gradient-to-b from-slate-900/50 to-slate-950/50"
-                  : "bg-gradient-to-b from-gray-50/50 to-white/50"
-              }`}
-            >
+            <div className="flex-1 overflow-y-auto bg-gradient-to-b from-slate-900/50 to-slate-950/50 p-6">
               <div className="grid gap-4">
                 {modalTopic.algorithms.map((algorithm, index) => (
                   <div
@@ -1107,9 +883,7 @@ const AlgorithmHomePage = () => {
                         ? `bg-gradient-to-r ${
                             gradientClassMap[modalTopic.id]
                           }/20 border-${modalTopic.accent}/50 shadow-lg`
-                        : theme === "dark"
-                        ? "glassmorphism border-white/10 hover:border-white/20 hover:bg-white/5"
-                        : "bg-white/50 border-gray-200 hover:border-gray-300 hover:bg-white/80"
+                        : "glassmorphism border-white/10 hover:border-white/20 hover:bg-white/5"
                     }`}
                     tabIndex={0}
                     role="button"
@@ -1124,9 +898,7 @@ const AlgorithmHomePage = () => {
                           className={`text-lg font-bold transition-colors duration-300 ${
                             selectedAlgorithm?.id === algorithm.id
                               ? accentClassMap[modalTopic.accent]?.split(" ")[0]
-                              : theme === "dark"
-                              ? "text-white"
-                              : "text-gray-900"
+                              : "text-white"
                           }`}
                         >
                           {algorithm.name}
@@ -1139,13 +911,7 @@ const AlgorithmHomePage = () => {
                           >
                             {algorithm.difficulty}
                           </span>
-                          <div
-                            className={`flex items-center space-x-1 text-sm ${
-                              theme === "dark"
-                                ? "text-slate-400"
-                                : "text-gray-500"
-                            }`}
-                          >
+                          <div className="flex items-center space-x-1 text-slate-400 text-sm">
                             <Clock className="w-3 h-3" />
                             <span>{algorithm.time}</span>
                           </div>
@@ -1156,9 +922,7 @@ const AlgorithmHomePage = () => {
                           selectedAlgorithm?.id === algorithm.id
                             ? accentClassMap[modalTopic.accent]?.split(" ")[0] +
                               " rotate-90"
-                            : theme === "dark"
-                            ? "text-slate-500 group-hover:text-slate-300"
-                            : "text-gray-400 group-hover:text-gray-600"
+                            : "text-slate-500 group-hover:text-slate-300"
                         }`}
                       />
                     </div>
@@ -1168,22 +932,14 @@ const AlgorithmHomePage = () => {
             </div>
 
             {/* Fixed button section - Always visible */}
-            <div
-              className={`flex justify-center p-4 border-t transition-colors duration-300 ${
-                theme === "dark"
-                  ? "bg-slate-900 border-cyan-500/30"
-                  : "bg-gray-50 border-gray-200"
-              }`}
-            >
+            <div className="flex justify-center p-4 bg-slate-900 border-t border-cyan-500/30">
               <button
                 onClick={startLearning}
                 disabled={!selectedAlgorithm}
                 className={`w-fit px-4 py-3 rounded-xl font-bold text-lg transition-all duration-500 ${
                   selectedAlgorithm
                     ? "bg-gradient-to-r from-cyan-600 to-teal-600 text-white shadow-lg hover:opacity-90"
-                    : theme === "dark"
-                    ? "bg-slate-800 text-slate-500 cursor-not-allowed"
-                    : "bg-gray-200 text-gray-400 cursor-not-allowed"
+                    : "bg-slate-800 text-slate-500 cursor-not-allowed"
                 }`}
                 aria-label="Start Visualizing"
               >
@@ -1206,47 +962,25 @@ const AlgorithmHomePage = () => {
                 role="dialog"
               >
                 <div
-                  className={`rounded-xl p-6 max-w-xs w-full shadow-xl border relative transition-all duration-300 ${
-                    theme === "dark"
-                      ? "bg-slate-900 border-cyan-500/30"
-                      : "bg-white border-gray-200"
-                  }`}
+                  className="bg-slate-900 rounded-xl p-6 max-w-xs w-full shadow-xl border border-cyan-500/30 relative"
                   onClick={(e) => e.stopPropagation()}
                 >
                   <button
-                    className={`absolute top-2 right-2 hover:text-red-400 transition-colors ${
-                      theme === "dark" ? "text-slate-400" : "text-gray-500"
-                    }`}
+                    className="absolute top-2 right-2 text-slate-400 hover:text-red-400"
                     onClick={() => setShowComingSoon(false)}
                     aria-label="Close"
                   >
                     <X className="w-5 h-5" />
                   </button>
-                  <h2
-                    className={`text-xl font-bold mb-4 text-center ${
-                      theme === "dark" ? "text-cyan-400" : "text-cyan-600"
-                    }`}
-                  >
+                  <h2 className="text-xl font-bold mb-4 text-center text-cyan-400">
                     Coming Soon
                   </h2>
-                  <div
-                    className={`text-center ${
-                      theme === "dark" ? "text-slate-300" : "text-gray-600"
-                    }`}
-                  >
+                  <div className="text-center text-slate-300">
                     This algorithm visualizer is under development!
                   </div>
                   <div className="mt-4 flex justify-center">
-                    <div
-                      className={`w-12 h-12 rounded-full flex items-center justify-center ${
-                        theme === "dark" ? "bg-cyan-500/10" : "bg-cyan-100"
-                      }`}
-                    >
-                      <Clock
-                        className={`w-6 h-6 animate-pulse ${
-                          theme === "dark" ? "text-cyan-400" : "text-cyan-600"
-                        }`}
-                      />
+                    <div className="w-12 h-12 bg-cyan-500/10 rounded-full flex items-center justify-center">
+                      <Clock className="w-6 h-6 text-cyan-400 animate-pulse" />
                     </div>
                   </div>
                 </div>
@@ -1257,11 +991,7 @@ const AlgorithmHomePage = () => {
       )}
 
       {/* Footer */}
-      <footer
-        className={`relative border-t mt-32 py-16 glassmorphism ${
-          theme === "dark" ? "border-cyan-500/10" : "border-gray-200"
-        }`}
-      >
+      <footer className="relative border-t border-cyan-500/10 mt-32 py-16 glassmorphism">
         <div className="container mx-auto px-6">
           <div className="flex flex-col md:flex-row justify-between items-center">
             <div className="mb-8 md:mb-0">
@@ -1273,11 +1003,7 @@ const AlgorithmHomePage = () => {
                   AlgoViz
                 </span>
               </div>
-              <p
-                className={`max-w-sm ${
-                  theme === "dark" ? "text-slate-400" : "text-gray-600"
-                }`}
-              >
+              <p className="text-slate-400 max-w-sm">
                 Visualizing algorithms for better understanding and learning
                 experiences.
               </p>
@@ -1287,52 +1013,32 @@ const AlgorithmHomePage = () => {
                   className="p-3 glassmorphism rounded-xl hover:bg-cyan-600/20 transition-colors duration-300"
                   aria-label="GitHub"
                 >
-                  <Github
-                    className={`w-5 h-5 ${
-                      theme === "dark" ? "text-slate-300" : "text-gray-600"
-                    }`}
-                  />
+                  <Github className="w-5 h-5 text-slate-300" />
                 </a>
                 <a
                   href="#"
                   className="p-3 glassmorphism rounded-xl hover:bg-cyan-600/20 transition-colors duration-300"
                   aria-label="Twitter"
                 >
-                  <Twitter
-                    className={`w-5 h-5 ${
-                      theme === "dark" ? "text-slate-300" : "text-gray-600"
-                    }`}
-                  />
+                  <Twitter className="w-5 h-5 text-slate-300" />
                 </a>
                 <a
                   href="#"
                   className="p-3 glassmorphism rounded-xl hover:bg-cyan-600/20 transition-colors duration-300"
                   aria-label="Mail"
                 >
-                  <Mail
-                    className={`w-5 h-5 ${
-                      theme === "dark" ? "text-slate-300" : "text-gray-600"
-                    }`}
-                  />
+                  <Mail className="w-5 h-5 text-slate-300" />
                 </a>
               </div>
             </div>
             <div className="grid grid-cols-2 md:grid-cols-3 gap-8">
               <div>
-                <h4
-                  className={`text-lg font-bold mb-4 ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  Resources
-                </h4>
+                <h4 className="text-lg font-bold text-white mb-4">Resources</h4>
                 <ul className="space-y-3">
                   <li>
                     <a
                       href="#"
-                      className={`hover:text-cyan-400 transition-colors ${
-                        theme === "dark" ? "text-slate-400" : "text-gray-600"
-                      }`}
+                      className="text-slate-400 hover:text-cyan-400 transition-colors"
                     >
                       Documentation
                     </a>
@@ -1340,9 +1046,7 @@ const AlgorithmHomePage = () => {
                   <li>
                     <a
                       href="#"
-                      className={`hover:text-cyan-400 transition-colors ${
-                        theme === "dark" ? "text-slate-400" : "text-gray-600"
-                      }`}
+                      className="text-slate-400 hover:text-cyan-400 transition-colors"
                     >
                       Tutorials
                     </a>
@@ -1350,9 +1054,7 @@ const AlgorithmHomePage = () => {
                   <li>
                     <a
                       href="/blogs"
-                      className={`hover:text-cyan-400 transition-colors ${
-                        theme === "dark" ? "text-slate-400" : "text-gray-600"
-                      }`}
+                      className="text-slate-400 hover:text-cyan-400 transition-colors"
                     >
                       Blog
                     </a>
@@ -1360,9 +1062,7 @@ const AlgorithmHomePage = () => {
                   <li>
                     <a
                       href="/support"
-                      className={`hover:text-cyan-400 transition-colors ${
-                        theme === "dark" ? "text-slate-400" : "text-gray-600"
-                      }`}
+                      className="text-slate-400 hover:text-cyan-400 transition-colors"
                     >
                       Support
                     </a>
@@ -1370,20 +1070,12 @@ const AlgorithmHomePage = () => {
                 </ul>
               </div>
               <div>
-                <h4
-                  className={`text-lg font-bold mb-4 ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  Company
-                </h4>
+                <h4 className="text-lg font-bold text-white mb-4">Company</h4>
                 <ul className="space-y-3">
                   <li>
                     <a
                       href="/about"
-                      className={`hover:text-cyan-400 transition-colors ${
-                        theme === "dark" ? "text-slate-400" : "text-gray-600"
-                      }`}
+                      className="text-slate-400 hover:text-cyan-400 transition-colors"
                     >
                       About
                     </a>
@@ -1391,9 +1083,7 @@ const AlgorithmHomePage = () => {
                   <li>
                     <a
                       href="#"
-                      className={`hover:text-cyan-400 transition-colors ${
-                        theme === "dark" ? "text-slate-400" : "text-gray-600"
-                      }`}
+                      className="text-slate-400 hover:text-cyan-400 transition-colors"
                     >
                       Careers
                     </a>
@@ -1401,9 +1091,7 @@ const AlgorithmHomePage = () => {
                   <li>
                     <a
                       href="/contact"
-                      className={`hover:text-cyan-400 transition-colors ${
-                        theme === "dark" ? "text-slate-400" : "text-gray-600"
-                      }`}
+                      className="text-slate-400 hover:text-cyan-400 transition-colors"
                     >
                       Contact
                     </a>
@@ -1411,9 +1099,7 @@ const AlgorithmHomePage = () => {
                   <li>
                     <a
                       href="#"
-                      className={`hover:text-cyan-400 transition-colors ${
-                        theme === "dark" ? "text-slate-400" : "text-gray-600"
-                      }`}
+                      className="text-slate-400 hover:text-cyan-400 transition-colors"
                     >
                       Partners
                     </a>
@@ -1421,20 +1107,12 @@ const AlgorithmHomePage = () => {
                 </ul>
               </div>
               <div>
-                <h4
-                  className={`text-lg font-bold mb-4 ${
-                    theme === "dark" ? "text-white" : "text-gray-900"
-                  }`}
-                >
-                  Legal
-                </h4>
+                <h4 className="text-lg font-bold text-white mb-4">Legal</h4>
                 <ul className="space-y-3">
                   <li>
                     <a
                       href="#"
-                      className={`hover:text-cyan-400 transition-colors ${
-                        theme === "dark" ? "text-slate-400" : "text-gray-600"
-                      }`}
+                      className="text-slate-400 hover:text-cyan-400 transition-colors"
                     >
                       Privacy Policy
                     </a>
@@ -1442,9 +1120,7 @@ const AlgorithmHomePage = () => {
                   <li>
                     <a
                       href="#"
-                      className={`hover:text-cyan-400 transition-colors ${
-                        theme === "dark" ? "text-slate-400" : "text-gray-600"
-                      }`}
+                      className="text-slate-400 hover:text-cyan-400 transition-colors"
                     >
                       Terms of Service
                     </a>
@@ -1452,9 +1128,7 @@ const AlgorithmHomePage = () => {
                   <li>
                     <a
                       href="#"
-                      className={`hover:text-cyan-400 transition-colors ${
-                        theme === "dark" ? "text-slate-400" : "text-gray-600"
-                      }`}
+                      className="text-slate-400 hover:text-cyan-400 transition-colors"
                     >
                       Cookie Policy
                     </a>
@@ -1462,9 +1136,7 @@ const AlgorithmHomePage = () => {
                   <li>
                     <a
                       href="#"
-                      className={`hover:text-cyan-400 transition-colors ${
-                        theme === "dark" ? "text-slate-400" : "text-gray-600"
-                      }`}
+                      className="text-slate-400 hover:text-cyan-400 transition-colors"
                     >
                       Licensing
                     </a>
@@ -1473,16 +1145,8 @@ const AlgorithmHomePage = () => {
               </div>
             </div>
           </div>
-          <div
-            className={`border-t mt-16 pt-8 text-center ${
-              theme === "dark" ? "border-cyan-500" : "border-gray-400"
-            }`}
-          >
-            <p
-              className={`flex items-center justify-center ${
-                theme === "dark" ? "text-slate-500" : "text-gray-500"
-              }`}
-            >
+          <div className="border-t border-cyan-500/10 mt-16 pt-8 text-center">
+            <p className="text-slate-500 flex items-center justify-center">
               <span>Made with</span>
               <Heart className="w-5 h-5 text-rose-500 mx-2 animate-pulse" />
               <span>for the developer community</span>
@@ -1491,71 +1155,15 @@ const AlgorithmHomePage = () => {
         </div>
       </footer>
 
-      {/* CodeForces-style Scroll to Top - Left Side Full Height Rectangle */}
-      {showScrollShade && (
-        <div
-          className="cf-scroll-to-top"
-          style={{
-            position: "fixed",
-            left: 0,
-            top: 0,
-            height: "100vh",
-            width: "40px",
-            zIndex: 40,
-          }}
-          onMouseEnter={() => setScrollHover(true)}
-          onMouseLeave={() => setScrollHover(false)}
+      {/* Scroll to Top Button */}
+      {showScrollToTop && (
+        <button
+          onClick={scrollToTop}
+          className="fixed bottom-8 right-8 p-4 bg-gradient-to-r from-cyan-600 to-teal-600 text-white rounded-2xl shadow-xl transition-all duration-300 transform hover:-translate-y-1 z-40"
+          aria-label="Scroll to top"
         >
-          <div
-            style={{
-              width: "100%",
-              height: "100%",
-              background: scrollHover
-                ? theme === "dark"
-                  ? "rgba(30,41,59,0.15)"
-                  : "rgba(59,130,246,0.08)"
-                : theme === "dark"
-                ? "rgba(30,41,59,0.08)"
-                : "rgba(59,130,246,0.04)",
-              transition: "background 0.2s",
-              position: "absolute",
-              left: 0,
-              top: 0,
-            }}
-          />
-          {scrollHover && (
-            <button
-              onClick={scrollToTop}
-              style={{ position: "relative", zIndex: 1 }}
-              className={`w-full h-full flex flex-col items-center justify-center group transition-all duration-200 ${
-                theme === "dark"
-                  ? "hover:bg-slate-700/20 text-slate-400 hover:text-cyan-400"
-                  : "hover:bg-gray-100/20 text-gray-500 hover:text-blue-600"
-              }`}
-              aria-label="Scroll to top"
-              title="Scroll to top"
-            >
-              {/* Up arrow icon */}
-              <svg
-                className="cf-scroll-arrow w-5 h-5 transition-transform duration-200 group-hover:-translate-y-1"
-                fill="none"
-                stroke="currentColor"
-                viewBox="0 0 24 24"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M5 10l7-7m0 0l7 7m-7-7v18"
-                />
-              </svg>
-              {/* Small "top" text */}
-              <span className="cf-scroll-text text-xs font-medium mt-1 opacity-70 group-hover:opacity-100 transition-opacity duration-200">
-                TOP
-              </span>
-            </button>
-          )}
-        </div>
+          <ArrowUp className="w-6 h-6" />
+        </button>
       )}
     </div>
   );

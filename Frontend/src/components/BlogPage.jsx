@@ -209,14 +209,14 @@ const BlogPage = () => {
         blogs.map((blog) =>
           blog.id === editingBlog.id
             ? {
-                ...blog,
-                title: newBlog.title,
-                content: newBlog.content,
-                tags: newBlog.tags
-                  .split(",")
-                  .map((tag) => tag.trim())
-                  .filter((tag) => tag),
-              }
+              ...blog,
+              title: newBlog.title,
+              content: newBlog.content,
+              tags: newBlog.tags
+                .split(",")
+                .map((tag) => tag.trim())
+                .filter((tag) => tag),
+            }
             : blog
         )
       );
@@ -278,10 +278,10 @@ const BlogPage = () => {
       blogs.map((blog) =>
         blog.id === blogId
           ? {
-              ...blog,
-              likes: blog.liked ? blog.likes - 1 : blog.likes + 1,
-              liked: !blog.liked,
-            }
+            ...blog,
+            likes: blog.liked ? blog.likes - 1 : blog.likes + 1,
+            liked: !blog.liked,
+          }
           : blog
       )
     );
@@ -396,9 +396,8 @@ const BlogPage = () => {
     return (
       <article
         key={blog.id}
-        className={`bg-gray-800 rounded-lg shadow-xl border border-gray-700 overflow-hidden ${
-          isCarousel ? "min-w-full" : ""
-        }`}
+        className={`bg-gray-800 rounded-lg shadow-xl border border-gray-700 overflow-hidden ${isCarousel ? "min-w-full" : ""
+          }`}
       >
         {/* Blog Header */}
         <div className="p-6 border-b border-gray-700">
@@ -482,11 +481,10 @@ const BlogPage = () => {
             <div className="flex items-center space-x-6">
               <button
                 onClick={() => handleLike(blog.id)}
-                className={`flex items-center space-x-2 transition-colors ${
-                  blog.liked
+                className={`flex items-center space-x-2 transition-colors ${blog.liked
                     ? "text-red-500"
                     : "text-gray-400 hover:text-red-500"
-                }`}
+                  }`}
               >
                 <Heart
                   className={`w-5 h-5 ${blog.liked ? "fill-current" : ""}`}
@@ -513,11 +511,10 @@ const BlogPage = () => {
 
             <button
               onClick={() => handleBookmark(blog.id)}
-              className={`transition-colors ${
-                blog.bookmarked
+              className={`transition-colors ${blog.bookmarked
                   ? "text-yellow-500"
                   : "text-gray-400 hover:text-yellow-500"
-              }`}
+                }`}
             >
               <Bookmark
                 className={`w-5 h-5 ${blog.bookmarked ? "fill-current" : ""}`}
@@ -601,7 +598,7 @@ const BlogPage = () => {
   return (
     <div className="min-h-screen bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900">
       {/* Header */}
-      <div className="bg-gray-800 border-b border-gray-700">
+      <div className="bg-gray-800 border-b border-gray-700 pt-24">
         <div className="container mx-auto">
           <div className="relative flex items-center">
             {/* Back button - positioned absolutely */}

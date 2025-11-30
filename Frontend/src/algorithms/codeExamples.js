@@ -400,35 +400,25 @@ pair<vector<int>, pair<int, int>> mergeSort(vector<int> arr) {
 
 // BFS
 export const bfs = {
-  cpp: `#include <bits/stdc++.h>
-using namespace std;
-
-unordered_map<int, int> bfs(const unordered_map<int, vector<int>>& graph, int start) {
-  unordered_set<int> visited;
-  queue<int> queue;
-  unordered_map<int, int> distances;
-  
-  queue.push(start);                        // Initialize queue with start node
-  distances[start] = 0;                     // Distance to start is 0
-  
-  while (!queue.empty()) {                  // Line 6
-    int current = queue.front();            // Line 6
-    queue.pop();                            // Line 6
+  cpp: `void bfs(int start, vector<vector<int>> &adj) {
+    vector<bool> visited(adj.size(), false);
+    queue<int> q;
     
-    if (visited.find(current) == visited.end()) {  // Line 8
-      visited.insert(current);                     // Line 9
-      
-      for (int neighbor : graph.at(current)) {     // Line 11
-        if (visited.find(neighbor) == visited.end() &&
-            find(queue.front(), queue.back(), neighbor) == queue.back()) {  // Line 13
-          queue.push(neighbor);                    // Line 14
-          distances[neighbor] = distances[current] + 1;  // Line 15
+    visited[start] = true;
+    q.push(start);
+    
+    while (!q.empty()) {
+        int u = q.front();
+        q.pop();
+        cout << u << " ";
+        
+        for (int v : adj[u]) {
+            if (!visited[v]) {
+                visited[v] = true;
+                q.push(v);
+            }
         }
-      }
     }
-  }
-  
-  return distances;                         // Line 21
 }`,
 
   python: `def bfs(graph, start):
@@ -1154,192 +1144,152 @@ export const lcs = {
 
 // DFS
 export const dfs = {
-  cpp: `#include <bits/stdc++.h>
-using namespace std;
+  cpp: `void dfsRec(vector<vector<int>> &adj, 
+            vector<bool> &visited, int s) {
+    visited[s] = true;              // Line 6
+    cout << s << " ";                // Line 7
+    
+    for (int i : adj[s])             // Line 9
+        if (visited[i] == false)     // Line 10
+            dfsRec(adj, visited, i); // Line 11
+}
 
-void dfsHelper(const unordered_map<int, vector<int>>& graph, 
-               int current, 
-               unordered_set<int>& visited,
-               unordered_map<int, int>& discovery,
-               int depth = 0) {
+void dfs(int start, vector<vector<int>> &adj) {
+    vector<bool> visited(adj.size(), false);
+    dfsRec(adj, visited, start);
+}`,
+
+  python: `def dfs(node, graph, visited):
+    \"\"\"
+    Depth-First Search traversal
+    \"\"\"
+    visited.add(node)                   # Line 6
+    print(node, end=" ")                # Line 7
+    
+    for neighbor in graph[node]:        # Line 9
+        if neighbor not in visited:     # Line 10
+            dfs(neighbor, graph, visited)  # Line 11
+
+def perform_dfs(graph, start_node):
+    \"\"\"
+    Perform DFS starting from the given node
+    \"\"\"
+    visited = set()
+    dfs(start_node, graph, visited)`,
+
+  javascript: `function dfs(node, graph, visited) {
+  /**
+   * Depth-First Search traversal
+   */
+  visited.add(node);                    // Line 6
+  console.log(node);                    // Line 7
   
-  visited.insert(current);                  // Line 6
-  discovery[current] = depth;               // Line 7
-  
-  for (int neighbor : graph.at(current)) {  // Line 9
-    if (visited.find(neighbor) == visited.end()) {  // Line 10
-      dfsHelper(graph, neighbor, visited, discovery, depth + 1);  // Line 11
+  for (const neighbor of graph[node]) { // Line 9
+    if (!visited.has(neighbor)) {       // Line 10
+      dfs(neighbor, graph, visited);    // Line 11
     }
   }
 }
 
-unordered_map<int, int> dfs(const unordered_map<int, vector<int>>& graph, int start) {
-  unordered_set<int> visited;
-  unordered_map<int, int> discovery;
-  
-  dfsHelper(graph, start, visited, discovery);
-  
-  return discovery;                         // Line 21
-}`,
-
-  python: `def dfs(graph, start):
-    visited = set()
-    discovery = {}
-    
-    def dfs_helper(current, depth=0):
-        visited.add(current)                # Line 6
-        discovery[current] = depth          # Line 7
-        
-        for neighbor in graph[current]:     # Line 9
-            if neighbor not in visited:     # Line 10
-                dfs_helper(neighbor, depth + 1)  # Line 11
-    
-    dfs_helper(start)
-    return discovery                        # Line 21`,
-
-  javascript: `function dfs(graph, start) {
+function performDFS(graph, startNode) {
+  /**
+   * Perform DFS starting from the given node
+   */
   const visited = new Set();
-  const discovery = {};
-  
-  function dfsHelper(current, depth = 0) {
-    visited.add(current);                   // Line 6
-    discovery[current] = depth;             // Line 7
-    
-    for (const neighbor of graph[current]) {  // Line 9
-      if (!visited.has(neighbor)) {         // Line 10
-        dfsHelper(neighbor, depth + 1);     // Line 11
-      }
-    }
-  }
-  
-  dfsHelper(start);
-  return discovery;                         // Line 21
+  dfs(startNode, graph, visited);
 }`
 };
 
+
 // Dijkstra's Algorithm
 export const dijkstra = {
-  cpp: `#include <bits/stdc++.h>
-using namespace std;
-
-unordered_map<int, int> dijkstra(
-    const unordered_map<int, vector<pair<int, int>>>& graph, 
-    int start) {
-  
-  // Priority queue to store vertices that need to be processed
-  // {distance, vertex}
-  priority_queue<pair<int, int>, 
-                 vector<pair<int, int>>, 
-                 greater<pair<int, int>>> pq;
-  
-  // Map to store shortest distance from start to each vertex
-  unordered_map<int, int> distances;
-  
-  // Initialize all distances as infinite
-  for (const auto& entry : graph) {
-    distances[entry.first] = numeric_limits<int>::max();
-  }
-  
-  // Distance to the start vertex is 0
-  distances[start] = 0;
-  pq.push({0, start});
-  
-  while (!pq.empty()) {
-    int u = pq.top().second;
-    pq.pop();
+  cpp: `vector<int> dijkstra(int start, vector<vector<pair<int, int>>> &adj) {
+    int n = adj.size();
+    vector<int> dist(n, INT_MAX);
+    priority_queue<pair<int, int>, 
+                   vector<pair<int, int>>, 
+                   greater<pair<int, int>>> pq;
     
-    // For each adjacent vertex of u
-    for (const auto& edge : graph.at(u)) {
-      int v = edge.first;
-      int weight = edge.second;
-      
-      // If there is a shorter path to v through u
-      if (distances[u] != numeric_limits<int>::max() && 
-          distances[u] + weight < distances[v]) {
-        // Update distance of v
-        distances[v] = distances[u] + weight;
-        pq.push({distances[v], v});
-      }
+    dist[start] = 0;
+    pq.push({0, start});
+    
+    while (!pq.empty()) {
+        auto [d, u] = pq.top();
+        pq.pop();
+        
+        if (d > dist[u]) continue;
+        
+        for (auto [v, w] : adj[u]) {
+            if (dist[u] + w < dist[v]) {
+                dist[v] = dist[u] + w;
+                pq.push({dist[v], v});
+            }
+        }
     }
-  }
-  
-  return distances;
+    
+    return dist;
 }`,
 
   python: `import heapq
 
 def dijkstra(graph, start):
-    # Priority queue to store vertices that need to be processed
-    # (distance, vertex)
-    pq = [(0, start)]
-    
-    # Dictionary to store shortest distance from start to each vertex
-    distances = {}
-    
-    # Initialize all distances as infinite
-    for vertex in graph:
-        distances[vertex] = float('infinity')
-    
-    # Distance to the start vertex is 0
+    \"\"\"
+    Find shortest paths from start node to all other nodes
+    \"\"\"
+    # Initialize distances
+    distances = {vertex: float('inf') for vertex in graph}
     distances[start] = 0
     
+    # Min-heap priority queue: (distance, vertex)
+    pq = [(0, start)]
+    
     while pq:
-        # Get vertex with minimum distance
-        current_distance, u = heapq.heappop(pq)
+        current_dist, u = heapq.heappop(pq)
         
-        # If we've already found a better path, skip
-        if current_distance > distances[u]:
+        # Skip if we found a better path already
+        if current_dist > distances[u]:
             continue
         
-        # For each adjacent vertex of u
         for v, weight in graph[u]:
-            # If there is a shorter path to v through u
-            if distances[u] + weight < distances[v]:
-                # Update distance of v
-                distances[v] = distances[u] + weight
-                heapq.heappush(pq, (distances[v], v))
+            new_dist = distances[u] + weight
+            if new_dist < distances[v]:
+                distances[v] = new_dist
+                heapq.heappush(pq, (new_dist, v))
     
     return distances`,
 
   javascript: `function dijkstra(graph, start) {
-  // Priority queue implementation using an array
-  // Each element is [distance, vertex]
-  const pq = [[0, start]];
-  
-  // Map to store shortest distance from start to each vertex
+  /**
+   * Find shortest paths from start node to all other nodes
+   */
+  // Initialize distances
   const distances = {};
-  
-  // Initialize all distances as infinite
   for (const vertex in graph) {
     distances[vertex] = Infinity;
   }
-  
-  // Distance to the start vertex is 0
   distances[start] = 0;
   
+  // Min-heap priority queue: [distance, vertex]
+  const pq = [[0, start]];
+  
   while (pq.length > 0) {
-    // Sort the priority queue to get the minimum distance vertex
     pq.sort((a, b) => a[0] - b[0]);
+    const [currentDist, u] = pq.shift();
     
-    // Get vertex with minimum distance
-    const [currentDistance, u] = pq.shift();
-    
-    // If we've already found a better path, skip
-    if (currentDistance > distances[u]) {
+    // Skip if we found a better path already
+    if (currentDist > distances[u]) {
       continue;
     }
     
-    // For each adjacent vertex of u
     for (const [v, weight] of graph[u]) {
-      // If there is a shorter path to v through u
-      if (distances[u] + weight < distances[v]) {
-        // Update distance of v
-        distances[v] = distances[u] + weight;
-        pq.push([distances[v], v]);
+      const newDist = distances[u] + weight;
+      if (newDist < distances[v]) {
+        distances[v] = newDist;
+        pq.push([newDist, v]);
       }
     }
   }
   
   return distances;
 }`
-}; 
+};  

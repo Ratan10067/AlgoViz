@@ -1,7 +1,5 @@
 import { BrowserRouter, Route, Routes } from "react-router-dom";
-import ScrollToTop from "./components/ScrollToTop";
 import AlgorithmHomePage from "./components/AlgorithmHomePage";
-import AlgorithmVisualizerPage from "./components/AlgorithmVisualizerPage";
 import BubbleSort from "./components/algorithms/Arrays and Sorting/BubbleSort";
 import QuickSort from "./components/algorithms/Arrays and Sorting/QuickSort";
 import MergeSort from "./components/algorithms/Arrays and Sorting/MergeSort";
@@ -51,7 +49,6 @@ import MainLayout from "./components/MainLayout";
 function App() {
   return (
     <>
-      <ScrollToTop />
       <Routes>
         {/* Routes that include Navbar via layout */}
         <Route element={<MainLayout />}>
@@ -67,7 +64,6 @@ function App() {
         <Route path="/signin" element={<SignIn />} />
         <Route path="/register" element={<SignUp />} />
         <Route path="/user-profile" element={<UserProfilePage />} />
-        <Route path="/visualizer" element={<AlgorithmVisualizerPage />} />
         <Route path="/view-documentation" element={<DocumentationModal />} />
         <Route path="/bubble-sort" element={<BubbleSort />} />
         <Route path="/quick-sort" element={<QuickSort />} />

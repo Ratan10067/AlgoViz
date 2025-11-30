@@ -1,6 +1,8 @@
 import React, { useMemo } from "react";
 import CodeMirror from "@uiw/react-codemirror";
 import { javascript } from "@codemirror/lang-javascript";
+import { python } from "@codemirror/lang-python";
+import { cpp } from "@codemirror/lang-cpp";
 import { oneDark } from "@codemirror/theme-one-dark";
 import { EditorView } from "@codemirror/view";
 import ErrorBoundary from "./ErrorBoundary";
@@ -16,10 +18,18 @@ const CodeMirrorWrapper = ({
 }) => {
   // Get the appropriate language extension based on selection
   const languageExtension = useMemo(() => {
-    // Only include javascript by default to avoid loading multiple instances
-    // of language modules which can cause conflicts
-    return javascript({ jsx: true });
-  }, []);
+    switch (language.toLowerCase()) {
+      case "python":
+        return python();
+      case "cpp":
+      case "c++":
+        return cpp();
+      case "javascript":
+      case "js":
+      default:
+        return javascript({ jsx: true });
+    }
+  }, [language]);
 
   const baseTheme = useMemo(() => ({
     "&": {

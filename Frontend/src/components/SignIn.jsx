@@ -8,10 +8,11 @@ import {
   Chrome,
   ArrowLeft,
   LogIn,
+  Code,
+  Sparkles,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import axios from "axios";
-import ResponsiveButton from "./ResponsiveButton";
 import { useAuth } from "../context/UserContext";
 
 const SignIn = () => {
@@ -35,38 +36,26 @@ const SignIn = () => {
     e.preventDefault();
     setIsLoading(true);
     setError("");
-    
+
     try {
-      console.log("Sending login request with data:", formData);
       const response = await axios.post(
         "http://localhost:3000/users/login",
         formData
       );
-      
-      console.log("Login response:", response);
-      
+
       if (response.status === 200) {
-        // Set the user data in auth context
         const { user: userData, token } = response.data;
-        console.log("User data from response:", userData);
-        console.log("Token from response:", token);
-        
         setUser(userData);
         setToken(token);
         setIsAuthenticated(true);
-        
-        // Store in appropriate storage based on remember me
+
         const storage = formData.rememberMe ? localStorage : sessionStorage;
         storage.setItem("authToken", token);
         storage.setItem("user", JSON.stringify(userData));
-        
-        console.log("Authentication successful, navigating to home");
-        // Navigate to home page
+
         navigate("/");
       }
     } catch (error) {
-      console.error("Login error:", error);
-      console.error("Error response:", error.response);
       setError(error.response?.data?.message || "Invalid credentials. Please check your email and password.");
     } finally {
       setIsLoading(false);
@@ -74,225 +63,213 @@ const SignIn = () => {
   };
 
   const handleSocialLogin = (provider) => {
-    // Handle social login
     console.log(`${provider} login clicked`);
   };
 
-  const handleSignUp = () => {
-    navigate("/register");
-  };
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-900 to-black flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 flex items-center justify-center p-4 relative overflow-hidden">
       {/* Animated background elements */}
       <div className="absolute inset-0 overflow-hidden">
-        {/* Animated circles */}
-        <div className="absolute top-1/4 left-1/4 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl animate-pulse"></div>
-        <div className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-purple-500/10 rounded-full blur-3xl animate-pulse delay-1000"></div>
-        
-        {/* Grid overlay */}
-        <div className="absolute inset-0 bg-grid-pattern opacity-10"></div>
+        <div className="absolute top-0 left-1/4 w-96 h-96 bg-cyan-500/20 rounded-full blur-3xl animate-pulse"></div>
+        <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '1s' }}></div>
+        <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-blue-500/10 rounded-full blur-3xl animate-pulse" style={{ animationDelay: '2s' }}></div>
       </div>
 
-      <div className="w-full max-w-md relative z-10">
-        {/* Back button */}
-        <ResponsiveButton
-          onClick={() => navigate("/")}
-          className="mb-8"
-          variant="ghost"
-          size="sm"
-          icon={<ArrowLeft className="w-4 h-4" />}
-          iconPosition="left"
-        >
-          Back to Home
-        </ResponsiveButton>
+      {/* Back button */}
+      <button
+        onClick={() => navigate("/")}
+        className="absolute top-8 left-8 flex items-center gap-2 px-4 py-2 bg-white/10 hover:bg-white/20 backdrop-blur-sm rounded-xl text-white transition-all duration-300 border border-white/20 hover:border-white/30 group z-20"
+      >
+        <ArrowLeft className="w-4 h-4 transition-transform group-hover:-translate-x-1" />
+        <span>Back to Home</span>
+      </button>
 
-        {/* Main card */}
-        <div className="bg-gray-800/40 backdrop-blur-lg rounded-2xl shadow-2xl border border-gray-700/50 overflow-hidden">
-          {/* Card header */}
-          <div className="relative h-24 bg-gradient-to-r from-blue-600 to-violet-600 flex items-center justify-center">
-            <div className="absolute inset-0 overflow-hidden">
-              {/* Header decorative elements */}
-              <div className="absolute -top-4 -right-4 w-24 h-24 bg-white/10 rounded-full"></div>
-              <div className="absolute -bottom-8 -left-8 w-32 h-32 bg-white/10 rounded-full"></div>
+      <div className="w-full max-w-6xl relative z-10 grid md:grid-cols-2 gap-8 items-center">
+        {/* Left Side - Branding */}
+        <div className="hidden md:flex flex-col justify-center space-y-6 px-8">
+          <div className="flex items-center gap-3">
+            <div className="p-3 bg-gradient-to-br from-cyan-400 to-blue-500 rounded-2xl shadow-lg">
+              <Code className="w-10 h-10 text-white" />
             </div>
-            <h1 className="text-2xl font-bold text-white relative z-10">Welcome Back</h1>
+            <span className="text-5xl font-black text-white">
+              Algo<span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400">Viz</span>
+            </span>
           </div>
 
-          {/* Card body */}
-          <div className="p-6">
-            {/* Error message */}
-            {error && (
-              <div className="mb-6 p-3 bg-red-500/20 border border-red-500/30 rounded-lg text-red-200 text-sm">
-                {error}
-              </div>
-            )}
+          <h2 className="text-4xl font-bold text-white leading-tight">
+            Welcome Back to Your
+            <span className="block text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400">
+              Learning Journey
+            </span>
+          </h2>
 
-            {/* Login form */}
-            <form onSubmit={handleSubmit} className="space-y-5">
-              {/* Email field */}
-              <div className="relative">
-                <label htmlFor="email" className="block text-sm font-medium text-gray-300 mb-1 ml-1">
-                  Email Address
-                </label>
-                <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type="email"
-                    id="email"
-                    className="w-full pl-10 pr-4 py-3 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300"
-                    placeholder="your@email.com"
-                    value={formData.email}
-                    onChange={(e) => handleInputChange("email", e.target.value)}
-                    required
-                  />
+          <p className="text-lg text-slate-300 leading-relaxed">
+            Continue mastering algorithms through interactive visualizations and hands-on practice.
+          </p>
+
+          <div className="flex items-center gap-4 pt-4">
+            <div className="flex -space-x-2">
+              {[1, 2, 3, 4].map((i) => (
+                <div key={i} className="w-10 h-10 rounded-full bg-gradient-to-br from-cyan-400 to-blue-500 border-2 border-slate-900 flex items-center justify-center text-white font-bold">
+                  {i}
                 </div>
-              </div>
+              ))}
+            </div>
+            <div className="text-slate-300">
+              <p className="font-semibold">10,000+ Active Learners</p>
+              <p className="text-sm text-slate-400">Join the community today</p>
+            </div>
+          </div>
+        </div>
 
-              {/* Password field */}
-              <div className="relative">
-                <label htmlFor="password" className="block text-sm font-medium text-gray-300 mb-1 ml-1">
-                  Password
-                </label>
-                <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    id="password"
-                    className="w-full pl-10 pr-12 py-3 bg-gray-700/50 border border-gray-600/50 rounded-lg text-white focus:outline-none focus:ring-2 focus:ring-blue-500/50 focus:border-blue-500/50 transition-all duration-300"
-                    placeholder="••••••••"
-                    value={formData.password}
-                    onChange={(e) => handleInputChange("password", e.target.value)}
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-200"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    {showPassword ? (
-                      <EyeOff className="w-5 h-5" />
-                    ) : (
-                      <Eye className="w-5 h-5" />
-                    )}
-                  </button>
+        {/* Right Side - Login Form */}
+        <div className="w-full">
+          <div className="bg-white/10 backdrop-blur-xl rounded-3xl shadow-2xl border border-white/20 overflow-hidden">
+            {/* Form Header */}
+            <div className="relative p-8 bg-gradient-to-r from-cyan-500/20 via-blue-500/20 to-purple-500/20 border-b border-white/10">
+              <div className="flex items-center gap-3 mb-2">
+                <Sparkles className="w-6 h-6 text-cyan-400" />
+                <h1 className="text-3xl font-bold text-white">Sign In</h1>
+              </div>
+              <p className="text-slate-300">Access your personalized learning dashboard</p>
+            </div>
+
+            {/* Form Body */}
+            <div className="p-8">
+              {error && (
+                <div className="mb-6 p-4 bg-red-500/20 border border-red-500/30 rounded-xl text-red-200 text-sm flex items-center gap-2">
+                  <div className="w-2 h-2 bg-red-400 rounded-full"></div>
+                  {error}
                 </div>
-              </div>
+              )}
 
-              {/* Remember me and forgot password */}
-              <div className="flex items-center justify-between">
-                <div className="flex items-center">
-                  <input
-                    id="remember-me"
-                    name="remember-me"
-                    type="checkbox"
-                    className="h-4 w-4 rounded border-gray-600 bg-gray-700 text-blue-500 focus:ring-blue-500/50"
-                    checked={formData.rememberMe}
-                    onChange={(e) =>
-                      handleInputChange("rememberMe", e.target.checked)
-                    }
-                  />
-                  <label
-                    htmlFor="remember-me"
-                    className="ml-2 block text-sm text-gray-300"
-                  >
-                    Remember me
+              <form onSubmit={handleSubmit} className="space-y-6">
+                {/* Email field */}
+                <div>
+                  <label htmlFor="email" className="block text-sm font-semibold text-white mb-2">
+                    Email Address
                   </label>
+                  <div className="relative group">
+                    <Mail className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-cyan-400 transition-colors" />
+                    <input
+                      type="email"
+                      id="email"
+                      className="w-full pl-12 pr-4 py-3.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300"
+                      placeholder="your@email.com"
+                      value={formData.email}
+                      onChange={(e) => handleInputChange("email", e.target.value)}
+                      required
+                    />
+                  </div>
                 </div>
-                <div className="text-sm">
-                  <a
-                    href="#"
-                    className="font-medium text-blue-400 hover:text-blue-300"
-                  >
+
+                {/* Password field */}
+                <div>
+                  <label htmlFor="password" className="block text-sm font-semibold text-white mb-2">
+                    Password
+                  </label>
+                  <div className="relative group">
+                    <Lock className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400 group-focus-within:text-cyan-400 transition-colors" />
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      id="password"
+                      className="w-full pl-12 pr-12 py-3.5 bg-white/10 border border-white/20 rounded-xl text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-cyan-500 transition-all duration-300"
+                      placeholder="••••••••"
+                      value={formData.password}
+                      onChange={(e) => handleInputChange("password", e.target.value)}
+                      required
+                    />
+                    <button
+                      type="button"
+                      className="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-white transition-colors"
+                      onClick={() => setShowPassword(!showPassword)}
+                    >
+                      {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
+                    </button>
+                  </div>
+                </div>
+
+                {/* Remember me and forgot password */}
+                <div className="flex items-center justify-between text-sm">
+                  <div className="flex items-center gap-2">
+                    <input
+                      id="remember-me"
+                      type="checkbox"
+                      className="w-4 h-4 rounded border-white/30 bg-white/10 text-cyan-500 focus:ring-cyan-500/50 focus:ring-offset-0"
+                      checked={formData.rememberMe}
+                      onChange={(e) => handleInputChange("rememberMe", e.target.checked)}
+                    />
+                    <label htmlFor="remember-me" className="text-slate-300">
+                      Remember me
+                    </label>
+                  </div>
+                  <a href="#" className="font-semibold text-cyan-400 hover:text-cyan-300 transition-colors">
                     Forgot password?
                   </a>
                 </div>
+
+                {/* Sign in button */}
+                <button
+                  type="submit"
+                  disabled={isLoading}
+                  className="w-full py-4 bg-gradient-to-r from-cyan-500 via-blue-500 to-purple-500 rounded-xl text-white font-bold text-lg shadow-lg hover:shadow-xl hover:scale-[1.02] active:scale-[0.98] transition-all duration-300 flex items-center justify-center gap-2 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  {isLoading ? (
+                    <div className="w-6 h-6 border-3 border-white border-t-transparent rounded-full animate-spin"></div>
+                  ) : (
+                    <>
+                      <LogIn className="w-5 h-5" />
+                      <span>Sign In</span>
+                    </>
+                  )}
+                </button>
+              </form>
+
+              {/* Divider */}
+              <div className="relative my-8">
+                <div className="absolute inset-0 flex items-center">
+                  <div className="w-full border-t border-white/20"></div>
+                </div>
+                <div className="relative flex justify-center">
+                  <span className="px-4 bg-slate-900/50 text-slate-400 text-sm">Or continue with</span>
+                </div>
               </div>
 
-              {/* Sign in button */}
-              <ResponsiveButton
-                type="submit"
-                variant="primary"
-                size="lg"
-                fullWidth
-                isLoading={isLoading}
-                icon={<LogIn className="w-5 h-5" />}
-                iconPosition="left"
-              >
-                Sign In
-              </ResponsiveButton>
-            </form>
+              {/* Social login buttons */}
+              <div className="grid grid-cols-2 gap-4">
+                <button
+                  onClick={() => handleSocialLogin("Google")}
+                  className="flex items-center justify-center gap-2 py-3 px-4 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white transition-all duration-300 hover:scale-105"
+                >
+                  <Chrome className="w-5 h-5" />
+                  <span className="font-semibold">Google</span>
+                </button>
 
-            {/* Divider */}
-            <div className="relative my-6">
-              <div className="absolute inset-0 flex items-center">
-                <div className="w-full border-t border-gray-600/50"></div>
+                <button
+                  onClick={() => handleSocialLogin("GitHub")}
+                  className="flex items-center justify-center gap-2 py-3 px-4 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white transition-all duration-300 hover:scale-105"
+                >
+                  <Github className="w-5 h-5" />
+                  <span className="font-semibold">GitHub</span>
+                </button>
               </div>
-              <div className="relative flex justify-center text-sm">
-                <span className="px-4 bg-gray-800/40 text-gray-400">
-                  Or continue with
-                </span>
+
+              {/* Sign up link */}
+              <div className="mt-8 text-center">
+                <p className="text-slate-300">
+                  Don't have an account?{" "}
+                  <button
+                    onClick={() => navigate("/register")}
+                    className="font-bold text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 to-blue-400 hover:from-cyan-300 hover:to-blue-300 transition-all"
+                  >
+                    Sign up now
+                  </button>
+                </p>
               </div>
             </div>
-
-            {/* Social login buttons */}
-            <div className="grid grid-cols-2 gap-4">
-              <ResponsiveButton
-                onClick={() => handleSocialLogin("Google")}
-                variant="outline"
-                size="md"
-                icon={<Chrome className="w-5 h-5 text-red-400" />}
-                iconPosition="left"
-              >
-                Google
-              </ResponsiveButton>
-              
-              <ResponsiveButton
-                onClick={() => handleSocialLogin("GitHub")}
-                variant="outline"
-                size="md"
-                icon={<Github className="w-5 h-5 text-white" />}
-                iconPosition="left"
-              >
-                GitHub
-              </ResponsiveButton>
-            </div>
-          </div>
-
-          {/* Card footer */}
-          <div className="p-6 bg-gray-900/50 text-center">
-            <p className="text-sm text-gray-400">
-              Don't have an account?{" "}
-              <button
-                onClick={handleSignUp}
-                className="font-medium text-blue-400 hover:text-blue-300 transition-colors"
-              >
-                Sign up now
-              </button>
-            </p>
           </div>
         </div>
       </div>
-      
-      {/* Add CSS for grid pattern */}
-      <style jsx>{`
-        .bg-grid-pattern {
-          background-size: 50px 50px;
-          background-image: 
-            linear-gradient(to right, rgba(255, 255, 255, 0.05) 1px, transparent 1px),
-            linear-gradient(to bottom, rgba(255, 255, 255, 0.05) 1px, transparent 1px);
-        }
-        
-        @keyframes float {
-          0% { transform: translateY(0px); }
-          50% { transform: translateY(-10px); }
-          100% { transform: translateY(0px); }
-        }
-        
-        .animate-float {
-          animation: float 6s ease-in-out infinite;
-        }
-      `}</style>
     </div>
   );
 };

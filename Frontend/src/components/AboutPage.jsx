@@ -83,6 +83,12 @@ export default function AboutPage() {
       bio: "Anup architects the platform's robust and secure foundation. His expertise in modern web security and browser technologies ensures a reliable and safe learning environment.",
       photoUrl: null, // Using the imported image variable
     },
+    {
+      name: "3rd Person",
+      role: "Waiting",
+      bio: "The silent partners dedicated to crafting clear tutorials and providing instant insights, translating complex concepts into practical lessons for all learners.",
+      photoUrl: null, 
+    },
   ];
 
   const features = [
@@ -183,19 +189,19 @@ export default function AboutPage() {
       `}</style>
 
       <div className="max-w-6xl mx-auto px-4 py-8">
-        {/* Back Button */}
-        <button
-          onClick={() => {
-            console.log("Back button clicked"); // Check if this logs
-            console.log("Navigate function:", navigate); // Check if navigate exists
-            navigate("/");
-            console.log("Navigate called"); // Check if this executes
-          }}
-          className="mb-8 flex items-center text-slate-400 hover:text-cyan-400 transition-colors duration-300 group"
-        >
-          <ArrowLeft className="w-5 h-5 mr-2 transition-transform duration-300 group-hover:-translate-x-1" />
-          <span>Back</span>
-        </button>
+        {/* Back Button - Added z-index to ensure it's above decorative elements */}
+        <div className="relative z-10">
+          <ResponsiveButton
+            onClick={handleBackClick}
+            className="mb-8 hover:cursor-pointer"
+            variant="ghost"
+            size="md"
+            icon={<ArrowLeft className="w-5 h-5" />}
+            iconPosition="left"
+          >
+            Back to Home
+          </ResponsiveButton>
+        </div>
 
         {/* Hero Section */}
         <div className="text-center mt-20 mb-20 relative">
