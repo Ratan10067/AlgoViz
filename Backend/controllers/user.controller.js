@@ -1,6 +1,7 @@
 const User = require("../models/user.model");
 // const otpGenerator = require("otp-generator");
 const nodemailer = require("nodemailer");
+const crypto = require("crypto");
 const transporter = nodemailer.createTransport({
   service: "gmail",
   auth: {
@@ -255,6 +256,7 @@ module.exports.verifyOtp = async (req, res, next) => {
     console.log(user.otp);
     // Check if OTP exists and is valid
     if (!user.otp || user.otp !== otp) {
+      console.log("user.otp : ", user.otp, " ", otp);
       return res.status(400).json({ message: "Invalid OTP" });
     }
 
@@ -274,9 +276,15 @@ module.exports.verifyOtp = async (req, res, next) => {
 
     // Generate token
     const token = await user.generateAuthToken();
-
+    await user.save({ validateModifiedOnly: true });
     // Set cookie
     res.cookie("token", token, {
+      httpOnly: true,
+      secure: process.env.NODE_ENV === "production",
+      sameSite: "strict",
+      maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
+    });
+    res.cookie("userId", user._id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === "production",
       sameSite: "strict",
@@ -286,10 +294,168 @@ module.exports.verifyOtp = async (req, res, next) => {
     return res.status(201).json({
       success: true,
       token,
-      user
+      user,
     });
   } catch (error) {
     console.error("Verify OTP error:", error);
     res.status(500).json({ message: "Failed to verify OTP" });
+  }
+};
+exports.getUserDetails = async (req, res) => {
+  console.log("aaya hu sir");
+  try {
+    console.log(req.body);
+    const userId = req.body.id;
+    console.log("userId : ", userId);
+    const user = await User.findById(userId).select("-password");
+    console.log(user);
+    if (!user) {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(200).json(user);
+  } catch (error) {
+    console.error("Error fetching user details:", error);
+
+    if (error.kind === "ObjectId") {
+      return res.status(404).json({ message: "User not found" });
+    }
+
+    res.status(500).json({ message: "Server error" });
+  }
+};
+
+module.exports.forgotPassword = async (req, res, next) => {
+  const { email } = req.body;
+  console.log("forgot password me aaya hu", email);
+  // 1. Find user
+  const user = await User.findOne({ email });
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+  // 2. Generate reset token (expires in 10 mins)
+  const resetToken = crypto.randomBytes(20).toString("hex");
+  user.resetPasswordToken = crypto
+    .createHash("sha256")
+    .update(resetToken)
+    .digest("hex");
+  user.resetPasswordExpire = Date.now() + 10 * 60 * 1000; // 10 mins
+  await user.save();
+  // 3. Send email
+  const resetUrl = `${req.protocol}://${req.get(
+    "host"
+  )}/users/reset-password/${resetToken}`;
+  console.log("yaha tk to aagay ab kya", resetUrl);
+
+  const message = `
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Password Reset Request</title>
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 0;
+        background-color: #f7f9fc;
+      }
+      .email-container {
+        max-width: 600px;
+        margin: 20px auto;
+        background: #ffffff;
+        border-radius: 8px;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        overflow: hidden;
+      }
+      .email-header {
+        background: #4caf50;
+        color: white;
+        padding: 20px;
+        text-align: center;
+      }
+      .email-body {
+        padding: 20px;
+      }
+      .email-body p {
+        margin: 0 0 10px;
+        line-height: 1.5;
+        color: #333;
+      }
+      .email-body a {
+        color: #4caf50;
+        text-decoration: none;
+        font-weight: bold;
+      }
+      .email-footer {
+        text-align: center;
+        padding: 10px;
+        background: #f1f1f1;
+        font-size: 12px;
+        color: #666;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="email-container">
+      <div class="email-header">
+        <h1>AlgoViz</h1>
+      </div>
+      <div class="email-body">
+        <h2>Password Reset Request</h2>
+        <p>Hello,</p>
+        <p>You requested to reset your password. Click the link below to reset your password:</p>
+        <p>
+          <a href="${resetUrl}" target="_blank">${resetUrl}</a>
+        </p>
+        <p>Please note that this link will expire in 10 minutes.</p>
+        <p>If you did not request a password reset, please ignore this email.</p>
+      </div>
+      <div class="email-footer">
+        <p>&copy; ${new Date().getFullYear()} AlgoViz. All Rights Reserved.</p>
+      </div>
+    </div>
+  </body>
+</html>
+`;
+  try {
+    await transporter.sendMail({
+      from: process.env.EMAIL_USER,
+      to: email,
+      subject: "Password Reset Request",
+      html: message,
+    });
+
+    res.json({ message: "Reset link sent to email" });
+  } catch (err) {
+    user.resetPasswordToken = undefined;
+    user.resetPasswordExpire = undefined;
+    await user.save();
+    res.status(500).json({ message: "Email could not be sent" });
+  }
+};
+
+module.exports.getResetPassword = async (req, res, next) => {
+  console.log("ha sarkar");
+  const { token } = req.params;
+  try {
+    // Hash the token to match the one stored in the database
+    const hashedToken = crypto.createHash("sha256").update(token).digest("hex");
+    // Find the user with the matching token and check if it is still valid
+    const user = await User.findOne({
+      resetPasswordToken: hashedToken,
+      resetPasswordExpire: { $gt: Date.now() }, // Ensure token has not expired
+    });
+
+    if (!user) {
+      return res.status(400).send("Invalid or expired token");
+    }
+
+    // Render the EJS file and pass the token to the template
+    return res.render("resetPassword", { token });
+  } catch (err) {
+    console.error(err);
+    res.status(500).send("An error occurred while processing your request.");
   }
 };

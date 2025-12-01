@@ -1,8 +1,7 @@
-// src/context/AuthContext.js
 import React, { createContext, useState, useEffect, useContext } from "react";
 
 export const AuthContext = createContext();
-
+import axios from "axios";
 // Custom hook to use auth context
 export const useAuth = () => {
   const context = useContext(AuthContext);
@@ -29,7 +28,7 @@ export function AuthProvider({ children }) {
       sms: false,
     },
   });
-
+  const API_BASE_URL = "http://localhost:4000/users";
   // App state
   const [isFirstLogin, setIsFirstLogin] = useState(false);
   const [hasCompletedTour, setHasCompletedTour] = useState(false);
@@ -38,7 +37,7 @@ export function AuthProvider({ children }) {
   // Error handling
   const [authError, setAuthError] = useState(null);
 
-  // Initialize auth state on app load
+  // Initialize auth state on app load (Local Storage Check)
   useEffect(() => {
     initializeAuth();
   }, []);
@@ -67,15 +66,12 @@ export function AuthProvider({ children }) {
         sessionStorage.getItem("authToken");
       const storedUser =
         localStorage.getItem("user") || sessionStorage.getItem("user");
-      
+
       if (storedToken && storedUser) {
-        // Set auth state from stored data
+        // Set auth state from stored data immediately for UI responsiveness
         setToken(storedToken);
         setUser(JSON.parse(storedUser));
         setIsAuthenticated(true);
-        
-        // For this demo, we'll skip token verification
-        // In a production app, you would verify the token with your backend
       }
     } catch (error) {
       console.error("Auth initialization error:", error);
@@ -85,6 +81,70 @@ export function AuthProvider({ children }) {
       setIsLoading(false);
     }
   };
+
+  // ------------------------------------------------------------------
+  // NEW: Fetch fresh user data from database using userId from storage
+  // ------------------------------------------------------------------
+  useEffect(() => {
+    const fetchFreshUser = async () => {
+      // 1. Get userId and token from storage
+      // We look for 'userId' specifically, or fall back to parsing the 'user' object if you store the ID there
+      let userId = localStorage.getItem("userId");
+      const storedToken = localStorage.getItem("token");
+      console.log("lane jaa rha hu data", userId);
+      // Fallback: If userId isn't stored separately, try to get it from the stored user object
+      if (!userId) {
+        const storedUser = localStorage.getItem("user");
+        if (storedUser) {
+          try {
+            const parsedUser = JSON.parse(storedUser);
+            userId = parsedUser.id || parsedUser._id || parsedUser.userId;
+          } catch (e) {
+            console.error("Error parsing stored user for ID");
+          }
+        }
+      }
+
+      // 2. If we have both ID and Token, fetch from DB
+      if (userId && storedToken) {
+        try {
+          // Adjust this URL to match your specific backend route (e.g., /api/users/:id)
+          const response = await axios.post(
+            `${API_BASE_URL}/getUserDetail`,
+            {id: userId }, // <-- body
+            {
+              headers: {
+                "Content-Type": "application/json",
+                Authorization: `Bearer ${storedToken}`,
+              },
+            }
+          );
+
+          if (response.ok) {
+            const freshUserData = await response.json();
+
+            // 3. Update state with fresh database data
+            setUser(freshUserData);
+
+            // Optional: Update local storage so it's fresh for next refresh
+            localStorage.setItem("user", JSON.stringify(freshUserData));
+
+            if (freshUserData.preferences) {
+              setUserPreferences(freshUserData.preferences);
+            }
+          } else {
+            console.warn("Failed to fetch fresh user data from DB");
+            // Optional: if response is 401 (Unauthorized), you might want to logout
+            if (response.status === 401) logout();
+          }
+        } catch (error) {
+          console.error("Network error fetching user details:", error);
+        }
+      }
+    };
+
+    fetchFreshUser();
+  }, []); // Runs once on mount
 
   const login = async (credentials, rememberMe = false) => {
     try {
@@ -119,6 +179,11 @@ export function AuthProvider({ children }) {
         const storage = rememberMe ? localStorage : sessionStorage;
         storage.setItem("authToken", authToken);
         storage.setItem("user", JSON.stringify(userData));
+
+        // Save userId explicitly if needed for the new useEffect
+        if (userData.id || userData._id) {
+          storage.setItem("userId", userData.id || userData._id);
+        }
 
         // Load user preferences
         if (userData.preferences) {
@@ -179,6 +244,9 @@ export function AuthProvider({ children }) {
 
           sessionStorage.setItem("authToken", data.token);
           sessionStorage.setItem("user", JSON.stringify(data.user));
+          if (data.user.id || data.user._id) {
+            sessionStorage.setItem("userId", data.user.id || data.user._id);
+          }
 
           return { success: true, user: data.user };
         }
@@ -224,9 +292,11 @@ export function AuthProvider({ children }) {
     // Clear storage
     localStorage.removeItem("authToken");
     localStorage.removeItem("user");
+    localStorage.removeItem("userId"); // Clear userId
     localStorage.removeItem("userPreferences");
     sessionStorage.removeItem("authToken");
     sessionStorage.removeItem("user");
+    sessionStorage.removeItem("userId"); // Clear userId
     sessionStorage.removeItem("userPreferences");
   };
 
@@ -374,7 +444,7 @@ export function AuthProvider({ children }) {
     setUserPreferences,
     setIsFirstLogin,
     setHasCompletedTour,
-    
+
     // Actions
     login,
     register,

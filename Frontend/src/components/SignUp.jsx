@@ -842,12 +842,14 @@ export default function UserSignUp() {
         name: formData.name,
         password: formData.password,
       });
-
+      console.log(response);
       if (response.status === 201) {
+        console.log("yes aaya hu");
         localStorage.setItem("token", response.data.token);
-        localStorage.setItem("userId", response.data.user.id);
-        setIsAuthenticated(true);
+        localStorage.setItem("userId", response.data.user._id);
+        // setIsAuthenticated(true);
         // setUser(response.)
+        console.log("yes aaya h1u");
         console.log(response);
         setModal({
           open: true,
