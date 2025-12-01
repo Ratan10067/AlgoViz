@@ -490,6 +490,10 @@ const AlgorithmHomePage = () => {
       navigate("/quick-sort");
     } else if (selectedAlgorithm.id === "merge-sort") {
       navigate("/merge-sort");
+    } else if (selectedAlgorithm.id === "avl-tree") {
+      navigate("/avl-tree");
+    } else if (selectedAlgorithm.id === "bst") {
+      navigate("/bst");
     } else {
       setShowComingSoon(true);
     }

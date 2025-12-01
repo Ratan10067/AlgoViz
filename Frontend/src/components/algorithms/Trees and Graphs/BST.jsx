@@ -1,14 +1,25 @@
 import React, { useState, useEffect, useRef } from "react";
-import {
-  PanelGroup,
-  Panel,
-  PanelResizeHandle,
-} from "react-resizable-panels";
+import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 
 import {
-  Play, Pause, SkipForward, RotateCcw, Settings, BarChart3, Code2,
-  Activity, Target, Clock, Maximize2, ArrowLeft, AlertTriangle, Shuffle,
-  GitBranch, Plus, Minus, Search
+  Play,
+  Pause,
+  SkipForward,
+  RotateCcw,
+  Settings,
+  BarChart3,
+  Code2,
+  Activity,
+  Target,
+  Clock,
+  Maximize2,
+  ArrowLeft,
+  AlertTriangle,
+  Shuffle,
+  GitBranch,
+  Plus,
+  Minus,
+  Search,
 } from "lucide-react";
 
 import { useNavigate } from "react-router-dom";
@@ -18,20 +29,20 @@ import { bst as bstCode } from "../../../algorithms/codeExamples.js";
 
 export default function BSTVisualizer() {
   const navigate = useNavigate();
-  
+
   // BST state
   const [initialValues, setInitialValues] = useState("50,30,70,20,40,60,80");
   const [currentTree, setCurrentTree] = useState(null);
-  const [operation, setOperation] = useState('insert'); // insert, delete, search
+  const [operation, setOperation] = useState("insert"); // insert, delete, search
   const [operationValue, setOperationValue] = useState(25);
-  
+
   // Animation state
   const [steps, setSteps] = useState([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [started, setStarted] = useState(false);
   const [speed, setSpeed] = useState(800);
-  
+
   // UI state
   const [activeRightTab, setActiveRightTab] = useState("stats");
   const [treeValidationError, setTreeValidationError] = useState("");
@@ -60,33 +71,40 @@ export default function BSTVisualizer() {
   const handleBack = () => {
     setAlertConfig({
       isOpen: true,
-      message: "Are you sure you want to go back? Any unsaved progress will be lost.",
+      message:
+        "Are you sure you want to go back? Any unsaved progress will be lost.",
       type: "warning",
-      customButtons: [
-        {
-          label: "Stay",
-          onClick: () => setAlertConfig({ isOpen: false }),
-          variant: "secondary"
-        },
-        {
-          label: "Go Back",
-          onClick: () => {
-            setAlertConfig({ isOpen: false });
-            navigate("/visualizer");
-          },
-          variant: "destructive"
-        }
-      ]
+      customButtons: (
+        <div className="flex gap-3 justify-center">
+          <button
+            onClick={() =>
+              setAlertConfig((prev) => ({ ...prev, isOpen: false }))
+            }
+            className="px-6 py-3 bg-gray-700 text-white rounded-xl transition-all duration-300 hover:scale-105 hover:bg-gray-600 shadow-lg"
+          >
+            Stay
+          </button>
+          <button
+            onClick={() => {
+              setAlertConfig((prev) => ({ ...prev, isOpen: false }));
+              setTimeout(() => navigate("/"), 100);
+            }}
+            className="px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl transition-all duration-300 hover:scale-105 shadow-lg"
+          >
+            Go Back
+          </button>
+        </div>
+      ),
     });
   };
 
   // Build BST from array
   const buildBSTFromArray = (values) => {
     let root = null;
-    
+
     const insert = (node, val) => {
       if (!node) return new TreeNode(val);
-      
+
       if (val < node.val) {
         node.left = insert(node.left, val);
       } else if (val > node.val) {
@@ -98,7 +116,7 @@ export default function BSTVisualizer() {
     for (const val of values) {
       root = insert(root, val);
     }
-    
+
     return root;
   };
 
@@ -113,10 +131,10 @@ export default function BSTVisualizer() {
 
     const assignPositions = (node, x, y, spacing) => {
       if (!node) return;
-      
+
       node.x = x;
       node.y = y;
-      
+
       if (node.left) {
         assignPositions(node.left, x - spacing, y + 80, spacing * 0.7);
       }
@@ -135,26 +153,26 @@ export default function BSTVisualizer() {
     let comparisons = 0;
 
     steps.push({
-      operation: 'insert',
+      operation: "insert",
       value: val,
       currentNode: null,
       path: [],
       comparisons,
       codeLine: 1,
-      description: `Starting insertion of ${val} into BST`
+      description: `Starting insertion of ${val} into BST`,
     });
 
     const insertRecursive = (node, path = []) => {
       if (!node) {
         steps.push({
-          operation: 'insert',
+          operation: "insert",
           value: val,
           currentNode: null,
           path: [...path],
           newNode: val,
           comparisons,
           codeLine: 2,
-          description: `Found empty spot, inserting ${val}`
+          description: `Found empty spot, inserting ${val}`,
         });
         return new TreeNode(val);
       }
@@ -163,13 +181,15 @@ export default function BSTVisualizer() {
       comparisons++;
 
       steps.push({
-        operation: 'insert',
+        operation: "insert",
         value: val,
         currentNode: node.val,
         path: [...path],
         comparisons,
         codeLine: val < node.val ? 4 : 6,
-        description: `Comparing ${val} with ${node.val}: ${val} ${val < node.val ? '<' : '>'} ${node.val}, go ${val < node.val ? 'left' : 'right'}`
+        description: `Comparing ${val} with ${node.val}: ${val} ${
+          val < node.val ? "<" : ">"
+        } ${node.val}, go ${val < node.val ? "left" : "right"}`,
       });
 
       if (val < node.val) {
@@ -178,13 +198,13 @@ export default function BSTVisualizer() {
         node.right = insertRecursive(node.right, [...path]);
       } else {
         steps.push({
-          operation: 'insert',
+          operation: "insert",
           value: val,
           currentNode: node.val,
           path: [...path],
           comparisons,
           codeLine: 8,
-          description: `Value ${val} already exists in BST`
+          description: `Value ${val} already exists in BST`,
         });
       }
       return node;
@@ -199,26 +219,26 @@ export default function BSTVisualizer() {
     let comparisons = 0;
 
     steps.push({
-      operation: 'search',
+      operation: "search",
       value: val,
       currentNode: null,
       path: [],
       comparisons,
       codeLine: 1,
-      description: `Starting search for ${val} in BST`
+      description: `Starting search for ${val} in BST`,
     });
 
     const searchRecursive = (node, path = []) => {
       if (!node) {
         steps.push({
-          operation: 'search',
+          operation: "search",
           value: val,
           currentNode: null,
           path: [...path],
           found: false,
           comparisons,
           codeLine: 2,
-          description: `Reached null node, ${val} not found in BST`
+          description: `Reached null node, ${val} not found in BST`,
         });
         return false;
       }
@@ -227,47 +247,47 @@ export default function BSTVisualizer() {
       comparisons++;
 
       steps.push({
-        operation: 'search',
+        operation: "search",
         value: val,
         currentNode: node.val,
         path: [...path],
         comparisons,
         codeLine: 3,
-        description: `Comparing ${val} with ${node.val}`
+        description: `Comparing ${val} with ${node.val}`,
       });
 
       if (val === node.val) {
         steps.push({
-          operation: 'search',
+          operation: "search",
           value: val,
           currentNode: node.val,
           path: [...path],
           found: true,
           comparisons,
           codeLine: 4,
-          description: `Found ${val} at current node!`
+          description: `Found ${val} at current node!`,
         });
         return true;
       } else if (val < node.val) {
         steps.push({
-          operation: 'search',
+          operation: "search",
           value: val,
           currentNode: node.val,
           path: [...path],
           comparisons,
           codeLine: 5,
-          description: `${val} < ${node.val}, searching left subtree`
+          description: `${val} < ${node.val}, searching left subtree`,
         });
         return searchRecursive(node.left, [...path]);
       } else {
         steps.push({
-          operation: 'search',
+          operation: "search",
           value: val,
           currentNode: node.val,
           path: [...path],
           comparisons,
           codeLine: 7,
-          description: `${val} > ${node.val}, searching right subtree`
+          description: `${val} > ${node.val}, searching right subtree`,
         });
         return searchRecursive(node.right, [...path]);
       }
@@ -280,26 +300,29 @@ export default function BSTVisualizer() {
   // Validate tree input
   const validateTree = (treeString) => {
     try {
-      const numbers = treeString.split(',').map(num => {
+      const numbers = treeString.split(",").map((num) => {
         const parsed = parseInt(num.trim());
         if (isNaN(parsed)) throw new Error("Invalid number");
         return parsed;
       });
-      
+
       if (numbers.length < 1) {
         return { isValid: false, error: "Tree must have at least 1 node" };
       }
-      
+
       if (numbers.length > 15) {
         return { isValid: false, error: "Tree size cannot exceed 15 nodes" };
       }
-      
+
       // Remove duplicates for BST
       const uniqueNumbers = [...new Set(numbers)];
-      
+
       return { isValid: true, values: uniqueNumbers };
     } catch (error) {
-      return { isValid: false, error: "Invalid tree format. Use comma-separated numbers." };
+      return {
+        isValid: false,
+        error: "Invalid tree format. Use comma-separated numbers.",
+      };
     }
   };
 
@@ -327,13 +350,13 @@ export default function BSTVisualizer() {
     }
 
     let operationSteps = [];
-    
-    if (operation === 'insert') {
+
+    if (operation === "insert") {
       const result = insertWithSteps(currentTree, operationValue);
       operationSteps = result.steps;
       setCurrentTree(result.newRoot);
       calculateTreePositions(result.newRoot);
-    } else if (operation === 'search') {
+    } else if (operation === "search") {
       const result = searchWithSteps(currentTree, operationValue);
       operationSteps = result.steps;
     }
@@ -375,7 +398,7 @@ export default function BSTVisualizer() {
     let interval;
     if (playing && currentStep < steps.length - 1) {
       interval = setInterval(() => {
-        setCurrentStep(prev => {
+        setCurrentStep((prev) => {
           if (prev >= steps.length - 1) {
             setPlaying(false);
             return prev;
@@ -399,11 +422,11 @@ export default function BSTVisualizer() {
     if (!canvasRef.current || !currentTree) return;
 
     const canvas = canvasRef.current;
-    const ctx = canvas.getContext('2d');
-    
+    const ctx = canvas.getContext("2d");
+
     canvas.width = canvas.offsetWidth;
     canvas.height = canvas.offsetHeight;
-    
+
     ctx.clearRect(0, 0, canvas.width, canvas.height);
 
     const currentStepData = steps[currentStep];
@@ -417,7 +440,7 @@ export default function BSTVisualizer() {
 
       // Draw edges first
       if (node.left) {
-        ctx.strokeStyle = '#4B5563';
+        ctx.strokeStyle = "#4B5563";
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(node.x, node.y);
@@ -425,9 +448,9 @@ export default function BSTVisualizer() {
         ctx.stroke();
         drawTree(node.left);
       }
-      
+
       if (node.right) {
-        ctx.strokeStyle = '#4B5563';
+        ctx.strokeStyle = "#4B5563";
         ctx.lineWidth = 2;
         ctx.beginPath();
         ctx.moveTo(node.x, node.y);
@@ -439,30 +462,30 @@ export default function BSTVisualizer() {
       // Draw node
       ctx.beginPath();
       ctx.arc(node.x, node.y, 25, 0, 2 * Math.PI);
-      
+
       if (isCurrentNode) {
-        ctx.fillStyle = '#EF4444'; // Red for current
-        ctx.strokeStyle = '#DC2626';
+        ctx.fillStyle = "#EF4444"; // Red for current
+        ctx.strokeStyle = "#DC2626";
       } else if (isNewNode) {
-        ctx.fillStyle = '#10B981'; // Green for new
-        ctx.strokeStyle = '#059669';
+        ctx.fillStyle = "#10B981"; // Green for new
+        ctx.strokeStyle = "#059669";
       } else if (isInPath) {
-        ctx.fillStyle = '#F59E0B'; // Yellow for path
-        ctx.strokeStyle = '#D97706';
+        ctx.fillStyle = "#F59E0B"; // Yellow for path
+        ctx.strokeStyle = "#D97706";
       } else {
-        ctx.fillStyle = '#6B7280'; // Gray for others
-        ctx.strokeStyle = '#4B5563';
+        ctx.fillStyle = "#6B7280"; // Gray for others
+        ctx.strokeStyle = "#4B5563";
       }
-      
+
       ctx.lineWidth = 3;
       ctx.fill();
       ctx.stroke();
 
       // Draw node value
-      ctx.fillStyle = '#FFFFFF';
-      ctx.font = 'bold 16px Arial';
-      ctx.textAlign = 'center';
-      ctx.textBaseline = 'middle';
+      ctx.fillStyle = "#FFFFFF";
+      ctx.font = "bold 16px Arial";
+      ctx.textAlign = "center";
+      ctx.textBaseline = "middle";
       ctx.fillText(node.val.toString(), node.x, node.y);
     };
 
@@ -493,7 +516,9 @@ export default function BSTVisualizer() {
     };
 
     return (
-      <div className={`bg-gradient-to-br ${colorClasses[color]} border rounded-xl p-4 backdrop-blur-sm`}>
+      <div
+        className={`bg-gradient-to-br ${colorClasses[color]} border rounded-xl p-4 backdrop-blur-sm`}
+      >
         <div className="flex items-center gap-3">
           <div className="p-2 bg-white/10 rounded-lg">
             <Icon size={20} className="text-white" />
@@ -536,7 +561,8 @@ export default function BSTVisualizer() {
                   Binary Search Tree Visualizer
                 </h1>
                 <p className="text-gray-400 text-sm">
-                  Interactive BST operations: Insert, Search, Delete • O(log n) average time
+                  Interactive BST operations: Insert, Search, Delete • O(log n)
+                  average time
                 </p>
               </div>
             </div>
@@ -554,7 +580,7 @@ export default function BSTVisualizer() {
                     <Settings size={18} />
                     Tree Configuration
                   </h3>
-                  
+
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -591,7 +617,7 @@ export default function BSTVisualizer() {
                     <Play size={18} />
                     BST Operations
                   </h3>
-                  
+
                   <div className="space-y-4">
                     <div>
                       <label className="block text-sm font-medium text-gray-300 mb-2">
@@ -599,16 +625,16 @@ export default function BSTVisualizer() {
                       </label>
                       <div className="grid grid-cols-1 gap-2">
                         {[
-                          { id: 'insert', name: 'Insert', icon: Plus },
-                          { id: 'search', name: 'Search', icon: Search }
+                          { id: "insert", name: "Insert", icon: Plus },
+                          { id: "search", name: "Search", icon: Search },
                         ].map((op) => (
                           <button
                             key={op.id}
                             onClick={() => setOperation(op.id)}
                             className={`p-3 rounded-lg text-left transition-colors flex items-center gap-2 ${
                               operation === op.id
-                                ? 'bg-blue-600 text-white'
-                                : 'bg-gray-700 text-gray-300 hover:bg-gray-600'
+                                ? "bg-blue-600 text-white"
+                                : "bg-gray-700 text-gray-300 hover:bg-gray-600"
                             }`}
                           >
                             <op.icon size={16} />
@@ -625,7 +651,9 @@ export default function BSTVisualizer() {
                       <input
                         type="number"
                         value={operationValue}
-                        onChange={(e) => setOperationValue(parseInt(e.target.value) || 0)}
+                        onChange={(e) =>
+                          setOperationValue(parseInt(e.target.value) || 0)
+                        }
                         className="w-full p-3 bg-gray-700 border border-gray-600 rounded-lg text-white focus:border-blue-500 focus:ring-1 focus:ring-blue-500 transition-colors"
                       />
                     </div>
@@ -636,7 +664,8 @@ export default function BSTVisualizer() {
                       className="w-full bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800 disabled:from-gray-600 disabled:to-gray-700 text-white font-semibold py-3 px-4 rounded-lg transition-all duration-200 flex items-center justify-center gap-2 disabled:cursor-not-allowed"
                     >
                       <GitBranch size={18} />
-                      Start {operation.charAt(0).toUpperCase() + operation.slice(1)}
+                      Start{" "}
+                      {operation.charAt(0).toUpperCase() + operation.slice(1)}
                     </button>
 
                     <div className="flex gap-2">
@@ -648,7 +677,7 @@ export default function BSTVisualizer() {
                         {playing ? <Pause size={16} /> : <Play size={16} />}
                         {playing ? "Pause" : "Play"}
                       </button>
-                      
+
                       <button
                         onClick={handleStepForward}
                         disabled={!started || currentStep >= steps.length - 1}
@@ -700,7 +729,7 @@ export default function BSTVisualizer() {
                     ref={canvasRef}
                     className="w-full h-full border border-gray-700 rounded-lg bg-gray-800/30"
                   />
-                  
+
                   {/* Legend */}
                   <div className="absolute top-4 right-4 bg-gray-800/90 rounded-lg p-3 border border-gray-600">
                     <div className="text-sm text-gray-300 mb-2">Legend:</div>
@@ -749,12 +778,16 @@ export default function BSTVisualizer() {
                   <div className="mt-4">
                     <div className="flex justify-between text-sm text-gray-400 mb-2">
                       <span>Progress</span>
-                      <span>{Math.round(((currentStep + 1) / steps.length) * 100)}%</span>
+                      <span>
+                        {Math.round(((currentStep + 1) / steps.length) * 100)}%
+                      </span>
                     </div>
                     <div className="w-full bg-gray-700 rounded-full h-2">
                       <div
                         className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-300"
-                        style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+                        style={{
+                          width: `${((currentStep + 1) / steps.length) * 100}%`,
+                        }}
                       />
                     </div>
                   </div>
@@ -780,7 +813,9 @@ export default function BSTVisualizer() {
                   <div className="space-y-4">
                     <StatCard
                       icon={GitBranch}
-                      value={operation.charAt(0).toUpperCase() + operation.slice(1)}
+                      value={
+                        operation.charAt(0).toUpperCase() + operation.slice(1)
+                      }
                       label="Operation"
                       color="blue"
                     />
@@ -798,14 +833,20 @@ export default function BSTVisualizer() {
                     />
                     <StatCard
                       icon={Clock}
-                      value={steps.length > 0 ? `${currentStep + 1}/${steps.length}` : "0/0"}
+                      value={
+                        steps.length > 0
+                          ? `${currentStep + 1}/${steps.length}`
+                          : "0/0"
+                      }
                       label="Steps"
                       color="orange"
                     />
 
                     {/* Algorithm Info */}
                     <div className="bg-gray-800/50 rounded-xl p-4 border border-gray-700">
-                      <h3 className="text-lg font-semibold text-white mb-3">Algorithm Info</h3>
+                      <h3 className="text-lg font-semibold text-white mb-3">
+                        Algorithm Info
+                      </h3>
                       <div className="space-y-3 text-sm">
                         <div className="flex justify-between">
                           <span className="text-gray-400">Average Time:</span>
@@ -816,7 +857,9 @@ export default function BSTVisualizer() {
                           <span className="text-white font-mono">O(n)</span>
                         </div>
                         <div className="flex justify-between">
-                          <span className="text-gray-400">Space Complexity:</span>
+                          <span className="text-gray-400">
+                            Space Complexity:
+                          </span>
                           <span className="text-white font-mono">O(log n)</span>
                         </div>
                         <div className="flex justify-between">
@@ -824,10 +867,12 @@ export default function BSTVisualizer() {
                           <span className="text-white">Binary Tree</span>
                         </div>
                       </div>
-                      
+
                       {/* BST Properties */}
                       <div className="mt-4 p-3 bg-gray-700/50 rounded-lg">
-                        <h4 className="text-sm font-semibold text-white mb-2">BST Properties:</h4>
+                        <h4 className="text-sm font-semibold text-white mb-2">
+                          BST Properties:
+                        </h4>
                         <div className="space-y-1 text-xs text-gray-300">
                           <div>• Left subtree values &lt; root</div>
                           <div>• Right subtree values &gt; root</div>

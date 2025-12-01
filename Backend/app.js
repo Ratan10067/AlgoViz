@@ -16,6 +16,6 @@ dbConnect();
 // Enable user routes
 app.use("/users", userRoutes);
 
-app.listen(3000, () => {
-  console.log("Server is running on http://localhost:3000");
+app.listen(process.env.PORT, () => {
+  console.log(`Server is running on Port ${process.env.PORT}`);
 });

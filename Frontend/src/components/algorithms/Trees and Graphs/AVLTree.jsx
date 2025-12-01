@@ -1,13 +1,27 @@
 import React, { useState, useEffect, useRef } from "react";
+import { PanelGroup, Panel, PanelResizeHandle } from "react-resizable-panels";
 import {
-  PanelGroup,
-  Panel,
-  PanelResizeHandle,
-} from "react-resizable-panels";
-import {
-  Play, Pause, SkipForward, RotateCcw, Settings, BarChart3, Code2,
-  Activity, Target, Clock, Maximize2, ArrowLeft, AlertTriangle, Shuffle,
-  Plus, Minus, Search, Eye, RotateCcw as RotateLeft, RotateCw as RotateRight, TreePine
+  Play,
+  Pause,
+  SkipForward,
+  RotateCcw,
+  Settings,
+  BarChart3,
+  Code2,
+  Activity,
+  Target,
+  Clock,
+  Maximize2,
+  ArrowLeft,
+  AlertTriangle,
+  Shuffle,
+  Plus,
+  Minus,
+  Search,
+  Eye,
+  RotateCcw as RotateLeft,
+  RotateCw as RotateRight,
+  TreePine,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import Alert from "../../Alert.jsx";
@@ -42,7 +56,8 @@ class AVLTreeClass {
 
   updateHeight(node) {
     if (node) {
-      node.height = 1 + Math.max(this.getHeight(node.left), this.getHeight(node.right));
+      node.height =
+        1 + Math.max(this.getHeight(node.left), this.getHeight(node.right));
     }
   }
 
@@ -81,34 +96,34 @@ class AVLTreeClass {
     if (!node) {
       const newNode = new AVLNode(value);
       steps.push({
-        type: 'insert',
+        type: "insert",
         value,
         description: `Created new node with value ${value}`,
         tree: this.cloneTree(this.root),
         highlighting: [value],
-        action: 'create'
+        action: "create",
       });
       return newNode;
     }
 
     if (value < node.value) {
       steps.push({
-        type: 'insert',
+        type: "insert",
         value,
         description: `${value} < ${node.value}, going left`,
         tree: this.cloneTree(this.root),
         highlighting: [node.value],
-        action: 'compare'
+        action: "compare",
       });
       node.left = this.insert(node.left, value, steps);
     } else if (value > node.value) {
       steps.push({
-        type: 'insert',
+        type: "insert",
         value,
         description: `${value} > ${node.value}, going right`,
         tree: this.cloneTree(this.root),
         highlighting: [node.value],
-        action: 'compare'
+        action: "compare",
       });
       node.right = this.insert(node.right, value, steps);
     } else {
@@ -123,24 +138,24 @@ class AVLTreeClass {
     const balance = this.getBalance(node);
 
     steps.push({
-      type: 'insert',
+      type: "insert",
       value,
       description: `Node ${node.value}: height=${node.height}, balance=${balance}`,
       tree: this.cloneTree(this.root),
       highlighting: [node.value],
-      action: 'balance_check'
+      action: "balance_check",
     });
 
     // Perform rotations if needed
     if (balance > 1 && value < node.left.value) {
       // Left Left Case
       steps.push({
-        type: 'insert',
+        type: "insert",
         value,
         description: `Left-Left imbalance at ${node.value}, performing right rotation`,
         tree: this.cloneTree(this.root),
         highlighting: [node.value],
-        action: 'rotate_right'
+        action: "rotate_right",
       });
       return this.rotateRight(node);
     }
@@ -148,12 +163,12 @@ class AVLTreeClass {
     if (balance < -1 && value > node.right.value) {
       // Right Right Case
       steps.push({
-        type: 'insert',
+        type: "insert",
         value,
         description: `Right-Right imbalance at ${node.value}, performing left rotation`,
         tree: this.cloneTree(this.root),
         highlighting: [node.value],
-        action: 'rotate_left'
+        action: "rotate_left",
       });
       return this.rotateLeft(node);
     }
@@ -161,12 +176,12 @@ class AVLTreeClass {
     if (balance > 1 && value > node.left.value) {
       // Left Right Case
       steps.push({
-        type: 'insert',
+        type: "insert",
         value,
         description: `Left-Right imbalance at ${node.value}, performing left-right rotation`,
         tree: this.cloneTree(this.root),
         highlighting: [node.value],
-        action: 'rotate_left_right'
+        action: "rotate_left_right",
       });
       node.left = this.rotateLeft(node.left);
       return this.rotateRight(node);
@@ -175,12 +190,12 @@ class AVLTreeClass {
     if (balance < -1 && value < node.right.value) {
       // Right Left Case
       steps.push({
-        type: 'insert',
+        type: "insert",
         value,
         description: `Right-Left imbalance at ${node.value}, performing right-left rotation`,
         tree: this.cloneTree(this.root),
         highlighting: [node.value],
-        action: 'rotate_right_left'
+        action: "rotate_right_left",
       });
       node.right = this.rotateRight(node.right);
       return this.rotateLeft(node);
@@ -192,23 +207,23 @@ class AVLTreeClass {
   insertValue(value) {
     const steps = [];
     steps.push({
-      type: 'insert',
+      type: "insert",
       value,
       description: `Starting insertion of ${value}`,
       tree: this.cloneTree(this.root),
       highlighting: [],
-      action: 'start'
+      action: "start",
     });
 
     this.root = this.insert(this.root, value, steps);
-    
+
     steps.push({
-      type: 'insert',
+      type: "insert",
       value,
       description: `Successfully inserted ${value}`,
       tree: this.cloneTree(this.root),
       highlighting: [value],
-      action: 'complete'
+      action: "complete",
     });
 
     return steps;
@@ -225,16 +240,28 @@ class AVLTreeClass {
 
   calculatePositions(node, x = 0, y = 0, level = 0, offset = 100) {
     if (!node) return;
-    
+
     node.x = x;
     node.y = y;
-    
+
     const nextOffset = offset / 2;
     if (node.left) {
-      this.calculatePositions(node.left, x - offset, y + 80, level + 1, nextOffset);
+      this.calculatePositions(
+        node.left,
+        x - offset,
+        y + 80,
+        level + 1,
+        nextOffset
+      );
     }
     if (node.right) {
-      this.calculatePositions(node.right, x + offset, y + 80, level + 1, nextOffset);
+      this.calculatePositions(
+        node.right,
+        x + offset,
+        y + 80,
+        level + 1,
+        nextOffset
+      );
     }
   }
 }
@@ -242,19 +269,19 @@ class AVLTreeClass {
 const AVLTree = () => {
   const navigate = useNavigate();
   const svgRef = useRef(null);
-  
+
   // Tree state
   const [avlTree] = useState(() => new AVLTreeClass());
   const [insertValue, setInsertValue] = useState("");
   const [searchValue, setSearchValue] = useState("");
-  
+
   // Animation state
   const [steps, setSteps] = useState([]);
   const [currentStep, setCurrentStep] = useState(0);
   const [playing, setPlaying] = useState(false);
   const [started, setStarted] = useState(false);
   const [speed, setSpeed] = useState(800);
-  
+
   // UI state
   const [activeRightTab, setActiveRightTab] = useState("stats");
   const [currentHighlightedLine, setCurrentHighlightedLine] = useState(null);
@@ -265,26 +292,34 @@ const AVLTree = () => {
     customButtons: null,
   });
 
+  
   const handleBack = () => {
     setAlertConfig({
       isOpen: true,
-      message: "Are you sure you want to go back? Any unsaved progress will be lost.",
+      message:
+        "Are you sure you want to go back? Any unsaved progress will be lost.",
       type: "warning",
-      customButtons: [
-        {
-          label: "Stay",
-          onClick: () => setAlertConfig({ isOpen: false }),
-          variant: "secondary"
-        },
-        {
-          label: "Go Back",
-          onClick: () => {
-            setAlertConfig({ isOpen: false });
-            navigate("/");
-          },
-          variant: "destructive"
-        }
-      ]
+      customButtons: (
+        <div className="flex gap-3 justify-center">
+          <button
+            onClick={() =>
+              setAlertConfig((prev) => ({ ...prev, isOpen: false }))
+            }
+            className="px-6 py-3 bg-gray-700 text-white rounded-xl transition-all duration-300 hover:scale-105 hover:bg-gray-600 shadow-lg"
+          >
+            Stay
+          </button>
+          <button
+            onClick={() => {
+              setAlertConfig((prev) => ({ ...prev, isOpen: false }));
+              setTimeout(() => navigate("/"), 100);
+            }}
+            className="px-6 py-3 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl transition-all duration-300 hover:scale-105 shadow-lg"
+          >
+            Go Back
+          </button>
+        </div>
+      ),
     });
   };
 
@@ -299,7 +334,7 @@ const AVLTree = () => {
   const handleInsert = () => {
     const value = parseInt(insertValue);
     if (isNaN(value)) return;
-    
+
     const insertSteps = avlTree.insertValue(value);
     setSteps(insertSteps);
     setCurrentStep(0);
@@ -328,7 +363,7 @@ const AVLTree = () => {
     let interval;
     if (playing && started && currentStep < steps.length - 1) {
       interval = setInterval(() => {
-        setCurrentStep(prev => {
+        setCurrentStep((prev) => {
           if (prev >= steps.length - 1) {
             setPlaying(false);
             return prev;
@@ -344,7 +379,7 @@ const AVLTree = () => {
     tree: avlTree.root,
     highlighting: [],
     description: "AVL Tree - Self-balancing Binary Search Tree",
-    action: 'ready'
+    action: "ready",
   };
 
   // Calculate positions for current tree
@@ -421,7 +456,7 @@ function insert(node, value) {
             strokeWidth="2"
           />
         )}
-        
+
         {/* Draw node */}
         <circle
           cx={node.x}
@@ -432,7 +467,7 @@ function insert(node, value) {
           strokeWidth="2"
           className="transition-all duration-300"
         />
-        
+
         {/* Node value */}
         <text
           x={node.x}
@@ -442,7 +477,7 @@ function insert(node, value) {
         >
           {node.value}
         </text>
-        
+
         {/* Height and balance factor */}
         <text
           x={node.x}
@@ -452,7 +487,7 @@ function insert(node, value) {
         >
           h:{node.height} b:{balance}
         </text>
-        
+
         {/* Recursively render children */}
         {node.left && renderTree(node.left, node.x, node.y)}
         {node.right && renderTree(node.right, node.x, node.y)}
@@ -463,7 +498,7 @@ function insert(node, value) {
   return (
     <div className="h-screen bg-gradient-to-br from-slate-900 via-purple-900 to-slate-900 text-white overflow-hidden">
       <Alert {...alertConfig} />
-      
+
       {/* Header */}
       <div className="bg-slate-800 border-b border-purple-500 px-6 py-4 flex items-center justify-between">
         <div className="flex items-center space-x-4">
@@ -493,7 +528,9 @@ function insert(node, value) {
             <div className="space-y-6">
               {/* Insert Value */}
               <div>
-                <label className="block text-sm font-medium mb-2">Insert Value</label>
+                <label className="block text-sm font-medium mb-2">
+                  Insert Value
+                </label>
                 <div className="flex space-x-2">
                   <input
                     type="number"
@@ -501,7 +538,7 @@ function insert(node, value) {
                     onChange={(e) => setInsertValue(e.target.value)}
                     className="flex-1 p-3 bg-slate-700 rounded-lg border border-gray-600 focus:border-purple-500 focus:outline-none"
                     placeholder="Enter number..."
-                    onKeyDown={(e) => e.key === 'Enter' && handleInsert()}
+                    onKeyDown={(e) => e.key === "Enter" && handleInsert()}
                   />
                   <button
                     onClick={handleInsert}
@@ -515,9 +552,11 @@ function insert(node, value) {
 
               {/* Quick Insert */}
               <div>
-                <label className="block text-sm font-medium mb-2">Quick Insert</label>
+                <label className="block text-sm font-medium mb-2">
+                  Quick Insert
+                </label>
                 <div className="grid grid-cols-3 gap-2">
-                  {[10, 20, 25, 30, 40, 50, 60, 70, 80].map(value => (
+                  {[10, 20, 25, 30, 40, 50, 60, 70, 80].map((value) => (
                     <button
                       key={value}
                       onClick={() => {
@@ -541,10 +580,14 @@ function insert(node, value) {
                     disabled={!started}
                     className="flex-1 flex items-center justify-center space-x-2 py-2 bg-yellow-600 rounded-lg hover:bg-yellow-500 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
                   >
-                    {playing ? <Pause className="w-4 h-4" /> : <Play className="w-4 h-4" />}
-                    <span>{playing ? 'Pause' : 'Resume'}</span>
+                    {playing ? (
+                      <Pause className="w-4 h-4" />
+                    ) : (
+                      <Play className="w-4 h-4" />
+                    )}
+                    <span>{playing ? "Pause" : "Resume"}</span>
                   </button>
-                  
+
                   <button
                     onClick={stepForward}
                     disabled={!started || currentStep >= steps.length - 1}
@@ -589,23 +632,32 @@ function insert(node, value) {
                   <div className="flex justify-between">
                     <span className="text-gray-400">Height:</span>
                     <span className="text-blue-400 font-mono">
-                      {currentStepData.tree ? avlTree.getHeight(currentStepData.tree) : 0}
+                      {currentStepData.tree
+                        ? avlTree.getHeight(currentStepData.tree)
+                        : 0}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Root Balance:</span>
                     <span className="text-purple-400 font-mono">
-                      {currentStepData.tree ? avlTree.getBalance(currentStepData.tree) : 0}
+                      {currentStepData.tree
+                        ? avlTree.getBalance(currentStepData.tree)
+                        : 0}
                     </span>
                   </div>
                   <div className="flex justify-between">
                     <span className="text-gray-400">Action:</span>
-                    <span className={`font-mono text-xs ${
-                      currentStepData.action === 'complete' ? 'text-green-400' :
-                      currentStepData.action === 'rotate_left' || currentStepData.action === 'rotate_right' ? 'text-yellow-400' :
-                      'text-gray-400'
-                    }`}>
-                      {currentStepData.action.replace('_', ' ')}
+                    <span
+                      className={`font-mono text-xs ${
+                        currentStepData.action === "complete"
+                          ? "text-green-400"
+                          : currentStepData.action === "rotate_left" ||
+                            currentStepData.action === "rotate_right"
+                          ? "text-yellow-400"
+                          : "text-gray-400"
+                      }`}
+                    >
+                      {currentStepData.action.replace("_", " ")}
                     </span>
                   </div>
                 </div>
@@ -638,7 +690,9 @@ function insert(node, value) {
             <div className="w-full max-w-4xl">
               {/* Description */}
               <div className="text-center mb-8">
-                <h2 className="text-xl font-semibold mb-2">AVL Tree Visualization</h2>
+                <h2 className="text-xl font-semibold mb-2">
+                  AVL Tree Visualization
+                </h2>
                 <p className="text-gray-400">{currentStepData.description}</p>
               </div>
 
@@ -670,12 +724,16 @@ function insert(node, value) {
                 <div className="mt-8">
                   <div className="flex justify-between text-sm text-gray-400 mb-2">
                     <span>Progress</span>
-                    <span>{currentStep + 1} / {steps.length}</span>
+                    <span>
+                      {currentStep + 1} / {steps.length}
+                    </span>
                   </div>
                   <div className="w-full bg-slate-700 rounded-full h-2">
                     <div
                       className="bg-purple-600 h-2 rounded-full transition-all duration-300"
-                      style={{ width: `${((currentStep + 1) / steps.length) * 100}%` }}
+                      style={{
+                        width: `${((currentStep + 1) / steps.length) * 100}%`,
+                      }}
                     />
                   </div>
                 </div>
@@ -725,8 +783,9 @@ function insert(node, value) {
                   <div>
                     <h3 className="text-lg font-semibold mb-3">AVL Tree</h3>
                     <p className="text-gray-300 text-sm leading-relaxed">
-                      AVL Tree is a self-balancing binary search tree where the difference 
-                      between heights of left and right subtrees cannot be more than one.
+                      AVL Tree is a self-balancing binary search tree where the
+                      difference between heights of left and right subtrees
+                      cannot be more than one.
                     </p>
                   </div>
 
@@ -747,16 +806,22 @@ function insert(node, value) {
                     <h4 className="font-medium mb-2">Rotations:</h4>
                     <div className="space-y-2 text-sm text-gray-300">
                       <div>
-                        <strong className="text-yellow-400">Left-Left:</strong> Right rotation
+                        <strong className="text-yellow-400">Left-Left:</strong>{" "}
+                        Right rotation
                       </div>
                       <div>
-                        <strong className="text-yellow-400">Right-Right:</strong> Left rotation
+                        <strong className="text-yellow-400">
+                          Right-Right:
+                        </strong>{" "}
+                        Left rotation
                       </div>
                       <div>
-                        <strong className="text-yellow-400">Left-Right:</strong> Left then right
+                        <strong className="text-yellow-400">Left-Right:</strong>{" "}
+                        Left then right
                       </div>
                       <div>
-                        <strong className="text-yellow-400">Right-Left:</strong> Right then left
+                        <strong className="text-yellow-400">Right-Left:</strong>{" "}
+                        Right then left
                       </div>
                     </div>
                   </div>
@@ -766,11 +831,15 @@ function insert(node, value) {
                     <div className="space-y-2 text-sm">
                       <div className="flex justify-between">
                         <span className="text-gray-400">Search:</span>
-                        <span className="text-green-400 font-mono">O(log n)</span>
+                        <span className="text-green-400 font-mono">
+                          O(log n)
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Insert:</span>
-                        <span className="text-yellow-400 font-mono">O(log n)</span>
+                        <span className="text-yellow-400 font-mono">
+                          O(log n)
+                        </span>
                       </div>
                       <div className="flex justify-between">
                         <span className="text-gray-400">Delete:</span>
